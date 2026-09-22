@@ -100,10 +100,10 @@
 
         .btn {
             border: none;
-            padding: 10px 18px;
+            padding: 8px 14px;
             border-radius: 8px;
             font-weight: 700;
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             cursor: pointer;
             display: inline-flex;
             align-items: center;
@@ -132,13 +132,13 @@
         .btn-inline-add {
             background: #059669;
             color: white;
-            padding: 4px 10px;
-            font-size: 0.8rem;
+            padding: 5px 12px;
+            font-size: 0.85rem;
             border-radius: 6px;
-            margin-right: 15px;
             cursor: pointer;
             border: none;
             font-weight: 700;
+            white-space: nowrap;
         }
         .btn-inline-add:hover { background: #047857; }
 
@@ -309,11 +309,17 @@
             background: #e2e8f0;
             color: #1e1b4b;
             font-weight: 800;
-            font-size: 1.05rem;
+            font-size: 1rem;
             padding: 8px 12px;
+        }
+
+        .line-row-flex {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            width: 100%;
+            gap: 10px;
+            flex-wrap: wrap;
         }
 
         .line-info-container {
@@ -368,16 +374,35 @@
             font-weight: 800;
         }
 
-        .departure-text {
-            display: inline-block;
+        .departures-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .departure-pill {
+            display: inline-flex;
+            align-items: center;
             background: #ecfdf5;
             color: #065f46;
             border: 1px solid #a7f3d0;
+            border-radius: 6px;
+            overflow: hidden;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+
+        .dep-time {
+            background: #d1fae5;
             padding: 3px 8px;
-            border-radius: 4px;
-            font-size: 0.92rem;
-            margin: 2px;
             font-weight: 800;
+        }
+
+        .dep-place {
+            background: #ecfdf5;
+            padding: 3px 8px;
+            border-right: 1px solid #a7f3d0;
         }
 
         .note-tag {
@@ -523,8 +548,8 @@
             <thead>
                 <tr>
                     <th style="width: 14%;">رقم الحافلة</th>
-                    <th style="width: 20%;">السائق (السائقون)</th>
-                    <th style="width: 56%;">مواعيد وأماكن الانطلاق والملاحظات</th>
+                    <th style="width: 22%;">السائق (السائقون)</th>
+                    <th style="width: 54%;">مواعيد وأماكن الانطلاق والملاحظات</th>
                     <th style="width: 10%; text-align: center;" class="action-column">خيارات</th>
                 </tr>
             </thead>
@@ -582,8 +607,8 @@
     </div>
 
     <div class="status-section">
-        <h3>📋 حالات السائقين (الراحة، الغياب، المرض، التراخيص، العطل، الإصلاح، والإدارة)</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">تم تسبيق السائقين الغير موجودين في العمل لتسهيل المراجعة والتعديل.</p>
+        <h3>📋 حالات السائقين (بدون العاملين)</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">تم إخفاء السائقين الذين في العمل لعرض المتواجدين في الراحة أو الحالات الأخرى فقط.</p>
         <table>
             <thead>
                 <tr>
@@ -598,7 +623,8 @@
     </div>
 
     <div class="status-section" style="margin-top: 20px;">
-        <h3>🚍 حالات الحافلات (الاحتياط، الإصلاح، الصيانة، متوقفة)</h3>
+        <h3>🚍 حالات الحافلات (بدون العاملة في الخطوط)</h3>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">تم إخفاء الحافلات التي في العمل (المدرجة في الجدول) وعرض الحافلات غير المدرجة في العمل أو في الإصلاح فقط.</p>
         <table>
             <thead>
                 <tr>
@@ -673,7 +699,7 @@
                 <datalist id="driversListOptions"></datalist>
             </div>
             <div class="form-group">
-                <label>الانطلاق الأول</label>
+                <label>التوقيت ثم مكان الانطلاق (الأول)</label>
                 <div class="form-row">
                     <input type="time" id="inputTime1" required style="flex:1.2;">
                     <input type="text" id="inputFrom1" placeholder="أيت إعزة" required style="flex:2;">
@@ -681,7 +707,7 @@
                 </div>
             </div>
             <div class="form-group">
-                <label>الانطلاق الثاني (اختياري)</label>
+                <label>التوقيت ثم مكان الانطلاق (الثاني - اختياري)</label>
                 <div class="form-row">
                     <input type="time" id="inputTime2" style="flex:1.2;">
                     <input type="text" id="inputFrom2" placeholder="تارودانت" style="flex:2;">
@@ -763,9 +789,9 @@
     var busData = [
         { line: "01 برحيل", bus: "451", driver: "احموش عبد العزيز / العسري محمد", departures: [{time: "06:30", from: "أيت إعزة", note: ""}, {time: "07:00", from: "تارودانت", note: ""}] },
         { line: "01 برحيل", bus: "479", driver: "زبيلا عبد المجيد", departures: [{time: "06:45", from: "أيت إعزة", note: ""}, {time: "07:16", from: "تارودانت", note: ""}] },
-        { line: "01 برحيل", bus: "465", driver: "اولحاج عبد الله", departures: [{time: "07:00", from: "أيت إعزة", note: ""}] },
-        { line: "01 برحيل", bus: "476", driver: "هشام ازم", departures: [{time: "07:00", from: "المرآب", note: ""}] },
-        { line: "01 برحيل", bus: "472", driver: "بوهرير عبد الرحيم", departures: [{time: "06:50", from: "اكلي", note: ""}] },
+        { line: "01 برحيل", bus: "465", driver: "اولحاج عبد الله", departures: [{time: "07:00", from: "أيت إعزة", note: ""}, {time: "07:32", from: "تارودانت", note: ""}] },
+        { line: "01 برحيل", bus: "476", driver: "هشام ازم", departures: [{time: "07:00", from: "المرآب", note: ""}, {time: "07:48", from: "تارودانت", note: ""}] },
+        { line: "01 برحيل", bus: "472", driver: "بوهرير عبد الرحيم", departures: [{time: "06:50", from: "اكلي", note: ""}, {time: "08:04", from: "تارودانت", note: ""}] },
         { line: "01 برحيل", bus: "458", driver: "الغرابي محمد", departures: [{time: "06:44", from: "برحيل", note: ""}] },
         { line: "01 برحيل", bus: "477", driver: "حجاج عمر", departures: [{time: "07:00", from: "برحيل", note: ""}] },
         { line: "01 برحيل", bus: "473", driver: "حفضي علي", departures: [{time: "07:16", from: "برحيل", note: ""}] },
@@ -790,391 +816,399 @@
         { line: "04 ارزان", bus: "468", driver: "ايت قاسي عبد العالي", departures: [{time: "06:40", from: "تارودانت", note: ""}] },
         { line: "04 ارزان", bus: "430", driver: "قيبوشي حسن", departures: [{time: "06:35", from: "أيت إعزة", note: ""}] },
         { line: "04 ارزان", bus: "433", driver: "الناجي كنتاوي", departures: [{time: "07:00", from: "أيت إعزة", note: ""}] },
-        { line: "04 ارزان", bus: "401", driver: "الصبار الحسين", departures: [{time: "06:46", from: "ارزان", note: ""}] },
-        { line: "04 ارزان", bus: "409", driver: "ايوب اد العربي", departures: [{time: "07:05", from: "ارزان", note: ""}] },
-        { line: "04 ارزان", bus: "464", driver: "بوكنين نور الدين", departures: [{time: "07:05", from: "بونيت", note: ""}] },
-        { line: "04 ارزان", bus: "459", driver: "اوبلا احمد", departures: [{time: "07:25", from: "بونيت", note: ""}] },
-        { line: "5/1 برحيل اولوز", bus: "436", driver: "البشير عبد الرحمان", departures: [{time: "07:20", from: "برحيل", note: ""}] },
-        { line: "5/1 برحيل اولوز", bus: "446", driver: "سمير عليلو", departures: [{time: "06:40", from: "برحيل", note: ""}] },
-        { line: "5/1 برحيل اولوز", bus: "423", driver: "بلاحمو هشام", departures: [{time: "07:20", from: "الخميس", note: ""}] },
-        { line: "5/1 برحيل اولوز", bus: "444", driver: "الناجي زكرياء / اوباسو عبد الصمد", departures: [{time: "07:20", from: "اولوز", note: ""}] },
-        { line: "5/2 تالوين", bus: "443", driver: "عملوك مصطفى / اسندال محمد", departures: [{time: "08:00", from: "تالوين", note: ""}] },
-        { line: "5/2 تالوين", bus: "441", driver: "حسيني عبد الله / الدلوجي عبد العزيز", departures: [{time: "08:00", from: "اولوز", note: ""}] },
-        { line: "5/2 تالوين", bus: "439", driver: "مبارك ايت علي", departures: [{time: "07:00", from: "برحيل", note: ""}] },
-        { line: "7 تازمورت", bus: "434", driver: "اسوان خاليد", departures: [{time: "07:00", from: "تارودانت", note: ""}] },
-        { line: "7 تازمورت", bus: "405", driver: "ابراشن لحسن", departures: [{time: "07:00", from: "تازمورت", note: ""}] },
-        { line: "12 اهل الرمل", bus: "438", driver: "الكادي عزيز / طالب رشيد", departures: [{time: "07:00", from: "هوارة", note: ""}] },
-        { line: "12 اهل الرمل", bus: "440", driver: "اعدار عبد الله / ايت حمو رشيد", departures: [{time: "07:30", from: "هوارة", note: ""}] }
+        { line: "04 ارزان", bus: "401", driver: "الصبار الحسين", departures: [{time: "07:00", from: "تارودانت", note: ""}] }
     ];
 
-    function populateDropdowns() {
-        var lineFilter = document.getElementById('lineFilter');
-        var inputLineSelect = document.getElementById('inputLineSelect');
-        var busesListOptions = document.getElementById('busesListOptions');
-        var driversListOptions = document.getElementById('driversListOptions');
-        
-        var currentFilterVal = lineFilter.value;
-        var currentSelectVal = inputLineSelect.value;
-
-        lineFilter.innerHTML = '<option value="">جميع الخطوط</option>';
-        inputLineSelect.innerHTML = '';
-        busesListOptions.innerHTML = '';
-        driversListOptions.innerHTML = '';
-
-        Object.keys(lineDefaults).sort(function(a, b) {
-            return a.localeCompare(b, 'ar', { numeric: true });
-        }).forEach(function(lineKey) {
-            var opt1 = document.createElement('option');
-            opt1.value = lineKey; opt1.innerText = lineKey;
-            lineFilter.appendChild(opt1);
-
-            var opt2 = document.createElement('option');
-            opt2.value = lineKey; opt2.innerText = lineKey;
-            inputLineSelect.appendChild(opt2);
-        });
-
-        [...busesList].sort(function(a, b) { return parseInt(a) - parseInt(b); }).forEach(function(bName) {
-            var optB = document.createElement('option');
-            optB.value = bName;
-            busesListOptions.appendChild(optB);
-        });
-
-        [...driversList].sort(function(a, b) { return a.localeCompare(b, 'ar'); }).forEach(function(dName) {
-            var optD = document.createElement('option');
-            optD.value = dName;
-            driversListOptions.appendChild(optD);
-        });
-
-        lineFilter.value = currentFilterVal;
-        inputLineSelect.value = currentSelectVal;
-    }
+    window.onload = function() {
+        var today = new Date().toISOString().split('T')[0];
+        document.getElementById('programDate').value = today;
+        updateHeaderTitle();
+        initDropdowns();
+        renderTable();
+        renderStatusTables();
+        updateStats();
+    };
 
     function updateHeaderTitle() {
         var dateVal = document.getElementById('programDate').value;
-        var headerElem = document.getElementById('mainHeaderTitle');
-        var restSheetTitle = document.getElementById('restSheetTitle');
+        if (!dateVal) return;
+        var dateObj = new Date(dateVal);
+        var options = { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' };
+        var formattedDate = dateObj.toLocaleDateString('ar-MA', options);
+        document.getElementById('mainHeaderTitle').innerText = "برنامج حافلات تارودانت ليوم " + formattedDate;
+        document.getElementById('restSheetTitle').innerText = "برنامج الراحة للسائقين ليوم " + formattedDate;
+    }
 
-        if (dateVal) {
-            var dateObj = new Date(dateVal);
-            var days = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
-            var dayName = days[dateObj.getDay()];
+    function initDropdowns() {
+        var lineSelect = document.getElementById('inputLineSelect');
+        var lineFilter = document.getElementById('lineFilter');
+        
+        lineSelect.innerHTML = "";
+        lineFilter.innerHTML = '<option value="">جميع الخطوط</option>';
 
-            var d = String(dateObj.getDate()).padStart(2, '0');
-            var m = String(dateObj.getMonth() + 1).padStart(2, '0');
-            var y = dateObj.getFullYear();
+        for (var line in lineDefaults) {
+            var opt1 = document.createElement('option');
+            opt1.value = line;
+            opt1.textContent = line;
+            lineSelect.appendChild(opt1);
 
-            headerElem.innerText = "برنامج حافلات تارودانت ليوم " + dayName + " " + d + "-" + m + "-" + y;
-            restSheetTitle.innerText = "برنامج الراحة للسائقين ليوم " + dayName + " " + d + "-" + m + "-" + y;
-        } else {
-            headerElem.innerText = "برنامج حافلات تارودانت";
-            restSheetTitle.innerText = "برنامج الراحة للسائقين";
+            var opt2 = document.createElement('option');
+            opt2.value = line;
+            opt2.textContent = line;
+            lineFilter.appendChild(opt2);
         }
+
+        updateDatalists();
     }
 
-    function getActiveDriversSet() {
-        var workingDrivers = new Set();
-        busData.forEach(function(item) {
-            item.driver.split('/').forEach(function(p){
-                if(p.trim()) workingDrivers.add(p.trim());
-            });
+    function updateDatalists() {
+        var dListOpt = document.getElementById('driversListOptions');
+        dListOpt.innerHTML = "";
+        driversList.forEach(function(d) {
+            var el = document.createElement('option');
+            el.value = d;
+            dListOpt.appendChild(el);
         });
-        return workingDrivers;
-    }
 
-    function getActiveBusesSet() {
-        var workingBuses = new Set();
-        busData.forEach(function(item) {
-            if(item.bus) workingBuses.add(item.bus.trim());
+        var bListOpt = document.getElementById('busesListOptions');
+        bListOpt.innerHTML = "";
+        busesList.forEach(function(b) {
+            var el = document.createElement('option');
+            el.value = b;
+            bListOpt.appendChild(el);
         });
-        return workingBuses;
     }
 
-    function renderTable(data) {
+    function renderTable() {
         var tbody = document.getElementById('busTableBody');
-        tbody.innerHTML = '';
+        tbody.innerHTML = "";
+
+        var searchVal = document.getElementById('searchInput').value.toLowerCase();
+        var filterLine = document.getElementById('lineFilter').value;
 
         var grouped = {};
-        data.forEach(function(item, i) {
-            if (!grouped[item.line]) grouped[item.line] = [];
-            grouped[item.line].push({item: item, originalIndex: i});
+        for (var line in lineDefaults) {
+            grouped[line] = [];
+        }
+
+        busData.forEach(function(item, index) {
+            item.originalIndex = index;
+            if (!grouped[item.line]) {
+                grouped[item.line] = [];
+            }
+            grouped[item.line].push(item);
         });
 
-        var registeredLines = Object.keys(lineDefaults);
-        var linesInGrouped = Object.keys(grouped);
-        var lines = registeredLines.filter(function(l) { return linesInGrouped.includes(l); });
-        linesInGrouped.forEach(function(l) { if (!lines.includes(l)) lines.push(l); });
+        var visibleBusesCount = 0;
 
-        lines.forEach(function(lineName) {
-            var busEntries = grouped[lineName] || [];
-            var lineInfo = lineDefaults[lineName] || { interval: "غير محدد", duration: "غير محدد" };
+        for (var lineName in grouped) {
+            if (filterLine && filterLine !== lineName) continue;
 
-            var headerTr = document.createElement('tr');
-            headerTr.className = 'line-group-header';
+            var items = grouped[lineName];
             
-            // إنشاء ترويسة الخط مع زر الإضافة السريع لكل خط على حدة
-            var tdContent = document.createElement('td');
-            tdContent.colSpan = 4;
-            tdContent.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: #e2e8f0;";
+            var filteredItems = items.filter(function(item) {
+                var matchSearch = item.bus.toLowerCase().includes(searchVal) ||
+                                  item.driver.toLowerCase().includes(searchVal) ||
+                                  item.departures.some(function(dep) { return dep.from.toLowerCase().includes(searchVal) || dep.time.toLowerCase().includes(searchVal); });
+                return matchSearch;
+            });
 
-            var infoContainer = document.createElement('div');
-            infoContainer.className = 'line-info-container';
-            infoContainer.innerHTML = 'الخط: ' + lineName + ' (' + busEntries.length + ' حافلات) ' +
-                '<span class="line-info-badge">التردد: ' + lineInfo.interval + '</span>' +
-                '<span class="line-info-badge">المدة الزمنية: ' + lineInfo.duration + '</span>';
+            if (filteredItems.length === 0 && searchVal !== "") continue;
 
-            var inlineAddBtn = document.createElement('button');
-            inlineAddBtn.className = 'btn-inline-add';
-            inlineAddBtn.innerText = '+ إضافة حافلة';
-            inlineAddBtn.onclick = function() {
-                openModalForLine(lineName);
-            };
+            var defs = lineDefaults[lineName] || { interval: "--", duration: "--" };
+            var currentLineBusCount = items.length;
 
-            tdContent.appendChild(infoContainer);
-            tdContent.appendChild(inlineAddBtn);
-            headerTr.appendChild(tdContent);
-            tbody.appendChild(headerTr);
+            var groupHeaderTr = document.createElement('tr');
+            groupHeaderTr.className = "line-group-header";
+            groupHeaderTr.innerHTML = `
+                <td colspan="4">
+                    <div class="line-row-flex">
+                        <div class="line-info-container">
+                            <span>الخط: ${lineName} (${currentLineBusCount} حافلات)</span>
+                            <span class="line-info-badge">التردد: ${defs.interval}</span>
+                            <span class="line-info-badge">المدة الزمنية: ${defs.duration}</span>
+                        </div>
+                        <button class="btn-inline-add" onclick="openModalForLine('${lineName}')">+ إضافة حافلة</button>
+                    </div>
+                </td>
+            `;
+            tbody.appendChild(groupHeaderTr);
 
-            busEntries.forEach(function(entry) {
-                var busObj = entry.item;
-                var origIdx = entry.originalIndex;
-                var driversParts = busObj.driver.split('/').map(function(d){ return d.trim(); });
-                
-                var driversHTML = driversParts.map(function(d, index){ 
-                    return index === 0 ? '<span class="driver-tag-primary">' + d + '</span>' : '<span class="driver-tag-secondary">' + d + '</span>';
-                }).join(' ');
+            var itemsToRender = searchVal !== "" ? filteredItems : items;
 
-                var departuresHTML = busObj.departures.map(function(dep){
-                    var noteHTML = dep.note ? '<span class="note-tag">📝 ' + dep.note + '</span>' : '';
-                    return '<span class="departure-text">' + dep.time + ' ' + dep.from + '</span> ' + noteHTML;
-                }).join(' ');
-
+            itemsToRender.forEach(function(item) {
+                visibleBusesCount++;
                 var tr = document.createElement('tr');
-                tr.innerHTML = 
-                    '<td><span class="bus-number">' + busObj.bus + '</span></td>' +
-                    '<td>' + driversHTML + '</td>' +
-                    '<td>' + departuresHTML + '</td>' +
-                    '<td class="action-column" style="text-align:center;">' +
-                        '<button class="btn btn-edit" onclick="editBus(' + origIdx + ')">تعديل</button> ' +
-                        '<button class="btn btn-delete" onclick="deleteBus(' + origIdx + ')">حذف</button>' +
-                    '</td>';
+
+                var driversArr = item.driver.split('/');
+                var formattedDrivers = driversArr.map(function(d, idx) {
+                    var trimmed = d.trim();
+                    var cls = idx === 0 ? "driver-tag-primary" : "driver-tag-secondary";
+                    return `<span class="${cls}">${trimmed}</span>`;
+                }).join(' ');
+
+                var departuresHtml = item.departures.map(function(dep) {
+                    var notePart = dep.note ? `<span class="note-tag">${dep.note}</span>` : "";
+                    return `
+                        <div class="departure-pill" style="margin-bottom: 4px;">
+                            <span class="dep-time">${dep.time}</span>
+                            <span class="dep-place">${dep.from}</span>
+                        </div>
+                        ${notePart}
+                    `;
+                }).join(' ');
+
+                tr.innerHTML = `
+                    <td><span class="bus-number">${item.bus}</span></td>
+                    <td>${formattedDrivers}</td>
+                    <td><div class="departures-container">${departuresHtml}</div></td>
+                    <td class="action-column" style="text-align: center;">
+                        <button class="btn btn-edit" onclick="editBus(${item.originalIndex})">تعديل</button>
+                        <button class="btn btn-delete" onclick="deleteBus(${item.originalIndex})">حذف</button>
+                    </td>
+                `;
                 tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('footerTotalBusses').innerText = visibleBusesCount;
+    }
+
+    function renderStatusTables() {
+        var activeDriversSet = new Set();
+        busData.forEach(function(item) {
+            var splitted = item.driver.split('/');
+            splitted.forEach(function(d) {
+                var name = d.trim();
+                if (name) activeDriversSet.add(name);
             });
         });
 
-        document.getElementById('totalBussesCount').innerText = data.length;
-        document.getElementById('totalLinesCount').innerText = lines.length;
-        document.getElementById('totalDriversCount').innerText = driversList.length;
-        document.getElementById('footerTotalBusses').innerText = data.length;
+        var activeBusesSet = new Set();
+        busData.forEach(function(item) {
+            if (item.bus) activeBusesSet.add(item.bus.trim());
+        });
 
-        renderDriversStatusTable();
-        renderBusesStatusTable();
+        // 1. جدول السائقين (استبعاد من هم في العمل)
+        var dBody = document.getElementById('driversStatusTableBody');
+        dBody.innerHTML = "";
+        var statuses = ["الراحة", "الغياب", "المرض", "الترخيص", "العطلة السنوية", "مهمة بالمراب", "الإدارة"];
+
+        var filteredDriversList = driversList.filter(function(driver) {
+            var isInWork = activeDriversSet.has(driver);
+            var defaultAutoStatus = isInWork ? "في العمل" : "الراحة";
+            var currentStatus = driversCustomStatus[driver] !== undefined ? driversCustomStatus[driver] : defaultAutoStatus;
+            return currentStatus !== "في العمل";
+        });
+
+        filteredDriversList.sort(function(a, b) { return a.localeCompare(b); });
+
+        filteredDriversList.forEach(function(driver) {
+            var isInWork = activeDriversSet.has(driver);
+            var defaultAutoStatus = isInWork ? "في العمل" : "الراحة";
+            var currentStatus = driversCustomStatus[driver] !== undefined ? driversCustomStatus[driver] : defaultAutoStatus;
+
+            var badgeClass = "status-admin";
+            if (currentStatus === "الراحة") badgeClass = "status-rest";
+            else if (currentStatus === "الغياب") badgeClass = "status-absence";
+            else if (currentStatus === "المرض") badgeClass = "status-sick";
+            else if (currentStatus === "الترخيص") badgeClass = "status-license";
+            else if (currentStatus === "العطلة السنوية") badgeClass = "status-vacation";
+            else if (currentStatus === "مهمة بالمراب") badgeClass = "status-repair";
+            else if (currentStatus === "الإدارة") badgeClass = "status-admin";
+
+            var tr = document.createElement('tr');
+            var selectHtml = `<select onchange="changeDriverStatus('${driver}', this.value)" style="width:100%; padding: 4px;">`;
+            statuses.forEach(function(st) {
+                selectHtml += `<option value="${st}" ${currentStatus === st ? 'selected' : ''}>${st}</option>`;
+            });
+            selectHtml += `</select>`;
+
+            var statusDisplay = `<span class="status-badge ${badgeClass}">${currentStatus}</span>`;
+
+            tr.innerHTML = `
+                <td style="font-weight:700;">${driver}</td>
+                <td>${statusDisplay}</td>
+                <td>${selectHtml}</td>
+            `;
+            dBody.appendChild(tr);
+        });
+
+        // 2. جدول الحافلات (استبعاد الحافلات التي في العمل في الجدول، الحالة الافتراضية غير المدرجة "غير مدرجة في العمل")
+        var bBody = document.getElementById('busesStatusTableBody');
+        bBody.innerHTML = "";
+        var busStatuses = ["غير مدرجة في العمل", "الإصلاح", "الصيانة", "متوقفة"];
+
+        var filteredBusesList = busesList.filter(function(bus) {
+            var isInWork = activeBusesSet.has(bus);
+            var defaultAutoBusStatus = isInWork ? "في العمل" : "غير مدرجة في العمل";
+            var currentStatus = busesCustomStatus[bus] !== undefined ? busesCustomStatus[bus] : defaultAutoBusStatus;
+            return currentStatus !== "في العمل";
+        });
+
+        filteredBusesList.forEach(function(bus) {
+            var isInWork = activeBusesSet.has(bus);
+            var defaultAutoBusStatus = isInWork ? "في العمل" : "غير مدرجة في العمل";
+            var currentStatus = busesCustomStatus[bus] !== undefined ? busesCustomStatus[bus] : defaultAutoBusStatus;
+
+            var badgeClass = "status-admin";
+            if (currentStatus === "غير مدرجة في العمل") badgeClass = "status-spare";
+            else if (currentStatus === "الإصلاح" || currentStatus === "الصيانة") badgeClass = "status-repair";
+            else if (currentStatus === "متوقفة") badgeClass = "status-absence";
+
+            var tr = document.createElement('tr');
+            var selectHtml = `<select onchange="changeBusStatus('${bus}', this.value)" style="width:100%; padding: 4px;">`;
+            busStatuses.forEach(function(st) {
+                selectHtml += `<option value="${st}" ${currentStatus === st ? 'selected' : ''}>${st}</option>`;
+            });
+            selectHtml += `</select>`;
+
+            var statusDisplay = `<span class="status-badge ${badgeClass}">${currentStatus}</span>`;
+
+            tr.innerHTML = `
+                <td><span class="bus-number">${bus}</span></td>
+                <td>${statusDisplay}</td>
+                <td>${selectHtml}</td>
+            `;
+            bBody.appendChild(tr);
+        });
+
+        updateRestExportSheet();
     }
 
-    function renderDriversStatusTable() {
-        var statusTbody = document.getElementById('driversStatusTableBody');
-        statusTbody.innerHTML = '';
+    function changeDriverStatus(driver, status) {
+        var activeDriversSet = new Set();
+        busData.forEach(function(item) {
+            item.driver.split('/').forEach(function(d) {
+                if (d.trim()) activeDriversSet.add(d.trim());
+            });
+        });
+        var defaultAutoStatus = activeDriversSet.has(driver) ? "في العمل" : "الراحة";
 
-        var workingDrivers = getActiveDriversSet();
-        var sortedDrivers = [...driversList].sort(function(a, b) { return a.localeCompare(b, 'ar'); });
+        if (status === defaultAutoStatus) {
+            delete driversCustomStatus[driver];
+        } else {
+            driversCustomStatus[driver] = status;
+        }
+        renderStatusTables();
+    }
 
-        sortedDrivers.sort(function(a, b) {
-            var aWorking = workingDrivers.has(a);
-            var bWorking = workingDrivers.has(b);
-            if (aWorking === bWorking) {
-                return a.localeCompare(b, 'ar');
-            }
-            return aWorking ? 1 : -1;
+    function changeBusStatus(bus, status) {
+        var activeBusesSet = new Set();
+        busData.forEach(function(item) {
+            if (item.bus) activeBusesSet.add(item.bus.trim());
+        });
+        var defaultAutoBusStatus = activeBusesSet.has(bus) ? "في العمل" : "غير مدرجة في العمل";
+
+        if (status === defaultAutoBusStatus) {
+            delete busesCustomStatus[bus];
+        } else {
+            busesCustomStatus[bus] = status;
+        }
+        renderStatusTables();
+    }
+
+    function updateRestExportSheet() {
+        var activeDriversSet = new Set();
+        busData.forEach(function(item) {
+            item.driver.split('/').forEach(function(d) {
+                if (d.trim()) activeDriversSet.add(d.trim());
+            });
         });
 
         var categories = {
-            "راحة": [],
-            "عطلة سنوية": [],
-            "الإدارة": [],
-            "غياب": [],
-            "ترخيص": [],
-            "انتظار اصلاح الحافلة": [],
-            "مرض": []
+            "الراحة": { countId: "headerRestCount", bodyId: "bodyRestNames", title: "الراحة" },
+            "العطلة السنوية": { countId: "headerVacationCount", bodyId: "bodyVacationNames", title: "العطلة السنوية" },
+            "الإدارة": { countId: "headerAdminCount", bodyId: "bodyAdminNames", title: "الإدارة" },
+            "الغياب": { countId: "headerAbsenceCount", bodyId: "bodyAbsenceNames", title: "الغياب" },
+            "الترخيص": { countId: "headerLicenseCount", bodyId: "bodyLicenseNames", title: "الترخيص" },
+            "مهمة بالمراب": { countId: "headerRepairCount", bodyId: "bodyRepairNames", title: "مهمة بالمراب" },
+            "المرض": { countId: "headerSickCount", bodyId: "bodySickNames", title: "المرض" }
         };
 
-        sortedDrivers.forEach(function(driverName) {
-            var tr = document.createElement('tr');
-            var statusBadgeHTML = "";
+        for (var cat in categories) {
+            var matchedDrivers = [];
+            driversList.forEach(function(d) {
+                var isInWork = activeDriversSet.has(d);
+                var defaultAutoStatus = isInWork ? "في العمل" : "الراحة";
+                var currentStatus = driversCustomStatus[d] !== undefined ? driversCustomStatus[d] : defaultAutoStatus;
+                if (currentStatus === cat) {
+                    matchedDrivers.push(d);
+                }
+            });
 
-            if (workingDrivers.has(driverName)) {
-                statusBadgeHTML = '<span class="status-badge" style="background:#e0e7ff; color:#3730a3; border:1px solid #c7d2fe;">في العمل (حافلة)</span>';
-            } else {
-                if (!driversCustomStatus[driverName]) driversCustomStatus[driverName] = "راحة";
-                var st = driversCustomStatus[driverName];
-                
-                if (categories[st]) categories[st].push(driverName);
-
-                if (st === "راحة") statusBadgeHTML = '<span class="status-badge status-rest">راحة</span>';
-                else if (st === "غياب") statusBadgeHTML = '<span class="status-badge status-absence">غياب</span>';
-                else if (st === "مرض") statusBadgeHTML = '<span class="status-badge status-sick">مرض</span>';
-                else if (st === "ترخيص") statusBadgeHTML = '<span class="status-badge status-license">ترخيص</span>';
-                else if (st === "عطلة سنوية") statusBadgeHTML = '<span class="status-badge status-vacation">عطلة سنوية</span>';
-                else if (st === "انتظار اصلاح الحافلة") statusBadgeHTML = '<span class="status-badge status-repair">مهمة بالمراب</span>';
-                else if (st === "الإدارة") statusBadgeHTML = '<span class="status-badge status-admin">الإدارة</span>';
-            }
-
-            var selectActionHTML = workingDrivers.has(driverName) ? 
-                '<span style="color:var(--text-muted); font-size:0.85rem;">مربوط بحافلة حالياً</span>' :
-                '<select onchange="changeDriverStatus(\'' + driverName + '\', this.value)" style="padding: 4px 8px; font-size:0.85rem;">' +
-                    '<option value="راحة" ' + (driversCustomStatus[driverName] === 'راحة' ? 'selected' : '') + '>راحة</option>' +
-                    '<option value="عطلة سنوية" ' + (driversCustomStatus[driverName] === 'عطلة سنوية' ? 'selected' : '') + '>عطلة سنوية</option>' +
-                    '<option value="الإدارة" ' + (driversCustomStatus[driverName] === 'الإدارة' ? 'selected' : '') + '>الإدارة</option>' +
-                    '<option value="غياب" ' + (driversCustomStatus[driverName] === 'غياب' ? 'selected' : '') + '>غياب</option>' +
-                    '<option value="ترخيص" ' + (driversCustomStatus[driverName] === 'ترخيص' ? 'selected' : '') + '>ترخيص</option>' +
-                    '<option value="انتظار اصلاح الحافلة" ' + (driversCustomStatus[driverName] === 'انتظار اصلاح الحافلة' ? 'selected' : '') + '>مهمة بالمراب</option>' +
-                    '<option value="مرض" ' + (driversCustomStatus[driverName] === 'مرض' ? 'selected' : '') + '>مرض</option>' +
-                '</select>';
-
-            tr.innerHTML = '<td><strong>' + driverName + '</strong></td><td>' + statusBadgeHTML + '</td><td>' + selectActionHTML + '</td>';
-            statusTbody.appendChild(tr);
-        });
-
-        updateRestSheetSection("Rest", "الراحة", categories["راحة"]);
-        updateRestSheetSection("Vacation", "العطلة السنوية", categories["عطلة سنوية"]);
-        updateRestSheetSection("Admin", "الإدارة", categories["الإدارة"]);
-        updateRestSheetSection("Absence", "الغياب", categories["غياب"]);
-        updateRestSheetSection("License", "الترخيص", categories["ترخيص"]);
-        updateRestSheetSection("Repair", "مهمة بالمراب", categories["انتظار اصلاح الحافلة"]);
-        updateRestSheetSection("Sick", "المرض", categories["مرض"]);
-    }
-
-    function updateRestSheetSection(key, title, list) {
-        var headerElem = document.getElementById('header' + key + 'Count');
-        var bodyElem = document.getElementById('body' + key + 'Names');
-        
-        if (!headerElem || !bodyElem) return;
-
-        var countFormatted = String(list.length).padStart(2, '0');
-        headerElem.innerText = title + " " + countFormatted;
-
-        if (list.length === 0) {
-            bodyElem.innerText = "***";
-        } else {
-            bodyElem.innerText = list.join(" - ");
+            var countStr = matchedDrivers.length < 10 ? "0" + matchedDrivers.length : matchedDrivers.length;
+            document.getElementById(categories[cat].countId).innerText = categories[cat].title + " " + countStr;
+            
+            var namesText = matchedDrivers.length > 0 ? matchedDrivers.join(' ، ') : "***";
+            document.getElementById(categories[cat].bodyId).innerText = namesText;
         }
     }
 
-    function renderBusesStatusTable() {
-        var busStatusTbody = document.getElementById('busesStatusTableBody');
-        busStatusTbody.innerHTML = '';
-
-        var workingBuses = getActiveBusesSet();
-        var sortedBuses = [...busesList].sort(function(a, b) { return parseInt(a) - parseInt(b); });
-
-        sortedBuses.sort(function(a, b) {
-            var aWorking = workingBuses.has(a);
-            var bWorking = workingBuses.has(b);
-            if (aWorking === bWorking) {
-                return parseInt(a) - parseInt(b);
-            }
-            return aWorking ? 1 : -1;
-        });
-
-        sortedBuses.forEach(function(busNum) {
-            var tr = document.createElement('tr');
-            var statusBadgeHTML = "";
-
-            if (workingBuses.has(busNum)) {
-                statusBadgeHTML = '<span class="status-badge" style="background:#e0e7ff; color:#3730a3; border:1px solid #c7d2fe;">في الخط (تعمل)</span>';
-            } else {
-                if (!busesCustomStatus[busNum]) busesCustomStatus[busNum] = "احتياط";
-                var st = busesCustomStatus[busNum];
-                
-                if (st === "احتياط") statusBadgeHTML = '<span class="status-badge status-spare">احتياط</span>';
-                else if (st === "إصلاح ميكانيكي") statusBadgeHTML = '<span class="status-badge status-repair">إصلاح ميكانيكي</span>';
-                else if (st === "صيانة دورية") statusBadgeHTML = '<span class="status-badge status-sick">صيانة دورية</span>';
-                else if (st === "متوقفة") statusBadgeHTML = '<span class="status-badge status-absence">متوقفة</span>';
-            }
-
-            var selectActionHTML = workingBuses.has(busNum) ?
-                '<span style="color:var(--text-muted); font-size:0.85rem;">تعمل على خط حالياً</span>' :
-                '<select onchange="changeBusStatus(\'' + busNum + '\', this.value)" style="padding: 4px 8px; font-size:0.85rem;">' +
-                    '<option value="احتياط" ' + (busesCustomStatus[busNum] === 'احتياط' ? 'selected' : '') + '>احتياط</option>' +
-                    '<option value="إصلاح ميكانيكي" ' + (busesCustomStatus[busNum] === 'إصلاح ميكانيكي' ? 'selected' : '') + '>إصلاح ميكانيكي</option>' +
-                    '<option value="صيانة دورية" ' + (busesCustomStatus[busNum] === 'صيانة دورية' ? 'selected' : '') + '>صيانة دورية</option>' +
-                    '<option value="متوقفة" ' + (busesCustomStatus[busNum] === 'متوقفة' ? 'selected' : '') + '>متوقفة</option>' +
-                '</select>';
-
-            tr.innerHTML = '<td><span class="bus-number">' + busNum + '</span></td><td>' + statusBadgeHTML + '</td><td>' + selectActionHTML + '</td>';
-            busStatusTbody.appendChild(tr);
-        });
-    }
-
-    function changeDriverStatus(driverName, newStatus) {
-        driversCustomStatus[driverName] = newStatus;
-        renderDriversStatusTable();
-    }
-
-    function changeBusStatus(busNum, newStatus) {
-        busesCustomStatus[busNum] = newStatus;
-        renderBusesStatusTable();
+    function updateStats() {
+        document.getElementById('totalBussesCount').innerText = busData.length;
+        document.getElementById('totalLinesCount').innerText = Object.keys(lineDefaults).length;
+        document.getElementById('totalDriversCount').innerText = driversList.length;
     }
 
     function filterData() {
-        var searchVal = document.getElementById('searchInput').value.toLowerCase();
-        var lineVal = document.getElementById('lineFilter').value;
-
-        var filtered = busData.filter(function(item) {
-            var matchesSearch = item.driver.toLowerCase().indexOf(searchVal) !== -1 || 
-                                item.bus.toLowerCase().indexOf(searchVal) !== -1 ||
-                                item.departures.some(function(d){ 
-                                    return d.from.toLowerCase().indexOf(searchVal) !== -1 || 
-                                           d.time.indexOf(searchVal) !== -1 ||
-                                           (d.note && d.note.toLowerCase().indexOf(searchVal) !== -1);
-                                });
-            var matchesLine = lineVal === "" || item.line === lineVal;
-            return matchesSearch && matchesLine;
-        });
-
-        renderTable(filtered);
+        renderTable();
     }
 
     function openModal() {
-        document.getElementById('editIndex').value = "-1";
         document.getElementById('modalTitle').innerText = "إضافة حافلة جديدة";
+        document.getElementById('editIndex').value = "-1";
         document.getElementById('busForm').reset();
         document.getElementById('busModal').style.display = 'flex';
     }
 
     function openModalForLine(lineName) {
-        document.getElementById('editIndex').value = "-1";
-        document.getElementById('modalTitle').innerText = "إضافة حافلة جديدة للخط: " + lineName;
-        document.getElementById('busForm').reset();
+        openModal();
         document.getElementById('inputLineSelect').value = lineName;
-        document.getElementById('busModal').style.display = 'flex';
     }
 
-    function closeModal() { document.getElementById('busModal').style.display = 'none'; }
-    function openNewLineModal() { document.getElementById('lineForm').reset(); document.getElementById('lineModal').style.display = 'flex'; }
-    function closeLineModal() { document.getElementById('lineModal').style.display = 'none'; }
-    function openDriversModal() { renderDriversListUI(); document.getElementById('driversModal').style.display = 'flex'; }
-    function closeDriversModal() { document.getElementById('driversModal').style.display = 'none'; }
-    function openBusesModal() { renderBusesListUI(); document.getElementById('busesModal').style.display = 'flex'; }
-    function closeBusesModal() { document.getElementById('busesModal').style.display = 'none'; }
+    function closeModal() {
+        document.getElementById('busModal').style.display = 'none';
+    }
 
-    function renderDriversListUI() {
+    function openNewLineModal() {
+        document.getElementById('lineForm').reset();
+        document.getElementById('lineModal').style.display = 'flex';
+    }
+
+    function closeLineModal() {
+        document.getElementById('lineModal').style.display = 'none';
+    }
+
+    function openDriversModal() {
+        renderDriversManagementList();
+        document.getElementById('driversModal').style.display = 'flex';
+    }
+
+    function closeDriversModal() {
+        document.getElementById('driversModal').style.display = 'none';
+    }
+
+    function openBusesModal() {
+        renderBusesManagementList();
+        document.getElementById('busesModal').style.display = 'flex';
+    }
+
+    function closeBusesModal() {
+        document.getElementById('busesModal').style.display = 'none';
+    }
+
+    function renderDriversManagementList() {
         var container = document.getElementById('driversListContainer');
-        container.innerHTML = '';
-        [...driversList].sort(function(a, b) { return a.localeCompare(b, 'ar'); }).forEach(function(driver) {
-            var row = document.createElement('div');
-            row.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: white; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color);";
-            row.innerHTML = '<span style="font-weight: 700; font-size: 0.9rem;">' + driver + '</span><button class="btn btn-delete" onclick="removeDriver(\'' + driver + '\')">حذف</button>';
-            container.appendChild(row);
-        });
-    }
-
-    function renderBusesListUI() {
-        var container = document.getElementById('busesListContainer');
-        container.innerHTML = '';
-        [...busesList].sort(function(a, b) { return parseInt(a) - parseInt(b); }).forEach(function(bus) {
-            var row = document.createElement('div');
-            row.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: white; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border-color);";
-            row.innerHTML = '<span class="bus-number" style="font-size: 0.9rem;">' + bus + '</span><button class="btn btn-delete" onclick="removeBusFromList(\'' + bus + '\')">حذف</button>';
-            container.appendChild(row);
+        container.innerHTML = "";
+        driversList.forEach(function(d, index) {
+            var div = document.createElement('div');
+            div.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 6px;";
+            div.innerHTML = `
+                <span style="font-weight: 700; font-size: 0.9rem;">${d}</span>
+                <button class="btn btn-delete" onclick="removeDriver(${index})">حذف</button>
+            `;
+            container.appendChild(div);
         });
     }
 
@@ -1183,198 +1217,183 @@
         var name = input.value.trim();
         if (name && !driversList.includes(name)) {
             driversList.push(name);
-            input.value = '';
-            populateDropdowns();
-            renderDriversListUI();
-            renderTable(busData);
+            input.value = "";
+            renderDriversManagementList();
+            updateDatalists();
+            renderStatusTables();
+            updateStats();
         }
+    }
+
+    function removeDriver(index) {
+        driversList.splice(index, 1);
+        renderDriversManagementList();
+        updateDatalists();
+        renderStatusTables();
+        updateStats();
+    }
+
+    function renderBusesManagementList() {
+        var container = document.getElementById('busesListContainer');
+        container.innerHTML = "";
+        busesList.forEach(function(b, index) {
+            var div = document.createElement('div');
+            div.style.cssText = "display: flex; justify-content: space-between; align-items: center; background: #fff; padding: 6px 10px; border: 1px solid var(--border-color); border-radius: 6px;";
+            div.innerHTML = `
+                <span style="font-weight: 700; font-size: 0.9rem;">الحافلة رقم ${b}</span>
+                <button class="btn btn-delete" onclick="removeBusFromList(${index})">حذف</button>
+            `;
+            container.appendChild(div);
+        });
     }
 
     function addNewBusToList() {
         var input = document.getElementById('newBusNameInput');
-        var busNum = input.value.trim();
-        if (busNum && !busesList.includes(busNum)) {
-            busesList.push(busNum);
-            input.value = '';
-            populateDropdowns();
-            renderBusesListUI();
-            renderTable(busData);
+        var name = input.value.trim();
+        if (name && !busesList.includes(name)) {
+            busesList.push(name);
+            input.value = "";
+            renderBusesManagementList();
+            updateDatalists();
+            renderStatusTables();
         }
     }
 
-    function removeDriver(name) {
-        if (confirm("هل أنت متأكد من حذف السائق " + name + "؟")) {
-            driversList = driversList.filter(function(d) { return d !== name; });
-            populateDropdowns();
-            renderDriversListUI();
-            renderTable(busData);
-        }
+    function removeBusFromList(index) {
+        busesList.splice(index, 1);
+        renderBusesManagementList();
+        updateDatalists();
+        renderStatusTables();
     }
 
-    function removeBusFromList(busNum) {
-        if (confirm("هل أنت متأكد من حذف الحافلة رقم " + busNum + "؟")) {
-            busesList = busesList.filter(function(b) { return b !== busNum; });
-            populateDropdowns();
-            renderBusesListUI();
-            renderTable(busData);
+    function handleSaveBus(e) {
+        e.preventDefault();
+        var index = parseInt(document.getElementById('editIndex').value);
+        var line = document.getElementById('inputLineSelect').value;
+        var bus = document.getElementById('inputBus').value.trim();
+        var driver1 = document.getElementById('inputDriver1').value.trim();
+        var driver2 = document.getElementById('inputDriver2').value.trim();
+        
+        var driverStr = driver2 ? driver1 + " / " + driver2 : driver1;
+
+        var departures = [];
+        var t1 = document.getElementById('inputTime1').value;
+        var f1 = document.getElementById('inputFrom1').value.trim();
+        var n1 = document.getElementById('inputNote1').value.trim();
+        if (t1 && f1) {
+            departures.push({ time: t1, from: f1, note: n1 });
+        }
+
+        var t2 = document.getElementById('inputTime2').value;
+        var f2 = document.getElementById('inputFrom2').value.trim();
+        var n2 = document.getElementById('inputNote2').value.trim();
+        if (t2 && f2) {
+            departures.push({ time: t2, from: f2, note: n2 });
+        }
+
+        var newItem = { line: line, bus: bus, driver: driverStr, departures: departures };
+
+        if (index === -1) {
+            busData.push(newItem);
+        } else {
+            busData[index] = newItem;
+        }
+
+        closeModal();
+        renderTable();
+        renderStatusTables();
+        updateStats();
+    }
+
+    function editBus(index) {
+        var item = busData[index];
+        document.getElementById('modalTitle').innerText = "تعديل بيانات الحافلة";
+        document.getElementById('editIndex').value = index;
+        document.getElementById('inputLineSelect').value = item.line;
+        document.getElementById('inputBus').value = item.bus;
+
+        var drivers = item.driver.split('/');
+        document.getElementById('inputDriver1').value = drivers[0] ? drivers[0].trim() : "";
+        document.getElementById('inputDriver2').value = drivers[1] ? drivers[1].trim() : "";
+
+        if (item.departures[0]) {
+            document.getElementById('inputTime1').value = item.departures[0].time;
+            document.getElementById('inputFrom1').value = item.departures[0].from;
+            document.getElementById('inputNote1').value = item.departures[0].note || "";
+        } else {
+            document.getElementById('inputTime1').value = "";
+            document.getElementById('inputFrom1').value = "";
+            document.getElementById('inputNote1').value = "";
+        }
+
+        if (item.departures[1]) {
+            document.getElementById('inputTime2').value = item.departures[1].time;
+            document.getElementById('inputFrom2').value = item.departures[1].from;
+            document.getElementById('inputNote2').value = item.departures[1].note || "";
+        } else {
+            document.getElementById('inputTime2').value = "";
+            document.getElementById('inputFrom2').value = "";
+            document.getElementById('inputNote2').value = "";
+        }
+
+        document.getElementById('busModal').style.display = 'flex';
+    }
+
+    function deleteBus(index) {
+        if (confirm("هل أنت متأكد من حذف هذه الحافلة من الجدول؟")) {
+            busData.splice(index, 1);
+            renderTable();
+            renderStatusTables();
+            updateStats();
         }
     }
 
     function handleSaveLine(e) {
         e.preventDefault();
-        var lineName = document.getElementById('newLineName').value.trim();
-        var lineInterval = document.getElementById('newLineInterval').value.trim();
-        var lineDuration = document.getElementById('newLineDuration').value.trim();
-        if (lineName) {
-            lineDefaults[lineName] = { interval: lineInterval, duration: lineDuration };
-            populateDropdowns();
-            renderTable(busData);
+        var name = document.getElementById('newLineName').value.trim();
+        var interval = document.getElementById('newLineInterval').value.trim();
+        var duration = document.getElementById('newLineDuration').value.trim();
+
+        if (name && !lineDefaults[name]) {
+            lineDefaults[name] = { interval: interval, duration: duration };
+            initDropdowns();
             closeLineModal();
+            renderTable();
+            updateStats();
         }
-    }
-
-    function editBus(index) {
-        var busObj = busData[index];
-        document.getElementById('editIndex').value = index;
-        document.getElementById('modalTitle').innerText = "تعديل حافلة " + busObj.bus;
-        document.getElementById('inputLineSelect').value = busObj.line;
-        document.getElementById('inputBus').value = busObj.bus;
-
-        var driversParts = busObj.driver.split('/').map(function(d){ return d.trim(); });
-        document.getElementById('inputDriver1').value = driversParts[0] || '';
-        document.getElementById('inputDriver2').value = driversParts[1] || '';
-
-        if (busObj.departures && busObj.departures[0]) {
-            document.getElementById('inputTime1').value = busObj.departures[0].time || '';
-            document.getElementById('inputFrom1').value = busObj.departures[0].from || '';
-            document.getElementById('inputNote1').value = busObj.departures[0].note || '';
-        }
-        if (busObj.departures && busObj.departures[1]) {
-            document.getElementById('inputTime2').value = busObj.departures[1].time || '';
-            document.getElementById('inputFrom2').value = busObj.departures[1].from || '';
-            document.getElementById('inputNote2').value = busObj.departures[1].note || '';
-        }
-        document.getElementById('busModal').style.display = 'flex';
-    }
-
-    function deleteBus(index) {
-        if (confirm("هل أنت متأكد من حذف هذه الحافلة؟")) {
-            busData.splice(index, 1);
-            renderTable(busData);
-        }
-    }
-
-    function handleSaveBus(e) {
-        e.preventDefault();
-        var editIndex = parseInt(document.getElementById('editIndex').value);
-        var lineVal = document.getElementById('inputLineSelect').value;
-        var busNum = document.getElementById('inputBus').value.trim();
-        var d1 = document.getElementById('inputDriver1').value.trim();
-        var d2 = document.getElementById('inputDriver2').value.trim();
-
-        if (!busNum) { alert("يرجى اختيار أو كتابة رقم الحافلة!"); return; }
-        if (!d1) { alert("يرجى اختيار أو كتابة اسم السائق الأول!"); return; }
-        if (d2 && d1 === d2) { alert("لا يمكن اختيار نفس السائق مرتين!"); return; }
-
-        var combinedDrivers = d2 ? (d1 + " / " + d2) : d1;
-        var departures = [];
-        var time1 = document.getElementById('inputTime1').value;
-        var from1 = document.getElementById('inputFrom1').value;
-        var note1 = document.getElementById('inputNote1').value.trim();
-        if (time1 && from1) departures.push({time: time1, from: from1, note: note1});
-
-        var time2 = document.getElementById('inputTime2').value;
-        var from2 = document.getElementById('inputFrom2').value;
-        var note2 = document.getElementById('inputNote2').value.trim();
-        if (time2 && from2) departures.push({time: time2, from: from2, note: note2});
-
-        var newBusObj = { line: lineVal, bus: busNum, driver: combinedDrivers, departures: departures };
-
-        if (editIndex >= 0) busData[editIndex] = newBusObj;
-        else busData.unshift(newBusObj);
-
-        renderTable(busData);
-        closeModal();
     }
 
     function exportAsImage() {
-        var exportSheet = document.getElementById('exportSheet');
-        var btn = document.getElementById('exportBtn');
-        var origText = btn.innerText;
-        btn.innerText = "⏳ جاري التوليد...";
-        btn.disabled = true;
-        exportSheet.classList.add('exporting');
-
-        html2canvas(exportSheet, { scale: 4, useCORS: true, backgroundColor: "#ffffff" }).then(function(canvas) {
-            exportSheet.classList.remove('exporting');
-            btn.innerText = origText;
-            btn.disabled = false;
+        var sheet = document.getElementById('exportSheet');
+        sheet.classList.add('exporting');
+        
+        html2canvas(sheet, { scale: 2, useCORS: true }).then(function(canvas) {
+            sheet.classList.remove('exporting');
             var link = document.createElement('a');
-            link.download = 'برنامج_حافلات_تارودانت_HD.png';
-            link.href = canvas.toDataURL('image/png', 1.0);
+            link.download = 'برنامج_حافلات_تارودانت.png';
+            link.href = canvas.toDataURL('image/png');
             link.click();
+        }).catch(function(err) {
+            sheet.classList.remove('exporting');
+            alert("حدث خطأ أثناء تصدير الصورة.");
         });
     }
 
     function exportRestAsImage() {
-        var exportRestSheet = document.getElementById('exportRestSheet');
-        var btn = document.getElementById('exportRestBtn');
-        var origText = btn.innerText;
+        var restSheet = document.getElementById('exportRestSheet');
+        restSheet.style.display = 'block';
 
-        if (btn.disabled) return;
-        btn.innerText = "⏳ جاري التوليد...";
-        btn.disabled = true;
-
-        try {
-            renderDriversStatusTable();
-            exportRestSheet.style.display = 'block';
-
-            setTimeout(function() {
-                if (typeof html2canvas === 'undefined') {
-                    alert("مكتبة التصوير غير محملة بشكل صحيح!");
-                    exportRestSheet.style.display = 'none';
-                    btn.innerText = origText;
-                    btn.disabled = false;
-                    return;
-                }
-
-                html2canvas(exportRestSheet, { 
-                    scale: 3, 
-                    useCORS: true, 
-                    backgroundColor: "#ffffff",
-                    logging: false 
-                }).then(function(canvas) {
-                    exportRestSheet.style.display = 'none';
-                    btn.innerText = origText;
-                    btn.disabled = false;
-                    
-                    var link = document.createElement('a');
-                    link.download = 'برنامج_راحة_السائقين_HD.png';
-                    link.href = canvas.toDataURL('image/png', 1.0);
-                    link.click();
-                }).catch(function(err) {
-                    console.error("خطأ html2canvas:", err);
-                    exportRestSheet.style.display, exportRestSheet.style.display = 'none';
-                    btn.innerText = origText;
-                    btn.disabled = false;
-                });
-            }, 200);
-
-        } catch (e) {
-            console.error("خطأ عام:", e);
-            exportRestSheet.style.display = 'none';
-            btn.innerText = origText;
-            btn.disabled = false;
-        }
+        html2canvas(restSheet, { scale: 2, useCORS: true }).then(function(canvas) {
+            restSheet.style.display = 'none';
+            var link = document.createElement('a');
+            link.download = 'برنامج_راحة_السائقين.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }).catch(function(err) {
+            restSheet.style.display = 'none';
+            alert("حدث خطأ أثناء تصدير صورة الراحة.");
+        });
     }
-
-    window.onload = function() {
-        var today = new Date().toISOString().split('T')[0];
-        document.getElementById('programDate').value = today;
-        populateDropdowns();
-        updateHeaderTitle();
-        renderTable(busData);
-    };
 </script>
 
 </body>
