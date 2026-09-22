@@ -561,7 +561,7 @@
 
     <div class="status-section">
         <h3>📋 حالات السائقين (الراحة، الغياب، المرض، التراخيص، العطل، الإصلاح، والإدارة)</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">السائقون الغير مرتبطين بحافلة في جدول العمل يتم وضعهم تلقائياً في خانة "راحة"، ويمكنك تغيير حالتهم مباشرة.</p>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">تم تسبيق السائقين الغير موجودين في العمل لتسهيل المراجعة والتعديل.</p>
         <table>
             <thead>
                 <tr>
@@ -637,20 +637,18 @@
                 <select id="inputLineSelect" style="width: 100%;" required></select>
             </div>
             <div class="form-group">
-                <label>رقم الحافلة</label>
-                <select id="inputBus" style="width: 100%;" required>
-                    <option value="">-- اختر رقم الحافلة --</option>
-                </select>
+                <label>رقم الحافلة (اختر أو اكتب رقم الحافلة)</label>
+                <input type="text" id="inputBus" list="busesListOptions" style="width: 100%; flex:unset;" placeholder="ابحث أو اختر رقم الحافلة..." required>
+                <datalist id="busesListOptions"></datalist>
             </div>
             <div class="form-group">
-                <label>السائق الأول (الرئيسي)</label>
-                <select id="inputDriver1" style="width: 100%;" required></select>
+                <label>السائق الأول (الرئيسي - اختر أو اكتب اسم السائق)</label>
+                <input type="text" id="inputDriver1" list="driversListOptions" style="width: 100%; flex:unset;" placeholder="ابحث أو اختر السائق الأول..." required>
             </div>
             <div class="form-group">
-                <label>السائق الثاني (اختياري)</label>
-                <select id="inputDriver2" style="width: 100%;">
-                    <option value="">-- بدون سائق ثانٍ --</option>
-                </select>
+                <label>السائق الثاني (اختياري - اختر أو اكتب اسم السائق)</label>
+                <input type="text" id="inputDriver2" list="driversListOptions" style="width: 100%; flex:unset;" placeholder="ابحث أو اختر السائق الثاني...">
+                <datalist id="driversListOptions"></datalist>
             </div>
             <div class="form-group">
                 <label>الانطلاق الأول</label>
@@ -682,15 +680,15 @@
         <form id="lineForm" onsubmit="handleSaveLine(event)">
             <div class="form-group">
                 <label>اسم الخط الجديد</label>
-                <input type="text" id="newLineName" style="width: 100%;" required placeholder="مثال: 08 سيدي موسى">
+                <input type="text" id="newLineName" style="width: 100%; flex:unset;" required placeholder="مثال: 08 سيدي موسى">
             </div>
             <div class="form-group">
                 <label>التردد</label>
-                <input type="text" id="newLineInterval" style="width: 100%;" required placeholder="مثال: 20 دقيقة">
+                <input type="text" id="newLineInterval" style="width: 100%; flex:unset;" required placeholder="مثال: 20 دقيقة">
             </div>
             <div class="form-group">
                 <label>المدة الزمنية</label>
-                <input type="text" id="newLineDuration" style="width: 100%;" required placeholder="مثال: 50 دقيقة">
+                <input type="text" id="newLineDuration" style="width: 100%; flex:unset;" required placeholder="مثال: 50 دقيقة">
             </div>
             <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px;">
                 <button type="button" class="btn" style="background:#cbd5e1; color:#334155;" onclick="closeLineModal()">إلغاء</button>
@@ -790,21 +788,16 @@
     function populateDropdowns() {
         var lineFilter = document.getElementById('lineFilter');
         var inputLineSelect = document.getElementById('inputLineSelect');
-        var busSelect = document.getElementById('inputBus');
-        var driver1Select = document.getElementById('inputDriver1');
-        var driver2Select = document.getElementById('inputDriver2');
+        var busesListOptions = document.getElementById('busesListOptions');
+        var driversListOptions = document.getElementById('driversListOptions');
         
         var currentFilterVal = lineFilter.value;
         var currentSelectVal = inputLineSelect.value;
-        var currentBusVal = busSelect.value;
-        var currentD1 = driver1Select.value;
-        var currentD2 = driver2Select.value;
 
         lineFilter.innerHTML = '<option value="">جميع الخطوط</option>';
         inputLineSelect.innerHTML = '';
-        busSelect.innerHTML = '<option value="">-- اختر رقم الحافلة --</option>';
-        driver1Select.innerHTML = '<option value="">-- اختر السائق الأول --</option>';
-        driver2Select.innerHTML = '<option value="">-- بدون سائق ثانٍ --</option>';
+        busesListOptions.innerHTML = '';
+        driversListOptions.innerHTML = '';
 
         Object.keys(lineDefaults).sort(function(a, b) {
             return a.localeCompare(b, 'ar', { numeric: true });
@@ -820,25 +813,18 @@
 
         [...busesList].sort(function(a, b) { return parseInt(a) - parseInt(b); }).forEach(function(bName) {
             var optB = document.createElement('option');
-            optB.value = bName; optB.innerText = bName;
-            busSelect.appendChild(optB);
+            optB.value = bName;
+            busesListOptions.appendChild(optB);
         });
 
         [...driversList].sort(function(a, b) { return a.localeCompare(b, 'ar'); }).forEach(function(dName) {
-            var optD1 = document.createElement('option');
-            optD1.value = dName; optD1.innerText = dName;
-            driver1Select.appendChild(optD1);
-
-            var optD2 = document.createElement('option');
-            optD2.value = dName; optD2.innerText = dName;
-            driver2Select.appendChild(optD2);
+            var optD = document.createElement('option');
+            optD.value = dName;
+            driversListOptions.appendChild(optD);
         });
 
         lineFilter.value = currentFilterVal;
         inputLineSelect.value = currentSelectVal;
-        busSelect.value = currentBusVal;
-        driver1Select.value = currentD1;
-        driver2Select.value = currentD2;
     }
 
     function updateHeaderTitle() {
@@ -952,6 +938,16 @@
         var workingDrivers = getActiveDriversSet();
         var sortedDrivers = [...driversList].sort(function(a, b) { return a.localeCompare(b, 'ar'); });
 
+        // ترتيب السائقين بحيث يتم تسبيق غير الموجودين في العمل (الذين ليسوا في workingDrivers)
+        sortedDrivers.sort(function(a, b) {
+            var aWorking = workingDrivers.has(a);
+            var bWorking = workingDrivers.has(b);
+            if (aWorking === bWorking) {
+                return a.localeCompare(b, 'ar');
+            }
+            return aWorking ? 1 : -1; // غير العاملين أولاً (-1) والعاملين آخراً (1)
+        });
+
         var categories = {
             "راحة": [],
             "عطلة سنوية": [],
@@ -1029,7 +1025,19 @@
         busStatusTbody.innerHTML = '';
 
         var workingBuses = getActiveBusesSet();
-        [...busesList].sort(function(a, b) { return parseInt(a) - parseInt(b); }).forEach(function(busNum) {
+        var sortedBuses = [...busesList].sort(function(a, b) { return parseInt(a) - parseInt(b); });
+
+        // تسبيق الحافلات غير العاملة (الاحتياط/المتوقفة) في جدول حالات الحافلات أيضاً لتسهيل الإدارة
+        sortedBuses.sort(function(a, b) {
+            var aWorking = workingBuses.has(a);
+            var bWorking = workingBuses.has(b);
+            if (aWorking === bWorking) {
+                return parseInt(a) - parseInt(b);
+            }
+            return aWorking ? 1 : -1;
+        });
+
+        sortedBuses.forEach(function(busNum) {
             var tr = document.createElement('tr');
             var statusBadgeHTML = "";
 
@@ -1214,11 +1222,12 @@
         e.preventDefault();
         var editIndex = parseInt(document.getElementById('editIndex').value);
         var lineVal = document.getElementById('inputLineSelect').value;
-        var busNum = document.getElementById('inputBus').value;
-        var d1 = document.getElementById('inputDriver1').value;
-        var d2 = document.getElementById('inputDriver2').value;
+        var busNum = document.getElementById('inputBus').value.trim();
+        var d1 = document.getElementById('inputDriver1').value.trim();
+        var d2 = document.getElementById('inputDriver2').value.trim();
 
-        if (!busNum) { alert("يرجى اختيار رقم الحافلة!"); return; }
+        if (!busNum) { alert("يرجى اختيار أو كتابة رقم الحافلة!"); return; }
+        if (!d1) { alert("يرجى اختيار أو كتابة اسم السائق الأول!"); return; }
         if (d2 && d1 === d2) { alert("لا يمكن اختيار نفس السائق مرتين!"); return; }
 
         var combinedDrivers = d2 ? (d1 + " / " + d2) : d1;
@@ -1309,7 +1318,7 @@
             console.error("خطأ عام:", e);
             exportRestSheet.style.display = 'none';
             btn.innerText = origText;
-            btn.disabled = false;
+            btn.disabled.false;
         }
     }
 
