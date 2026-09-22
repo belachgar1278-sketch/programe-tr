@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>برنامج حافلات تارودانت</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --primary-light: #eef2ff;
+            --secondary: #0f172a;
+            --accent: #d97706;
+            --bg-body: #f8fafc;
+            --card-bg: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border-color: #cbd5e1;
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.07);
+            --radius: 12px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', sans-serif;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        body {
+            background-color: var(--bg-body);
+            color: var(--text-main);
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%);
+            color: #ffffff;
+            padding: 18px 24px;
+            border-radius: var(--radius);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-md);
+            margin-bottom: 16px;
+        }
+
+        .header-title h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+        }
+
+        .header-title p {
+            font-size: 0.85rem;
+            color: #c7d2fe;
+            margin-top: 2px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .admin-date-box {
+            background: var(--card-bg);
+            padding: 12px 18px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .admin-date-box label {
+            font-weight: 700;
+            color: var(--secondary);
+            font-size: 0.95rem;
+        }
+
+        .admin-date-box input[type="date"] {
+            padding: 6px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            outline: none;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .btn {
+            border: none;
+            padding: 10px 18px;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.95rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-primary:hover { background: #4338ca; }
+        
+        .btn-success { background: #059669; color: white; }
+        .btn-success:hover { background: #047857; }
+
+        .btn-warning { background: #d97706; color: white; }
+        .btn-warning:hover { background: #b45309; }
+
+        .btn-edit { background: #e0e7ff; color: #3730a3; padding: 4px 8px; font-size: 0.8rem; }
+        .btn-edit:hover { background: #c7d2fe; }
+
+        .btn-delete { background: #fee2e2; color: #991b1b; padding: 4px 8px; font-size: 0.8rem; }
+        .btn-delete:hover { background: #fecaca; }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .stat-box {
+            background: var(--card-bg);
+            padding: 14px 18px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .stat-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 8px;
+            background: var(--primary-light);
+            color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.3rem;
+        }
+
+        .stat-data h4 { font-size: 0.8rem; color: var(--text-muted); font-weight: 500; }
+        .stat-data span { font-size: 1.4rem; font-weight: 800; color: var(--secondary); }
+
+        .controls-card {
+            background: var(--card-bg);
+            padding: 12px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            margin-bottom: 16px;
+            display: flex;
+            gap: 10px;
+            border: 1px solid var(--border-color);
+        }
+
+        input, select {
+            padding: 9px 14px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            outline: none;
+            font-size: 0.9rem;
+            background: #f8fafc;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--primary);
+            background: #fff;
+        }
+
+        input { flex: 2; }
+        select { flex: 1; }
+
+        #exportSheet {
+            background: #ffffff;
+            padding: 24px;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-sm);
+            border: 1px solid var(--border-color);
+            width: 100%;
+        }
+
+        .print-header {
+            text-align: center;
+            border-bottom: 3px solid var(--primary);
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+        }
+
+        .print-header h2 { 
+            color: var(--secondary); 
+            font-size: 1.8rem; 
+            font-weight: 800; 
+            line-height: 1.2;
+            margin: 0;
+            padding: 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: right;
+        }
+
+        th {
+            background: #f1f5f9;
+            color: var(--secondary);
+            font-weight: 800;
+            font-size: 1rem;
+            padding: 10px 12px;
+            border: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 8px 12px;
+            border: 1.5px solid var(--border-color);
+            font-size: 0.95rem;
+            vertical-align: middle;
+            color: #0f172a;
+            line-height: 1.3;
+        }
+
+        tr.line-group-header td {
+            background: #e2e8f0;
+            color: #1e1b4b;
+            font-weight: 800;
+            font-size: 1.05rem;
+            padding: 8px 12px;
+        }
+
+        .line-info-badge {
+            display: inline-block;
+            background: #ffffff;
+            color: #312e81;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-right: 6px;
+            border: 1px solid #cbd5e1;
+        }
+
+        .bus-number {
+            display: inline-block;
+            background: #312e81;
+            color: #ffffff;
+            padding: 4px 10px;
+            border-radius: 5px;
+            font-weight: 800;
+            font-size: 1rem;
+        }
+
+        .driver-tag-primary {
+            display: inline-block;
+            background: #f1f5f9;
+            color: #0f172a;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin: 2px;
+            font-size: 0.92rem;
+            border: 1px solid #cbd5e1;
+            font-weight: 700;
+        }
+
+        .driver-tag-secondary {
+            display: inline-block;
+            background: #fef2f2;
+            color: #dc2626;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin: 2px;
+            font-size: 0.92rem;
+            border: 1px solid #fca5a5;
+            font-weight: 800;
+        }
+
+        .departure-text {
+            display: inline-block;
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.92rem;
+            margin: 2px;
+            font-weight: 800;
+        }
+
+        .note-tag {
+            display: inline-block;
+            background: #fffbeb;
+            color: #b45309;
+            border: 1px solid #fde68a;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            font-weight: 700;
+            margin-right: 4px;
+        }
+
+        tfoot td {
+            background: #1e1b4b;
+            color: #ffffff;
+            font-weight: 800;
+            font-size: 1.05rem;
+            padding: 12px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-content {
+            background: white;
+            padding: 24px;
+            border-radius: var(--radius);
+            width: 90%;
+            max-width: 520px;
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+        }
+
+        .modal-content h3 { margin-bottom: 14px; color: var(--secondary); }
+
+        .form-group { margin-bottom: 12px; }
+        .form-group label { display: block; font-size: 0.8rem; font-weight: 700; color: var(--text-muted); margin-bottom: 4px; }
+        .form-row { display: flex; gap: 6px; }
+
+        .exporting .action-column { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <div class="header-title">
+            <h1>🚍 برنامج حافلات تارودانت</h1>
+            <p>منظومة إدارة وتوليد جدول الرحلات الموحد</p>
+        </div>
+        <div class="header-actions">
+            <button class="btn btn-success" id="exportBtn" onclick="exportAsImage()">📸 استخراج صورة عالية الدقة (HD)</button>
+            <button class="btn btn-warning" onclick="openNewLineModal()">+ إضافة خط جديد</button>
+            <button class="btn btn-primary" onclick="openModal()">+ إضافة حافلة</button>
+        </div>
+    </header>
+
+    <div class="admin-date-box">
+        <label for="programDate">تاريخ البرنامج (تحديد الأدمن):</label>
+        <input type="date" id="programDate" onchange="updateHeaderTitle()">
+    </div>
+
+    <div class="stats-container">
+        <div class="stat-box">
+            <div class="stat-icon">🚌</div>
+            <div class="stat-data">
+                <h4>إجمالي الحافلات</h4>
+                <span id="totalBussesCount">0</span>
+            </div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-icon">🚩</div>
+            <div class="stat-data">
+                <h4>عدد الخطوط</h4>
+                <span id="totalLinesCount">0</span>
+            </div>
+        </div>
+        <div class="stat-box">
+            <div class="stat-icon">👥</div>
+            <div class="stat-data">
+                <h4>إجمالي السائقين</h4>
+                <span id="totalDriversCount">0</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="controls-card">
+        <input type="text" id="searchInput" placeholder="بحث عن سائق، رقم حافلة، أو نقطة انطلاق..." oninput="filterData()">
+        <select id="lineFilter" onchange="filterData()">
+            <option value="">جميع الخطوط</option>
+        </select>
+    </div>
+
+    <div id="exportSheet">
+        <div class="print-header">
+            <h2 id="mainHeaderTitle">برنامج حافلات تارودانت</h2>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th style="width: 14%;">رقم الحافلة</th>
+                    <th style="width: 20%;">السائق (السائقون)</th>
+                    <th style="width: 56%;">مواعيد وأماكن الانطلاق والملاحظات</th>
+                    <th style="width: 10%; text-align: center;" class="action-column">خيارات</th>
+                </tr>
+            </thead>
+            <tbody id="busTableBody">
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td colspan="4" style="text-align: center;">
+                        إجمالي عدد الحافلات: <span id="footerTotalBusses">0</span>
+                    </td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<!-- مودال إضافة / تعديل حافلة -->
+<div class="modal" id="busModal">
+    <div class="modal-content">
+        <h3 id="modalTitle">إضافة / تعديل حافلة</h3>
+        <form id="busForm" onsubmit="handleSaveBus(event)">
+            <input type="hidden" id="editIndex" value="-1">
+            <div class="form-group">
+                <label>اختر الخط</label>
+                <select id="inputLineSelect" style="width: 100%;" required>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>رقم الحافلة</label>
+                <input type="text" id="inputBus" style="width: 100%;" required placeholder="451">
+            </div>
+            <div class="form-group">
+                <label>السائقين (فصل بـ / - السائق الثاني سيظهر بالأحمر)</label>
+                <input type="text" id="inputDriver" style="width: 100%;" required placeholder="احموش عبد العزيز / العسري محمد">
+            </div>
+            
+            <div class="form-group">
+                <label>الانطلاق الأول (الوقت / الجهة / ملاحظة)</label>
+                <div class="form-row">
+                    <input type="time" id="inputTime1" required style="flex:1.2;">
+                    <input type="text" id="inputFrom1" placeholder="أيت إعزة" required style="flex:2;">
+                    <input type="text" id="inputNote1" placeholder="ملاحظة (اختياري)" style="flex:2;">
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>الانطلاق الثاني (اختياري)</label>
+                <div class="form-row">
+                    <input type="time" id="inputTime2" style="flex:1.2;">
+                    <input type="text" id="inputFrom2" placeholder="تارودانت" style="flex:2;">
+                    <input type="text" id="inputNote2" placeholder="ملاحظة (اختياري)" style="flex:2;">
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px;">
+                <button type="button" class="btn" style="background:#cbd5e1; color:#334155;" onclick="closeModal()">إلغاء</button>
+                <button type="submit" class="btn btn-primary">حفظ</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- مودال إضافة خط جديد -->
+<div class="modal" id="lineModal">
+    <div class="modal-content">
+        <h3>إضافة خط جديد</h3>
+        <form id="lineForm" onsubmit="handleSaveLine(event)">
+            <div class="form-group">
+                <label>اسم الخط الجديد</label>
+                <input type="text" id="newLineName" style="width: 100%;" required placeholder="مثال: 08 سيدي موسى">
+            </div>
+            <div class="form-group">
+                <label>التردد</label>
+                <input type="text" id="newLineInterval" style="width: 100%;" required placeholder="مثال: 20 دقيقة">
+            </div>
+            <div class="form-group">
+                <label>المدة الزمنية</label>
+                <input type="text" id="newLineDuration" style="width: 100%;" required placeholder="مثال: 50 دقيقة">
+            </div>
+
+            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px;">
+                <button type="button" class="btn" style="background:#cbd5e1; color:#334155;" onclick="closeLineModal()">إلغاء</button>
+                <button type="submit" class="btn btn-warning">إضافة الخط</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    var lineDefaults = {
+        "01 برحيل": { interval: "15 دقيقة", duration: "90 دقيقة" },
+        "1/2 اولاد عرفة": { interval: "30 دقيقة", duration: "45 دقيقة" },
+        "ايت عزة / تارودانت": { interval: "30 دقيقة", duration: "30 دقيقة" },
+        "02 موسى الحمري": { interval: "60 دقيقة", duration: "60 دقيقة" },
+        "3/1 سبت الكردان": { interval: "18 دقيقة", duration: "40/50 دقيقة" },
+        "3/2 اولاد تايمة": { interval: "20 دقيقة", duration: "75 دقيقة" },
+        "04 ارزان": { interval: "20 دقيقة", duration: "75 دقيقة" },
+        "5/1 برحيل اولوز": { interval: "40 دقيقة", duration: "80 دقيقة" },
+        "5/2 تالوين": { interval: "30 دقيقة", duration: "60 دقيقة" },
+        "7 تازمورت": { interval: "40 دقيقة", duration: "60 دقيقة" },
+        "12 اهل الرمل": { interval: "45 دقيقة", duration: "60 دقيقة" }
+    };
+
+    var busData = [
+        { line: "01 برحيل", bus: "451", driver: "احموش عبد العزيز", departures: [{time: "06:30", from: "أيت إعزة", note: ""}, {time: "07:00", from: "تارودانت", note: ""}] },
+        { line: "01 برحيل", bus: "479", driver: "زبيلا عبد المجيد", departures: [{time: "06:45", from: "أيت إعزة", note: ""}, {time: "07:16", from: "تارودانت", note: ""}] },
+        { line: "01 برحيل", bus: "465", driver: "اولحاج عبد الله", departures: [{time: "07:00", from: "أيت إعزة", note: ""}, {time: "07:32", from: "تارودانت", note: ""}] },
+        { line: "01 برحيل", bus: "476", driver: "هشام ازم", departures: [{time: "07:00", from: "المرآب", note: ""}, {time: "07:48", from: "تارودانت", note: ""}] },
+        { line: "01 برحيل", bus: "472", driver: "بوهرير عبد الرحيم", departures: [{time: "06:50", from: "اكلي", note: ""}, {time: "08:04", from: "تارودانت", note: ""}] },
+        { line: "01 برحيل", bus: "458", driver: "الغرابي محمد", departures: [{time: "06:44", from: "برحيل", note: ""}] },
+        { line: "01 برحيل", bus: "477", driver: "حجاج عمر", departures: [{time: "07:00", from: "برحيل", note: ""}] },
+        { line: "01 برحيل", bus: "473", driver: "حفظي علي", departures: [{time: "07:16", from: "برحيل", note: ""}] },
+        { line: "01 برحيل", bus: "448", driver: "ايت عدي رشيد", departures: [{time: "06:20", from: "المرآب", note: ""}, {time: "07:32", from: "برحيل", note: ""}] },
+        { line: "01 برحيل", bus: "474", driver: "المسعودي محمد", departures: [{time: "06:30", from: "المرآب", note: ""}, {time: "07:48", from: "برحيل", note: ""}] },
+        { line: "01 برحيل", bus: "454", driver: "ايت ناصر عبد العزيز", departures: [{time: "06:28", from: "تارودانت", note: ""}, {time: "08:04", from: "برحيل", note: ""}] },
+        
+        { line: "1/2 اولاد عرفة", bus: "431", driver: "قابا محمد / العسري محمد", departures: [{time: "06:45", from: "تارودانت", note: ""}] },
+        { line: "ايت عزة / تارودانت", bus: "437", driver: "اوقديم مصطفى", departures: [{time: "06:45", from: "أيت إعزة", note: ""}] },
+        
+        { line: "02 موسى الحمري", bus: "407", driver: "حسن قاضي", departures: [{time: "07:00", from: "تارودانت", note: ""}] },
+        { line: "02 موسى الحمري", bus: "411", driver: "صابر هشام", departures: [{time: "07:00", from: "سيدي موسى", note: ""}] },
+        
+        { line: "3/1 سبت الكردان", bus: "428", driver: "بنسلام مصطفى", departures: [{time: "06:30", from: "السبت", note: ""}] },
+        { line: "3/1 سبت الكردان", bus: "426", driver: "ازكري محمد", departures: [{time: "06:30", from: "تارودانت", note: ""}] },
+        { line: "3/1 سبت الكردان", bus: "424", driver: "ايت ايعيش الحسين", departures: [{time: "06:45", from: "تارودانت", note: ""}] },
+        { line: "3/1 سبت الكردان", bus: "406", driver: "عفو مصطفى", departures: [{time: "07:00", from: "تارودانت", note: ""}] },
+        { line: "3/1 سبت الكردان", bus: "404", driver: "حقي براهيم / ناصر عبد الله", departures: [{time: "07:18", from: "تارودانت", note: ""}] },
+        { line: "3/1 سبت الكردان", bus: "402", driver: "عوضت 459 بسبب غياب السائق", departures: [{time: "08:15", from: "تارودانت", note: ""}] },
+
+        { line: "3/2 اولاد تايمة", bus: "453", driver: "بادي محمد", departures: [{time: "06:35", from: "تارودانت", note: ""}] },
+        { line: "3/2 اولاد تايمة", bus: "460", driver: "منير كبير", departures: [{time: "07:00", from: "الخنافيف", note: ""}] },
+        { line: "3/2 اولاد تايمة", bus: "463", driver: "كنزة اتويبا", departures: [{time: "07:25", from: "تارودانت", note: ""}] },
+        { line: "3/2 اولاد تايمة", bus: "408", driver: "الصديقي مولاي محمد", departures: [{time: "07:00", from: "تارودانت", note: ""}] },
+        { line: "3/2 اولاد تايمة", bus: "452", driver: "حسن حوري", departures: [{time: "07:25", from: "هوارة", note: ""}] },
+
+        { line: "04 ارزان", bus: "468", driver: "ايت قاسي عبد العالي", departures: [{time: "06:40", from: "تارودانت", note: ""}] },
+        { line: "04 ارزان", bus: "430", driver: "حسن قيبوشي / كمال الساخي", departures: [{time: "06:35", from: "أيت إعزة", note: ""}, {time: "07:02", from: "تارودانت", note: ""}] },
+        { line: "04 ارزان", bus: "433", driver: "الناجي كنتاوي", departures: [{time: "07:00", from: "أيت إعزة", note: ""}, {time: "07:24", from: "تارودانت", note: ""}] },
+        { line: "04 ارزان", bus: "401", driver: "صبار الحسين", departures: [{time: "06:46", from: "ارزان", note: ""}, {time: "07:46", from: "تارودانت", note: ""}] },
+        { line: "04 ارزان", bus: "409", driver: "ايوب اد العربي", departures: [{time: "07:05", from: "ارزان", note: ""}] },
+        { line: "04 ارزان", bus: "464", driver: "بوكنين نور الدين", departures: [{time: "07:05", from: "بونيت", note: ""}, {time: "08:20", from: "تارودانت", note: ""}] },
+        { line: "04 ارزان", bus: "459", driver: "احمد اوبلا", departures: [{time: "07:25", from: "بونيت", note: ""}] },
+
+        { line: "5/1 برحيل اولوز", bus: "436", driver: "البشير عبد الرحمان", departures: [{time: "07:20", from: "برحيل", note: ""}] },
+        { line: "5/1 برحيل اولوز", bus: "446", driver: "عليلو سمير", departures: [{time: "06:40", from: "برحيل", note: ""}] },
+        { line: "5/1 برحيل اولوز", bus: "423", driver: "هشام بلاحمو", departures: [{time: "07:20", from: "الخميس", note: ""}, {time: "08:00", from: "برحيل", note: ""}] },
+        { line: "5/1 برحيل اولوز", bus: "444", driver: "الناجي زكرياء / اوباسو عبد الصمد", departures: [{time: "07:20", from: "اولوز", note: ""}] },
+
+        { line: "5/2 تالوين", bus: "443", driver: "عملوك مصطفى / اسندال محمد", departures: [{time: "08:00", from: "تالوين", note: ""}] },
+        { line: "5/2 تالوين", bus: "441", driver: "حسيني عبد الله / عبد العزيز الدلوجي", departures: [{time: "08:00", from: "اولوز", note: ""}] },
+        { line: "5/2 تالوين", bus: "439", driver: "مبارك ايت علي / اقزداو مهدي", departures: [{time: "07:00", from: "برحيل", note: ""}, {time: "08:30", from: "اولوز", note: ""}] },
+
+        { line: "7 تازمورت", bus: "434", driver: "اسوان خاليد", departures: [{time: "07:00", from: "تارودانت", note: ""}] },
+        { line: "7 تازمورت", bus: "405", driver: "ابراشن لحسن", departures: [{time: "07:00", from: "تازمورت", note: ""}] },
+
+        { line: "12 اهل الرمل", bus: "438", driver: "عزيز الكادي / طالب رشيد", departures: [{time: "07:00", from: "هوارة", note: ""}] },
+        { line: "12 اهل الرمل", bus: "440", driver: "اعدار عبد الله / ايت حمو رشيد", departures: [{time: "07:30", from: "هوارة", note: ""}] }
+    ];
+
+    function populateLineDropdowns() {
+        var lineFilter = document.getElementById('lineFilter');
+        var inputLineSelect = document.getElementById('inputLineSelect');
+        
+        var currentFilterVal = lineFilter.value;
+        var currentSelectVal = inputLineSelect.value;
+
+        lineFilter.innerHTML = '<option value="">جميع الخطوط</option>';
+        inputLineSelect.innerHTML = '';
+
+        var keys = Object.keys(lineDefaults).sort(function(a, b) {
+            return a.localeCompare(b, 'ar', { numeric: true });
+        });
+
+        keys.forEach(function(lineKey) {
+            var opt1 = document.createElement('option');
+            opt1.value = lineKey;
+            opt1.innerText = lineKey;
+            lineFilter.appendChild(opt1);
+
+            var opt2 = document.createElement('option');
+            opt2.value = lineKey;
+            opt2.innerText = lineKey;
+            inputLineSelect.appendChild(opt2);
+        });
+
+        lineFilter.value = currentFilterVal;
+        inputLineSelect.value = currentSelectVal;
+    }
+
+    function updateHeaderTitle() {
+        var dateVal = document.getElementById('programDate').value;
+        var headerElem = document.getElementById('mainHeaderTitle');
+
+        if (dateVal) {
+            var dateObj = new Date(dateVal);
+            var days = ["الأحد", "الإثنين", "الثلاثاء", "الأربعاء", "الخميس", "الجمعة", "السبت"];
+            var dayName = days[dateObj.getDay()];
+
+            var d = String(dateObj.getDate()).padStart(2, '0');
+            var m = String(dateObj.getMonth() + 1).padStart(2, '0');
+            var y = dateObj.getFullYear();
+
+            headerElem.innerText = "برنامج حافلات تارودانت ليوم " + dayName + " " + d + "-" + m + "-" + y;
+        } else {
+            headerElem.innerText = "برنامج حافلات تارودانت";
+        }
+    }
+
+    function renderTable(data) {
+        var tbody = document.getElementById('busTableBody');
+        tbody.innerHTML = '';
+
+        var grouped = {};
+        for (var i = 0; i < data.length; i++) {
+            var item = data[i];
+            if (!grouped[item.line]) grouped[item.line] = [];
+            grouped[item.line].push({item: item, originalIndex: i});
+        }
+
+        var registeredLines = Object.keys(lineDefaults);
+        var linesInGrouped = Object.keys(grouped);
+
+        var lines = registeredLines.filter(function(l) { return linesInGrouped.includes(l); });
+        linesInGrouped.forEach(function(l) {
+            if (!lines.includes(l)) lines.push(l);
+        });
+
+        var totalDriversSet = new Set();
+
+        for (var j = 0; j < lines.length; j++) {
+            var lineName = lines[j];
+            var busEntries = grouped[lineName];
+            var lineInfo = lineDefaults[lineName] || { interval: "غير محدد", duration: "غير محدد" };
+
+            var headerTr = document.createElement('tr');
+            headerTr.className = 'line-group-header';
+            headerTr.innerHTML = '<td colspan="4">' +
+                'الخط: ' + lineName + ' (' + busEntries.length + ' حافلات) ' +
+                '<span class="line-info-badge">التردد: ' + lineInfo.interval + '</span>' +
+                '<span class="line-info-badge">المدة الزمنية: ' + lineInfo.duration + '</span>' +
+            '</td>';
+            tbody.appendChild(headerTr);
+
+            for (var k = 0; k < busEntries.length; k++) {
+                var busObj = busEntries[k].item;
+                var origIdx = busEntries[k].originalIndex;
+
+                var driversList = busObj.driver.split('/').map(function(d){ return d.trim(); });
+                driversList.forEach(function(d){ if(d) totalDriversSet.add(d); });
+                
+                var driversHTML = driversList.map(function(d, index){ 
+                    if (index === 0) {
+                        return '<span class="driver-tag-primary">' + d + '</span>';
+                    } else {
+                        return '<span class="driver-tag-secondary">' + d + '</span>';
+                    }
+                }).join(' ');
+
+                var departuresHTML = busObj.departures.map(function(dep){
+                    var noteHTML = dep.note ? '<span class="note-tag">📝 ' + dep.note + '</span>' : '';
+                    return '<span class="departure-text">🕒 ' + dep.time + ' ➔ ' + dep.from + '</span> ' + noteHTML;
+                }).join(' ');
+
+                var tr = document.createElement('tr');
+                tr.innerHTML = 
+                    '<td><span class="bus-number">' + busObj.bus + '</span></td>' +
+                    '<td>' + driversHTML + '</td>' +
+                    '<td>' + departuresHTML + '</td>' +
+                    '<td class="action-column" style="text-align:center;">' +
+                        '<button class="btn btn-edit" onclick="editBus(' + origIdx + ')">تعديل</button> ' +
+                        '<button class="btn btn-delete" onclick="deleteBus(' + origIdx + ')">حذف</button>' +
+                    '</td>';
+                tbody.appendChild(tr);
+            }
+        }
+
+        document.getElementById('totalBussesCount').innerText = data.length;
+        document.getElementById('totalLinesCount').innerText = lines.length;
+        document.getElementById('totalDriversCount').innerText = totalDriversSet.size;
+
+        document.getElementById('footerTotalBusses').innerText = data.length;
+    }
+
+    function filterData() {
+        var searchVal = document.getElementById('searchInput').value.toLowerCase();
+        var lineVal = document.getElementById('lineFilter').value;
+
+        var filtered = busData.filter(function(item) {
+            var matchesSearch = item.driver.toLowerCase().indexOf(searchVal) !== -1 || 
+                                item.bus.toLowerCase().indexOf(searchVal) !== -1 ||
+                                item.departures.some(function(d){ 
+                                    return d.from.toLowerCase().indexOf(searchVal) !== -1 || 
+                                           d.time.indexOf(searchVal) !== -1 ||
+                                           (d.note && d.note.toLowerCase().indexOf(searchVal) !== -1);
+                                });
+            var matchesLine = lineVal === "" || item.line === lineVal;
+            return matchesSearch && matchesLine;
+        });
+
+        renderTable(filtered);
+    }
+
+    function openModal() {
+        document.getElementById('editIndex').value = "-1";
+        document.getElementById('modalTitle').innerText = "إضافة حافلة جديدة";
+        document.getElementById('busForm').reset();
+        document.getElementById('busModal').style.display = 'flex';
+    }
+
+    function closeModal() {
+        document.getElementById('busModal').style.display = 'none';
+    }
+
+    function openNewLineModal() {
+        document.getElementById('lineForm').reset();
+        document.getElementById('lineModal').style.display = 'flex';
+    }
+
+    function closeLineModal() {
+        document.getElementById('lineModal').style.display = 'none';
+    }
+
+    function handleSaveLine(e) {
+        e.preventDefault();
+        var lineName = document.getElementById('newLineName').value.trim();
+        var lineInterval = document.getElementById('newLineInterval').value.trim();
+        var lineDuration = document.getElementById('newLineDuration').value.trim();
+
+        if (lineName) {
+            lineDefaults[lineName] = {
+                interval: lineInterval,
+                duration: lineDuration
+            };
+            populateLineDropdowns();
+            renderTable(busData);
+            closeLineModal();
+            alert("تمت إضافة الخط " + lineName + " بنجاح!");
+        }
+    }
+
+    function editBus(index) {
+        var busObj = busData[index];
+
+        document.getElementById('editIndex').value = index;
+        document.getElementById('modalTitle').innerText = "تعديل حافلة " + busObj.bus;
+        
+        document.getElementById('inputLineSelect').value = busObj.line;
+        document.getElementById('inputBus').value = busObj.bus;
+        document.getElementById('inputDriver').value = busObj.driver;
+
+        if (busObj.departures && busObj.departures[0]) {
+            document.getElementById('inputTime1').value = busObj.departures[0].time || '';
+            document.getElementById('inputFrom1').value = busObj.departures[0].from || '';
+            document.getElementById('inputNote1').value = busObj.departures[0].note || '';
+        } else {
+            document.getElementById('inputTime1').value = '';
+            document.getElementById('inputFrom1').value = '';
+            document.getElementById('inputNote1').value = '';
+        }
+
+        if (busObj.departures && busObj.departures[1]) {
+            document.getElementById('inputTime2').value = busObj.departures[1].time || '';
+            document.getElementById('inputFrom2').value = busObj.departures[1].from || '';
+            document.getElementById('inputNote2').value = busObj.departures[1].note || '';
+        } else {
+            document.getElementById('inputTime2').value = '';
+            document.getElementById('inputFrom2').value = '';
+            document.getElementById('inputNote2').value = '';
+        }
+
+        document.getElementById('busModal').style.display = 'flex';
+    }
+
+    function deleteBus(index) {
+        if (confirm("هل أنت تأكد من حذف هذه الحافلة؟")) {
+            busData.splice(index, 1);
+            renderTable(busData);
+        }
+    }
+
+    function handleSaveBus(e) {
+        e.preventDefault();
+        var editIndex = parseInt(document.getElementById('editIndex').value);
+        var lineVal = document.getElementById('inputLineSelect').value;
+
+        var departures = [];
+        var time1 = document.getElementById('inputTime1').value;
+        var from1 = document.getElementById('inputFrom1').value;
+        var note1 = document.getElementById('inputNote1').value.trim();
+        if (time1 && from1) departures.push({time: time1, from: from1, note: note1});
+
+        var time2 = document.getElementById('inputTime2').value;
+        var from2 = document.getElementById('inputFrom2').value;
+        var note2 = document.getElementById('inputNote2').value.trim();
+        if (time2 && from2) departures.push({time: time2, from: from2, note: note2});
+
+        var newBusObj = {
+            line: lineVal,
+            bus: document.getElementById('inputBus').value,
+            driver: document.getElementById('inputDriver').value,
+            departures: departures
+        };
+
+        if (editIndex >= 0) {
+            busData[editIndex] = newBusObj;
+        } else {
+            busData.unshift(newBusObj);
+        }
+
+        renderTable(busData);
+        closeModal();
+    }
+
+    function exportAsImage() {
+        var exportSheet = document.getElementById('exportSheet');
+        var btn = document.getElementById('exportBtn');
+        var origText = btn.innerText;
+
+        btn.innerText = "⏳ جاري توليد صورة عالية الدقة...";
+        btn.disabled = true;
+
+        exportSheet.classList.add('exporting');
+
+        html2canvas(exportSheet, {
+            scale: 4, 
+            useCORS: true,
+            allowTaint: true,
+            backgroundColor: "#ffffff",
+            logging: false
+        }).then(function(canvas) {
+            exportSheet.classList.remove('exporting');
+            btn.innerText = origText;
+            btn.disabled = false;
+
+            var link = document.createElement('a');
+            link.download = 'برنامج_حافلات_تارودانت_HD.png';
+            link.href = canvas.toDataURL('image/png', 1.0);
+            link.click();
+        }).catch(function(err) {
+            exportSheet.classList.remove('exporting');
+            btn.innerText = origText;
+            btn.disabled = false;
+            alert("حدث خطأ أثناء استخراج الصورة: " + err.message);
+        });
+    }
+
+    window.onload = function() {
+        var today = new Date().toISOString().split('T')[0];
+        document.getElementById('programDate').value = today;
+        populateLineDropdowns();
+        updateHeaderTitle();
+        renderTable(busData);
+    };
+</script>
+
+</body>
+</html>
