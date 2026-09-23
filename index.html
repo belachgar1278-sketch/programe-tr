@@ -650,6 +650,31 @@
         .history-table th { background:#eef2f7; }
         .history-empty { text-align:center; color:#64748b; padding:20px; }
         .rotation-info { background:#eef6ff; border:1px solid #bfdbfe; color:#1e3a8a; padding:10px 12px; border-radius:8px; margin-top:10px; line-height:1.7; }
+        /* تصميم صورة برنامج المراقبين - واضح وكبير للطباعة */
+        .monitor-export-sheet { display:none; background:#f8fafc; color:#172033; width:1500px; margin:20px auto; padding:34px 38px 40px; direction:rtl; font-family:Arial, Tahoma, sans-serif; }
+        .monitor-export-title { text-align:center; font-size:38px; line-height:1.35; font-weight:900; color:#123b63; margin:0 0 28px; padding:18px 22px; background:#eaf3fb; border:2px solid #b8d2e8; border-radius:14px; }
+        .monitor-export-section { margin-top:24px; }
+        .monitor-export-card { border:2px solid #c8d7e5; border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 4px 12px rgba(31,55,78,.08); }
+        .monitor-export-section-title { background:#1f5d8f; color:#fff; padding:15px 20px; margin:0; font-size:27px; line-height:1.35; font-weight:900; text-align:right; border-bottom:2px solid #17496f; }
+        .monitor-export-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+        .monitor-export-table th,.monitor-export-table td { border:1.5px solid #c9d6e2; padding:16px 18px; text-align:right; vertical-align:middle; line-height:1.45; }
+        .monitor-export-table th { background:#dcebf7; color:#123b63; font-size:23px; font-weight:900; }
+        .monitor-export-table td { font-size:22px; font-weight:600; min-height:58px; }
+        .monitor-export-table tbody tr:nth-child(even) { background:#f5f9fc; }
+        .monitor-export-table tbody tr:nth-child(odd) { background:#ffffff; }
+        .monitor-export-table tbody tr:hover { background:#edf6fc; }
+        .monitor-export-card.untitled-status-card { margin-top:18px; }
+        .monitor-export-table .time-cell { text-align:center; direction:rtl; font-weight:800; white-space:nowrap; font-size:21px; }
+        .monitor-export-sheet .monitor-export-card:last-child { border-color:#d5c79a; }
+        .monitor-export-sheet .monitor-export-card:last-child .monitor-export-table th { background:#f5edd2; color:#5f4b12; }
+        .monitor-export-sheet .monitor-export-card:last-child .monitor-export-table td { font-size:22px; }
+        .monitor-manager-table { width:100%; border-collapse:collapse; margin-top:10px; }
+        .monitor-manager-table th,.monitor-manager-table td { border:1px solid #dbe3ef; padding:7px; }
+        .monitor-manager-table input { width:100%; padding:7px; border:1px solid #cbd5e1; border-radius:6px; }
+        .monitor-section-card { border:1px solid #dbe3ef; border-radius:10px; padding:12px; margin-bottom:14px; background:#f8fafc; }
+        .monitor-section-head { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; }
+        .monitor-section-head h4 { margin:0; color:#1e1b4b; }
+
         @media print { #supabaseLoginOverlay { display:none !important; } }
 
     </style>
@@ -658,13 +683,13 @@
 <div class="modal" id="programHistoryModal">
     <div class="modal-content program-history-modal">
         <div class="modal-header">
-            <h3> سجل البرامج حسب اليوم</h3>
+            <h3>📅 سجل البرامج حسب اليوم</h3>
             <button class="close-modal" type="button" onclick="closeProgramHistory()">×</button>
         </div>
         <div class="modal-body">
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                <span>كل برنامج يومي يظهر هنا، ويمكن تحميله للعمل عليه.</span>
-                <button class="btn btn-success" type="button" onclick="saveCurrentProgramToHistory()"> حفظ اليوم الحالي</button>
+                <span>كل يوم محفوظ يظهر هنا، ويمكن تحميله للعمل عليه.</span>
+                <button class="btn btn-success" type="button" onclick="saveCurrentProgramToHistory()">💾 حفظ اليوم الحالي</button>
             </div>
             <div id="programHistoryList"></div>
         </div>
@@ -691,14 +716,16 @@
 <div class="container">
     <header>
         <div class="header-title">
-            <h1> برنامج حافلات تارودانت</h1>
-            <p> إدارة وتوليد جدول الرحلات </p>
+            <h1>🚍 برنامج حافلات تارودانت</h1>
+            <p>منظومة إدارة وتوليد جدول الرحلات الموحد</p>
         </div>
         <div class="header-actions">
-            <button class="btn btn-success" id="exportBtn" onclick="exportAsImage()"> استخراج برنامج الحافلات</button>
-            <button class="btn btn-warning" id="exportRestBtn" onclick="exportRestAsImage()"> استخراج برنامج الراحة</button>
-            <button class="btn btn-info" onclick="openDriversModal()"> السائقون</button>
-            <button class="btn btn-purple" onclick="openBusesModal()"> الحافلات</button>
+            <button class="btn btn-success" id="exportBtn" onclick="exportAsImage()">▣ استخراج صورة الحافلات</button>
+            <button class="btn btn-warning" id="exportRestBtn" onclick="exportRestAsImage()">▣ استخراج برنامج الراحة</button>
+            <button class="btn btn-info" id="monitorBtn" onclick="openMonitorsModal()">👁 إدارة المراقبين</button>
+            <button class="btn btn-success" id="exportMonitorBtn" onclick="exportMonitorAsImage()">▣ استخراج برنامج المراقبين</button>
+            <button class="btn btn-info" onclick="openDriversModal()">👥 السائقون</button>
+            <button class="btn btn-purple" onclick="openBusesModal()">🚌 الحافلات</button>
             <button class="btn btn-warning" onclick="openNewLineModal()">+ إضافة خط</button>
             <button class="btn btn-primary" onclick="openModal()">+ إضافة حافلة</button>
             <button class="btn btn-danger supabase-logout-btn no-print" id="supabaseLogoutBtn" type="button">خروج</button>
@@ -815,6 +842,30 @@
         </div>
     </div>
 
+    <div id="monitorExportSheet" class="monitor-export-sheet">
+        <div class="monitor-export-title" id="monitorExportTitle">برنامج المراقبين</div>
+        <div class="monitor-export-section monitor-export-card">
+            <div class="monitor-export-section-title">مراقبي المحطات</div>
+            <table class="monitor-export-table">
+                <thead><tr><th style="width:58%">المحطة</th><th style="width:42%">المراقب</th></tr></thead>
+                <tbody id="monitorStationsExportBody"></tbody>
+            </table>
+        </div>
+        <div class="monitor-export-section monitor-export-card">
+            <div class="monitor-export-section-title">مراقبي الخطوط</div>
+            <table class="monitor-export-table">
+                <thead><tr><th style="width:42%">الخط</th><th style="width:23%">التوقيت</th><th style="width:35%">المراقب</th></tr></thead>
+                <tbody id="monitorLinesExportBody"></tbody>
+            </table>
+        </div>
+        <div class="monitor-export-section monitor-export-card">
+            <table class="monitor-export-table">
+                <thead><tr><th style="width:58%">الحالة</th><th style="width:42%">المراقب</th></tr></thead>
+                <tbody id="monitorStatusesExportBody"></tbody>
+            </table>
+        </div>
+    </div>
+
     <div class="status-section">
         <h3>📋 حالات السائقين (بدون العاملين)</h3>
         <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">تم إخفاء السائقين الذين في العمل وعرض المتواجدين في الراحة أو الحالات الأخرى فقط (يتم التحيين تلقائياً عند تعديل الحافلات).</p>
@@ -845,6 +896,21 @@
             <tbody id="busesStatusTableBody">
             </tbody>
         </table>
+    </div>
+</div>
+
+<div class="modal" id="monitorsModal">
+    <div class="modal-content" style="max-width:1100px; max-height:90vh; overflow-y:auto;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <h3>👁 إدارة برنامج المراقبين</h3>
+            <button class="close-modal" type="button" onclick="closeMonitorsModal()">×</button>
+        </div>
+        <p style="color:#64748b;font-size:.9rem;margin:8px 0 14px;">التاريخ المعتمد هو تاريخ البرنامج الذي يحدده الأدمن. يمكنك تعديل الأسماء والمحطات والخطوط والحالات، ثم حفظ البرنامج.</p>
+        <div id="monitorManagerContent"></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+            <button type="button" class="btn" style="background:#cbd5e1;color:#334155;" onclick="closeMonitorsModal()">إغلاق</button>
+            <button type="button" class="btn btn-success" onclick="saveMonitorProgram()">💾 حفظ برنامج المراقبين</button>
+        </div>
     </div>
 </div>
 
@@ -1126,6 +1192,38 @@
     var driversCustomStatus = JSON.parse(localStorage.getItem('taroudant_driversCustomStatus')) || {};
     var busesCustomStatus = JSON.parse(localStorage.getItem('taroudant_busesCustomStatus')) || {};
     var programHistory = JSON.parse(localStorage.getItem('taroudant_programHistory')) || {};
+    var defaultMonitorProgram = {
+        stations: [
+            {name:'أيت بدني ياسين', assignment:'منسق الحركية'},
+            {name:'موسى الخموس', assignment:'محطة البلدية'},
+            {name:'محفوظ اوغيلاس', assignment:'محطة بوذهب'},
+            {name:'****', assignment:'محطة اولوز'},
+            {name:'بن عكوك سعيد', assignment:'محطة ايت اعزة'},
+            {name:'****', assignment:'محطة المعديات'},
+            {name:'', assignment:'محطة البلاليع'},
+            {name:'****', assignment:'محطة برحيل 1 و 5'},
+            {name:'ابخار حسن', assignment:'محطة سبت الكردان'},
+            {name:'', assignment:'محطة سبت الكردان ( السوق)'},
+            {name:'******', assignment:'محطة اولاد تايمة'}
+        ],
+        lines: [
+            {name:'حكيم بلقشاش', time:'06:00 إلى 14:00', assignment:'الخط برحيل'},
+            {name:'عثمان حطابي', time:'06:00 إلى 14:00', assignment:'الخط اولوز'},
+            {name:'الختير اوزالين', time:'06:00 إلى 14:00', assignment:'خط اولاد تايمة'},
+            {name:'وهيب عبد المجيد', time:'06:00 إلى 14:00', assignment:'خط سبت الكردان'},
+            {name:'****', time:'', assignment:'الخط مابين ( ارزان + ايت إعزة)'}
+        ],
+        statuses: [
+            {name:'****', assignment:'الراحة 00'},
+            {name:'****', assignment:'الادارة 00'},
+            {name:'******', assignment:'العطلة السنوية 00'},
+            {name:'أيت خلفت عبد الكريم + المال احمد', assignment:'الترخيص 01'},
+            {name:'هشام ايت علي', assignment:'مصلحة البطائق'},
+            {name:'*****', assignment:'المرض 00'},
+            {name:'****', assignment:'الغياب 00'}
+        ]
+    };
+    var monitorPrograms = JSON.parse(localStorage.getItem('taroudant_monitorPrograms')) || {'2026-09-14': defaultMonitorProgram};
     var __switchingProgramDate = false;
 
     function cloneData(value) {
@@ -1140,6 +1238,7 @@
         localStorage.setItem('taroudant_driversCustomStatus', JSON.stringify(driversCustomStatus));
         localStorage.setItem('taroudant_busesCustomStatus', JSON.stringify(busesCustomStatus));
         localStorage.setItem('taroudant_programHistory', JSON.stringify(programHistory));
+        localStorage.setItem('taroudant_monitorPrograms', JSON.stringify(monitorPrograms));
         if (window.__supabaseReady && !window.__supabaseLoading && !__switchingProgramDate) window.__queueSupabaseSave();
     }
 
@@ -1153,6 +1252,7 @@
         renderTable();
         renderStatusTables();
         updateStats();
+        updateMonitorExportSheet();
     };
 
     function getProgramDateValue() {
@@ -1318,11 +1418,14 @@
     function updateHeaderTitle() {
         var dateVal = document.getElementById('programDate').value;
         if (!dateVal) return;
+        getMonitorProgramForDate(dateVal, true);
+        saveDataToStorage();
         var dateObj = new Date(dateVal);
         var options = { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' };
         var formattedDate = dateObj.toLocaleDateString('ar-MA', options);
         document.getElementById('mainHeaderTitle').innerText = "برنامج حافلات تارودانت ليوم " + formattedDate;
         document.getElementById('restSheetTitle').innerText = "برنامج الراحة للسائقين ليوم " + formattedDate;
+        updateMonitorExportSheet();
     }
 
     function initDropdowns() {
@@ -1677,6 +1780,119 @@
         }
     }
 
+    function getMonitorProgramForDate(dateValue, createIfMissing) {
+        if (!dateValue) return null;
+        if (!monitorPrograms[dateValue] && createIfMissing) monitorPrograms[dateValue] = cloneData(defaultMonitorProgram);
+        return monitorPrograms[dateValue] || null;
+    }
+
+    function openMonitorsModal() {
+        renderMonitorManager();
+        document.getElementById('monitorsModal').style.display = 'flex';
+    }
+
+    function closeMonitorsModal() {
+        document.getElementById('monitorsModal').style.display = 'none';
+    }
+
+    function renderMonitorManager() {
+        var date = getProgramDateValue();
+        var data = getMonitorProgramForDate(date, true);
+        var html = '';
+        html += monitorManagerSection('مراقبي المحطات','stations',['المراقب','المحطة / المهمة'], data.stations, false);
+        html += monitorManagerSection('مراقبي الخطوط','lines',['المراقب','التوقيت','الخط'], data.lines, true);
+        html += monitorManagerSection('الحالات الإدارية','statuses',['المراقب','الحالة / المهمة'], data.statuses, false);
+        document.getElementById('monitorManagerContent').innerHTML = html;
+    }
+
+    function monitorManagerSection(title,key,headers,rows,withTime) {
+        var h = '<div class="monitor-section-card"><div class="monitor-section-head"><h4>'+title+'</h4><button class="btn btn-success" type="button" onclick="addMonitorRow(\''+key+'\')">+ إضافة</button></div>';
+        h += '<table class="monitor-manager-table"><thead><tr>';
+        headers.forEach(function(x){ h += '<th>'+x+'</th>'; });
+        h += '<th style="width:70px">حذف</th></tr></thead><tbody>';
+        rows.forEach(function(r,i){
+            h += '<tr><td><input data-monitor-key="'+key+'" data-index="'+i+'" data-field="name" value="'+escapeHtmlAttr(r.name||'')+'"></td>';
+            if(withTime) h += '<td><input data-monitor-key="'+key+'" data-index="'+i+'" data-field="time" value="'+escapeHtmlAttr(r.time||'')+'"></td>';
+            h += '<td><input data-monitor-key="'+key+'" data-index="'+i+'" data-field="assignment" value="'+escapeHtmlAttr(r.assignment||'')+'"></td>';
+            h += '<td><button type="button" class="btn btn-danger" style="padding:6px 9px" onclick="removeMonitorRow(\''+key+'\','+i+')">×</button></td></tr>';
+        });
+        h += '</tbody></table></div>'; return h;
+    }
+
+    function escapeHtmlAttr(v) { return String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function syncMonitorManagerInputs() {
+        var date=getProgramDateValue(), data=getMonitorProgramForDate(date,true);
+        document.querySelectorAll('#monitorManagerContent [data-monitor-key]').forEach(function(el){
+            var key=el.dataset.monitorKey, i=Number(el.dataset.index), field=el.dataset.field;
+            if(data[key] && data[key][i]) data[key][i][field]=el.value;
+        });
+    }
+
+    function addMonitorRow(key) {
+        syncMonitorManagerInputs();
+        var data=getMonitorProgramForDate(getProgramDateValue(),true);
+        if(key==='lines') data.lines.push({name:'****',time:'',assignment:''});
+        else data[key].push({name:'****',assignment:''});
+        renderMonitorManager();
+    }
+
+    function removeMonitorRow(key,index) {
+        syncMonitorManagerInputs();
+        var data=getMonitorProgramForDate(getProgramDateValue(),true);
+        if(!data[key]) return;
+        data[key].splice(index,1); renderMonitorManager();
+    }
+
+    function saveMonitorProgram() {
+        syncMonitorManagerInputs();
+        var date=getProgramDateValue();
+        if(!date) return alert('حدد تاريخ البرنامج أولاً.');
+        saveDataToStorage();
+        updateMonitorExportSheet();
+        closeMonitorsModal();
+        alert('تم حفظ برنامج المراقبين ليوم '+formatArabicDate(date)+'.');
+    }
+
+    function formatArabicDate(dateValue) {
+        var d=new Date(dateValue+'T12:00:00');
+        var days=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+        var dd=String(d.getDate()).padStart(2,'0'), mm=String(d.getMonth()+1).padStart(2,'0'), yy=d.getFullYear();
+        return days[d.getDay()]+' '+dd+'-'+mm+'-'+yy;
+    }
+
+    function updateMonitorExportSheet() {
+        var date=getProgramDateValue(), data=getMonitorProgramForDate(date,false);
+        if(!data) return;
+        document.getElementById('monitorExportTitle').innerText='برنامج المراقبين ليوم '+formatArabicDate(date);
+        var sb=document.getElementById('monitorStationsExportBody'); sb.innerHTML='';
+        data.stations.forEach(function(r){
+            sb.innerHTML += '<tr><td>'+escapeHtml(r.assignment||'')+'</td><td>'+escapeHtml(r.name||'')+'</td></tr>';
+        });
+        var lb=document.getElementById('monitorLinesExportBody'); lb.innerHTML='';
+        data.lines.forEach(function(r){
+            lb.innerHTML += '<tr><td>'+escapeHtml(r.assignment||'')+'</td><td class="time-cell">'+escapeHtml(r.time ? '(من '+r.time+')' : '')+'</td><td>'+escapeHtml(r.name||'')+'</td></tr>';
+        });
+        var stb=document.getElementById('monitorStatusesExportBody'); stb.innerHTML='';
+        (data.statuses||[]).forEach(function(r){
+            stb.innerHTML += '<tr><td>'+escapeHtml(r.assignment||'')+'</td><td>'+escapeHtml(r.name||'')+'</td></tr>';
+        });
+    }
+
+    function escapeHtml(v) { return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    function exportMonitorAsImage() {
+        updateMonitorExportSheet();
+        var sheet=document.getElementById('monitorExportSheet');
+        sheet.style.display='block';
+        html2canvas(sheet,{scale:2,useCORS:true,backgroundColor:'#f8fafc',logging:false}).then(function(canvas){
+            sheet.style.display='none';
+            var link=document.createElement('a');
+            link.download='برنامج_المراقبين_'+getProgramDateValue()+'.png';
+            link.href=canvas.toDataURL('image/png'); link.click();
+        }).catch(function(){ sheet.style.display='none'; alert('حدث خطأ أثناء استخراج صورة برنامج المراقبين.'); });
+    }
+
     function updateStats() {
         document.getElementById('totalBussesCount').innerText = busData.length;
         document.getElementById('totalLinesCount').innerText = Object.keys(lineDefaults).length;
@@ -1955,6 +2171,7 @@
       driversCustomStatus: driversCustomStatus,
       busesCustomStatus: busesCustomStatus,
       programHistory: programHistory,
+      monitorPrograms: monitorPrograms,
       programDate: document.getElementById('programDate')?.value || ''
     };
   }
@@ -1986,6 +2203,7 @@
       if(st.driversCustomStatus) driversCustomStatus=st.driversCustomStatus;
       if(st.busesCustomStatus) busesCustomStatus=st.busesCustomStatus;
       if(st.programHistory && typeof st.programHistory === 'object') programHistory=st.programHistory;
+      if(st.monitorPrograms && typeof st.monitorPrograms === 'object') monitorPrograms=st.monitorPrograms;
       if(st.programDate) document.getElementById('programDate').value=st.programDate;
       saveDataToStorage();
     } else {
