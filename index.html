@@ -68,13 +68,30 @@
 
         .header-actions {
             display: flex;
-            gap: 10px;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 7px;
             flex-wrap: wrap;
+            max-width: 760px;
+        }
+
+        .header-actions .btn {
+            min-height: 38px;
+            padding: 8px 12px;
+            border-radius: 9px;
+            border: 1px solid rgba(255,255,255,.16);
+            box-shadow: 0 2px 5px rgba(0,0,0,.10);
+            white-space: nowrap;
+        }
+
+        .header-actions .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 9px rgba(0,0,0,.16);
         }
 
         .admin-date-box {
             background: var(--card-bg);
-            padding: 12px 18px;
+            padding: 14px 18px;
             border-radius: var(--radius);
             box-shadow: var(--shadow-sm);
             border: 1px solid var(--border-color);
@@ -82,6 +99,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-wrap: wrap;
         }
 
         .admin-date-box label {
@@ -91,12 +109,35 @@
         }
 
         .admin-date-box input[type="date"] {
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
+            appearance: none;
+            -webkit-appearance: none;
+            min-width: 190px;
+            height: 42px;
+            padding: 7px 12px;
+            border-radius: 9px;
+            border: 1px solid #cbd5e1;
             outline: none;
-            font-weight: 700;
-            color: var(--primary);
+            font-weight: 800;
+            color: #312e81;
+            background: #f8fafc;
+            cursor: pointer;
+            direction: ltr;
+            text-align: center;
+        }
+        .admin-date-box input[type="date"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+            background: #fff;
+        }
+        .admin-date-box input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: .9;
+            padding: 3px;
+        }
+        @media (max-width: 700px) {
+            .admin-date-box { align-items: stretch; }
+            .admin-date-box input[type="date"] { width: 100%; min-width: 0; }
+            .program-actions { width: 100%; }
         }
 
         .btn {
@@ -108,8 +149,56 @@
             cursor: pointer;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
-            transition: all 0.2s ease;
+            transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+        }
+
+        .program-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .program-actions .btn {
+            min-height: 40px;
+            padding: 8px 14px;
+            border-radius: 9px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(15,23,42,.08);
+        }
+
+        .program-actions .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-rotate {
+            background: #4f46e5;
+            color: #fff;
+        }
+
+        .btn-rotate:hover { background: #4338ca; }
+
+        .btn-history {
+            background: #fff;
+            color: #0369a1;
+            border-color: #bae6fd !important;
+        }
+
+        .btn-history:hover { background: #f0f9ff; }
+
+        .rotation-info {
+            margin-top: 9px;
+            padding: 8px 11px;
+            border-radius: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: .78rem;
+            line-height: 1.7;
         }
 
         .btn-primary { background: var(--primary); color: white; }
@@ -142,6 +231,27 @@
             white-space: nowrap;
         }
         .btn-inline-add:hover { background: #047857; }
+
+        @media (max-width: 900px) {
+            header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+            .header-actions {
+                width: 100%;
+                max-width: none;
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header-actions .btn, .program-actions .btn {
+                flex: 1 1 auto;
+            }
+            .program-actions {
+                width: 100%;
+            }
+        }
 
         .stats-container {
             display: grid;
@@ -484,6 +594,35 @@
         .form-row { display: flex; gap: 6px; }
 
         .exporting .action-column, .exporting .btn-inline-add { display: none !important; }
+
+        .manual-move-controls {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-right: 6px;
+            direction: ltr;
+        }
+        .btn-move {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            background: #f8fafc;
+            color: #334155;
+            font-size: 16px;
+            font-weight: 800;
+            line-height: 1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: .15s ease;
+        }
+        .btn-move:hover { background: #e0e7ff; color: #3730a3; border-color: #a5b4fc; transform: translateY(-1px); }
+        .btn-move:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+        .move-label { font-size: .72rem; color: #64748b; font-weight: 700; margin-left: 3px; }
+        .exporting .manual-move-controls { display: none !important; }
     
         /* ===== Supabase Login - does not alter the original program UI ===== */
         body.auth-locked > .container { visibility: hidden; }
@@ -505,11 +644,33 @@
         #supabaseLoginStatus { color:#64748b; font-size:.78rem; margin-top:10px; }
         .supabase-user-chip { font-size:.78rem; color:#c7d2fe; align-self:center; }
         .supabase-logout-btn { background:#b91c1c !important; color:#fff !important; }
+        .program-history-modal { max-width: 760px !important; }
+        .history-table { width:100%; border-collapse:collapse; margin-top:12px; }
+        .history-table th,.history-table td { border:1px solid #dbe3ef; padding:8px; text-align:center; }
+        .history-table th { background:#eef2f7; }
+        .history-empty { text-align:center; color:#64748b; padding:20px; }
+        .rotation-info { background:#eef6ff; border:1px solid #bfdbfe; color:#1e3a8a; padding:10px 12px; border-radius:8px; margin-top:10px; line-height:1.7; }
         @media print { #supabaseLoginOverlay { display:none !important; } }
 
     </style>
 </head>
 <body class="auth-locked">
+<div class="modal" id="programHistoryModal">
+    <div class="modal-content program-history-modal">
+        <div class="modal-header">
+            <h3>📅 سجل البرامج حسب اليوم</h3>
+            <button class="close-modal" type="button" onclick="closeProgramHistory()">×</button>
+        </div>
+        <div class="modal-body">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <span>كل يوم محفوظ يظهر هنا، ويمكن تحميله للعمل عليه.</span>
+                <button class="btn btn-success" type="button" onclick="saveCurrentProgramToHistory()">💾 حفظ اليوم الحالي</button>
+            </div>
+            <div id="programHistoryList"></div>
+        </div>
+    </div>
+</div>
+
 <div id="supabaseLoginOverlay">
   <div class="login-card">
     <h2>🚍 برنامج حافلات تارودانت</h2>
@@ -531,22 +692,29 @@
     <header>
         <div class="header-title">
             <h1>🚍 برنامج حافلات تارودانت</h1>
-            <p>منظومة إدارة وتوليد جدول الرحلات الموحد</p>
+            <p> إدارة وتوليد جدول الرحلات </p>
         </div>
         <div class="header-actions">
-            <button class="btn btn-success" id="exportBtn" onclick="exportAsImage()"> استخراج البرنامج </button>
-            <button class="btn btn-warning" id="exportRestBtn" onclick="exportRestAsImage()"> استخراج برنامج الراحة HD</button>
-            <button class="btn btn-info" onclick="openDriversModal()"> إدارة السائقين</button>
-            <button class="btn btn-purple" onclick="openBusesModal()"> إدارة الحافلات</button>
+            <button class="btn btn-success" id="exportBtn" onclick="exportAsImage()"> استخراج برنامد الحافلات</button>
+            <button class="btn btn-warning" id="exportRestBtn" onclick="exportRestAsImage()"> استخراج برنامج الراحة</button>
+            <button class="btn btn-info" onclick="openDriversModal()"> السائقون</button>
+            <button class="btn btn-purple" onclick="openBusesModal()"> الحافلات</button>
             <button class="btn btn-warning" onclick="openNewLineModal()">+ إضافة خط</button>
             <button class="btn btn-primary" onclick="openModal()">+ إضافة حافلة</button>
-            <button class="btn btn-danger supabase-logout-btn no-print" id="supabaseLogoutBtn" type="button">تسجيل الخروج</button>
+            <button class="btn btn-danger supabase-logout-btn no-print" id="supabaseLogoutBtn" type="button">خروج</button>
         </div>
     </header>
 
     <div class="admin-date-box">
         <label for="programDate">تاريخ البرنامج (تحديد الأدمن):</label>
         <input type="date" id="programDate" onchange="updateHeaderTitle()">
+        <div class="program-actions no-print">
+            <button class="btn btn-rotate" type="button" onclick="rotateToNextProgram()">↻ تدوير لليوم الموالي</button>
+            <button class="btn btn-history" type="button" onclick="openProgramHistory()">▣ سجل البرامج</button>
+        </div>
+        <div class="rotation-info no-print">
+            عند التدوير: تبقى التوقيتات وأماكن الانطلاق والملاحظات ثابتة، بينما تنتقل الحافلة مع سائقها إلى الترتيب الجديد. آخر حافلة في كل خط تصبح الأولى، وجميع الحافلات الأخرى تتقدم مركزًا واحدًا.
+        </div>
     </div>
 
     <div class="stats-container">
@@ -957,6 +1125,12 @@
     var busData = JSON.parse(localStorage.getItem('taroudant_busData')) || defaultBusData;
     var driversCustomStatus = JSON.parse(localStorage.getItem('taroudant_driversCustomStatus')) || {};
     var busesCustomStatus = JSON.parse(localStorage.getItem('taroudant_busesCustomStatus')) || {};
+    var programHistory = JSON.parse(localStorage.getItem('taroudant_programHistory')) || {};
+    var __switchingProgramDate = false;
+
+    function cloneData(value) {
+        return JSON.parse(JSON.stringify(value));
+    }
 
     function saveDataToStorage() {
         localStorage.setItem('taroudant_driversList', JSON.stringify(driversList));
@@ -965,18 +1139,181 @@
         localStorage.setItem('taroudant_busData', JSON.stringify(busData));
         localStorage.setItem('taroudant_driversCustomStatus', JSON.stringify(driversCustomStatus));
         localStorage.setItem('taroudant_busesCustomStatus', JSON.stringify(busesCustomStatus));
-        if (window.__supabaseReady && !window.__supabaseLoading) window.__queueSupabaseSave();
+        localStorage.setItem('taroudant_programHistory', JSON.stringify(programHistory));
+        if (window.__supabaseReady && !window.__supabaseLoading && !__switchingProgramDate) window.__queueSupabaseSave();
     }
 
     window.onload = function() {
-        var today = "2026-09-22";
+        var today = new Date().toISOString().slice(0,10);
         document.getElementById('programDate').value = today;
+        window.__lastProgramDate = today;
+        if(!programHistory[today]) programHistory[today] = snapshotCurrentProgram();
         updateHeaderTitle();
         initDropdowns();
         renderTable();
         renderStatusTables();
         updateStats();
     };
+
+    function getProgramDateValue() {
+        return document.getElementById('programDate').value;
+    }
+
+    function snapshotCurrentProgram() {
+        return {
+            busData: cloneData(busData),
+            lineDefaults: cloneData(lineDefaults),
+            driversCustomStatus: cloneData(driversCustomStatus),
+            busesCustomStatus: cloneData(busesCustomStatus),
+            savedAt: new Date().toISOString()
+        };
+    }
+
+    function saveCurrentProgramToHistory(dateValue) {
+        var date = dateValue || getProgramDateValue();
+        if (!date) return;
+        programHistory[date] = snapshotCurrentProgram();
+        saveDataToStorage();
+        renderProgramHistory();
+    }
+
+    function restoreProgramFromHistory(dateValue) {
+        var snap = programHistory[dateValue];
+        if (!snap) return false;
+        busData = cloneData(snap.busData || []);
+        if (snap.lineDefaults) lineDefaults = cloneData(snap.lineDefaults);
+        if (snap.driversCustomStatus) driversCustomStatus = cloneData(snap.driversCustomStatus);
+        if (snap.busesCustomStatus) busesCustomStatus = cloneData(snap.busesCustomStatus);
+        return true;
+    }
+
+    // التناوب الصحيح حسب المطلوب: التوقيتات وأماكن الانطلاق والملاحظات ثابتة.
+    // آخر حافلة في ترتيب كل خط تنتقل إلى الترتيب الأول، مع سائقها/سائقيها.
+    // مثال: 448،474،454،471 ...،473 تصبح: 473،448،474،454،471 ...
+    function rotateBusSchedulesForNextDay(sourceData) {
+        var grouped = {};
+        sourceData.forEach(function(item, index) {
+            if (!grouped[item.line]) grouped[item.line] = [];
+            grouped[item.line].push({ item:item, index:index });
+        });
+
+        var result = cloneData(sourceData);
+
+        Object.keys(grouped).forEach(function(line) {
+            var rows = grouped[line];
+            if (rows.length < 2) return;
+
+            // كل خانة تحتفظ بتوقيتها ومكانها وملاحظتها،
+            // وتأخذ الحافلة والسائق من الخانة السابقة في الترتيب؛
+            // الخانة الأولى تأخذ آخر حافلة.
+            rows.forEach(function(row, pos) {
+                var previous = rows[(pos - 1 + rows.length) % rows.length];
+                var current = sourceData[row.index];
+                var previousBus = sourceData[previous.index];
+
+                result[row.index].bus = previousBus.bus;
+                result[row.index].driver = previousBus.driver;
+                result[row.index].departures = cloneData(current.departures || []);
+                result[row.index].line = current.line;
+            });
+        });
+
+        return result;
+    }
+
+    async function rotateToNextProgram() {
+        var sourceDate = getProgramDateValue();
+        if (!sourceDate) return alert('حدد تاريخ البرنامج أولاً.');
+        var target = new Date(sourceDate + 'T12:00:00');
+        target.setDate(target.getDate() + 1);
+        var targetDate = target.toISOString().slice(0,10);
+        var exists = !!programHistory[targetDate];
+        var msg = exists
+            ? 'يوجد برنامج محفوظ لليوم الموالي. هل تريد استبداله بالتناوب الجديد؟'
+            : 'سيتم إنشاء برنامج ' + targetDate + ' بالتناوب بين حافلات كل خط. هل تريد المتابعة؟';
+        if (!confirm(msg)) return;
+
+        saveCurrentProgramToHistory(sourceDate);
+        var sourceSnapshot = programHistory[sourceDate];
+        var rotated = rotateBusSchedulesForNextDay(sourceSnapshot.busData);
+        programHistory[targetDate] = {
+            busData: rotated,
+            lineDefaults: cloneData(sourceSnapshot.lineDefaults),
+            driversCustomStatus: cloneData(sourceSnapshot.driversCustomStatus),
+            busesCustomStatus: cloneData(sourceSnapshot.busesCustomStatus),
+            sourceDate: sourceDate,
+            rotation: true,
+            savedAt: new Date().toISOString()
+        };
+
+        __switchingProgramDate = true;
+        document.getElementById('programDate').value = targetDate;
+        window.__lastProgramDate = targetDate;
+        restoreProgramFromHistory(targetDate);
+        updateHeaderTitle();
+        initDropdowns();
+        renderTable();
+        renderStatusTables();
+        updateStats();
+        __switchingProgramDate = false;
+        saveDataToStorage();
+        if(window.__supabaseReady) await window.__queueSupabaseSave(true);
+        alert('تم إنشاء برنامج اليوم الموالي بالتناوب وحفظه في السجل.');
+    }
+
+    function openProgramHistory() {
+        renderProgramHistory();
+        document.getElementById('programHistoryModal').style.display = 'flex';
+    }
+
+    function closeProgramHistory() {
+        document.getElementById('programHistoryModal').style.display = 'none';
+    }
+
+    function renderProgramHistory() {
+        var box = document.getElementById('programHistoryList');
+        if (!box) return;
+        var dates = Object.keys(programHistory).sort().reverse();
+        if (!dates.length) {
+            box.innerHTML = '<div class="history-empty">لا توجد برامج محفوظة بعد.</div>';
+            return;
+        }
+        var html = '<table class="history-table"><thead><tr><th>التاريخ</th><th>النوع</th><th>الحافلات</th><th>الإجراء</th></tr></thead><tbody>';
+        dates.forEach(function(date) {
+            var s = programHistory[date] || {};
+            var count = Array.isArray(s.busData) ? s.busData.length : 0;
+            var type = s.rotation ? 'تدوير من اليوم السابق' : 'برنامج محفوظ';
+            html += '<tr><td>' + date + '</td><td>' + type + '</td><td>' + count + '</td><td>' +
+                '<button class="btn btn-primary" type="button" onclick="loadProgramHistoryDate(\'' + date + '\')">فتح</button> ' +
+                '<button class="btn btn-danger" type="button" onclick="deleteProgramHistoryDate(\'' + date + '\')">حذف السجل</button></td></tr>';
+        });
+        html += '</tbody></table>';
+        box.innerHTML = html;
+    }
+
+    function loadProgramHistoryDate(dateValue) {
+        if (!programHistory[dateValue]) return;
+        saveCurrentProgramToHistory(getProgramDateValue());
+        __switchingProgramDate = true;
+        document.getElementById('programDate').value = dateValue;
+        window.__lastProgramDate = dateValue;
+        restoreProgramFromHistory(dateValue);
+        updateHeaderTitle();
+        initDropdowns();
+        renderTable();
+        renderStatusTables();
+        updateStats();
+        __switchingProgramDate = false;
+        saveDataToStorage();
+        closeProgramHistory();
+    }
+
+    function deleteProgramHistoryDate(dateValue) {
+        if (!confirm('حذف برنامج يوم ' + dateValue + ' من السجل؟')) return;
+        delete programHistory[dateValue];
+        saveDataToStorage();
+        renderProgramHistory();
+    }
 
     function updateHeaderTitle() {
         var dateVal = document.getElementById('programDate').value;
@@ -1111,7 +1448,11 @@
                     <td><span class="bus-number">${item.bus}</span></td>
                     <td>${formattedDrivers}</td>
                     <td><div class="departures-container">${departuresHtml}</div></td>
-                    <td class="action-column" style="text-align: center;">
+                    <td class="action-column" style="text-align: center; white-space: nowrap;">
+                        <div class="manual-move-controls" title="تحريك الحافلة مع سائقها بين خانات التوقيت دون تغيير التوقيت">
+                            <button class="btn-move" type="button" onclick="moveBusInLine(${item.originalIndex}, -1)" ${isFirstInLine(item.originalIndex) ? 'disabled' : ''} aria-label="تحريك للأعلى">▲</button>
+                            <button class="btn-move" type="button" onclick="moveBusInLine(${item.originalIndex}, 1)" ${isLastInLine(item.originalIndex) ? 'disabled' : ''} aria-label="تحريك للأسفل">▼</button>
+                        </div>
                         <button class="btn btn-edit" onclick="editBus(${item.originalIndex})">تعديل</button>
                         <button class="btn btn-delete" onclick="deleteBus(${item.originalIndex})">حذف</button>
                     </td>
@@ -1121,6 +1462,58 @@
         }
 
         document.getElementById('footerTotalBusses').innerText = visibleBusesCount;
+    }
+
+    function getLineIndexes(lineName) {
+        var indexes = [];
+        busData.forEach(function(item, index) {
+            if (item.line === lineName) indexes.push(index);
+        });
+        return indexes;
+    }
+
+    function isFirstInLine(index) {
+        var item = busData[index];
+        if (!item) return true;
+        var indexes = getLineIndexes(item.line);
+        return indexes.indexOf(index) <= 0;
+    }
+
+    function isLastInLine(index) {
+        var item = busData[index];
+        if (!item) return true;
+        var indexes = getLineIndexes(item.line);
+        return indexes.indexOf(index) === indexes.length - 1;
+    }
+
+    // تحريك يدوي: ننقل هوية الحافلة وسائقها فقط بين خانات الخط.
+    // التوقيت + مكان الانطلاق + الملاحظات تبقى ثابتة في الخانة نفسها.
+    function moveBusInLine(index, direction) {
+        if (!busData[index]) return;
+        var line = busData[index].line;
+        var indexes = getLineIndexes(line);
+        var pos = indexes.indexOf(index);
+        if (pos < 0) return;
+
+        var targetPos = pos + direction;
+        if (targetPos < 0 || targetPos >= indexes.length) return;
+
+        var targetIndex = indexes[targetPos];
+        var current = busData[index];
+        var target = busData[targetIndex];
+
+        // فقط الحافلة والسائق ينتقلان؛ departures لا تتغير إطلاقاً.
+        var tmpBus = current.bus;
+        var tmpDriver = current.driver;
+        current.bus = target.bus;
+        current.driver = target.driver;
+        target.bus = tmpBus;
+        target.driver = tmpDriver;
+
+        saveDataToStorage();
+        renderTable();
+        renderStatusTables();
+        updateStats();
     }
 
     function renderStatusTables() {
@@ -1561,6 +1954,7 @@
       busData: busData,
       driversCustomStatus: driversCustomStatus,
       busesCustomStatus: busesCustomStatus,
+      programHistory: programHistory,
       programDate: document.getElementById('programDate')?.value || ''
     };
   }
@@ -1572,8 +1966,9 @@
     if(error) console.error('Supabase save:', error);
   }
 
-  window.__queueSupabaseSave = function(){
+  window.__queueSupabaseSave = function(force){
     clearTimeout(saveTimer);
+    if(force) return saveRemoteNow();
     saveTimer = setTimeout(saveRemoteNow, 500);
   };
 
@@ -1590,6 +1985,7 @@
       if(Array.isArray(st.busData) && st.busData.length) busData=st.busData;
       if(st.driversCustomStatus) driversCustomStatus=st.driversCustomStatus;
       if(st.busesCustomStatus) busesCustomStatus=st.busesCustomStatus;
+      if(st.programHistory && typeof st.programHistory === 'object') programHistory=st.programHistory;
       if(st.programDate) document.getElementById('programDate').value=st.programDate;
       saveDataToStorage();
     } else {
@@ -1647,7 +2043,27 @@
     location.reload();
   });
 
-  document.getElementById('programDate').addEventListener('change', function(){
+  document.getElementById('programDate').addEventListener('change', async function(){
+    if(__switchingProgramDate) return;
+    var newDate = this.value;
+    if(!newDate) return;
+    var oldDate = window.__lastProgramDate || newDate;
+    saveCurrentProgramToHistory(oldDate);
+    __switchingProgramDate = true;
+    if(programHistory[newDate]) {
+      restoreProgramFromHistory(newDate);
+    } else {
+      // A new day starts from the currently displayed program until the user rotates it.
+      programHistory[newDate] = snapshotCurrentProgram();
+    }
+    __switchingProgramDate = false;
+    window.__lastProgramDate = newDate;
+    updateHeaderTitle();
+    initDropdowns();
+    renderTable();
+    renderStatusTables();
+    updateStats();
+    saveDataToStorage();
     if(window.__supabaseReady) window.__queueSupabaseSave();
   });
 
