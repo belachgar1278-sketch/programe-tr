@@ -1620,8 +1620,8 @@
     function renderStatusTables() {
         var activeDriversSet = new Set();
         busData.forEach(function(item) {
-            var splitted = item.driver.split('/');
-            splitted.forEach(function(d) {
+            if (!item.driver) return;
+            item.driver.split('/').forEach(function(d) {
                 var name = d.trim();
                 if (name) activeDriversSet.add(name);
             });
@@ -1633,94 +1633,80 @@
         });
 
         var dBody = document.getElementById('driversStatusTableBody');
-        dBody.innerHTML = "";
-        var statuses = ["الراحة", "الغياب", "المرض", "الترخيص", "العطلة السنوية", "انتظار اصلاح الحافلة", "الإدارة"];
+        dBody.innerHTML = '';
+        var statuses = ['الراحة', 'الغياب', 'المرض', 'الترخيص', 'العطلة السنوية', 'انتظار اصلاح الحافلة', 'الإدارة'];
 
         var filteredDriversList = driversList.filter(function(driver) {
             var isInWork = activeDriversSet.has(driver);
+            var currentStatus = String(driversCustomStatus[driver] || '').trim();
+
+            // السائق العامل لا يظهر في الحالات العادية، لكنه يبقى ظاهراً
+            // إذا كانت حالته "انتظار اصلاح الحافلة".
             if (isInWork) {
-                if (driversCustomStatus[driver]) {
-                    delete driversCustomStatus[driver];
-                }
-                return false;
+                return currentStatus === 'انتظار اصلاح الحافلة';
             }
-            if (driversCustomStatus[driver] === undefined) {
-                driversCustomStatus[driver] = "الراحة";
+
+            if (!currentStatus) {
+                driversCustomStatus[driver] = 'الراحة';
             }
             return true;
         });
 
-        saveDataToStorage();
-
         filteredDriversList.sort(function(a, b) { return a.localeCompare(b); });
 
         filteredDriversList.forEach(function(driver) {
-            var currentStatus = driversCustomStatus[driver] || "الراحة";
-
-            var badgeClass = "status-admin";
-            if (currentStatus === "الراحة") badgeClass = "status-rest";
-            else if (currentStatus === "الغياب") badgeClass = "status-absence";
-            else if (currentStatus === "المرض") badgeClass = "status-sick";
-            else if (currentStatus === "الترخيص") badgeClass = "status-license";
-            else if (currentStatus === "العطلة السنوية") badgeClass = "status-vacation";
-           else if (currentStatus === " انتظار اصلاح الحافلة ") badgeClass = "status-repair";
-            else if (currentStatus === "الإدارة") badgeClass = "status-admin";
+            var currentStatus = String(driversCustomStatus[driver] || 'الراحة').trim();
+            var badgeClass = 'status-admin';
+            if (currentStatus === 'الراحة') badgeClass = 'status-rest';
+            else if (currentStatus === 'الغياب') badgeClass = 'status-absence';
+            else if (currentStatus === 'المرض') badgeClass = 'status-sick';
+            else if (currentStatus === 'الترخيص') badgeClass = 'status-license';
+            else if (currentStatus === 'العطلة السنوية') badgeClass = 'status-vacation';
+            else if (currentStatus === 'انتظار اصلاح الحافلة') badgeClass = 'status-repair';
+            else if (currentStatus === 'الإدارة') badgeClass = 'status-admin';
 
             var tr = document.createElement('tr');
-            var selectHtml = `<select onchange="changeDriverStatus('${driver}', this.value)" style="width:100%; padding: 4px;">`;
+            var selectHtml = `<select onchange="changeDriverStatus('${driver}', this.value)" style="width:100%; padding:4px;">`;
             statuses.forEach(function(st) {
                 selectHtml += `<option value="${st}" ${currentStatus === st ? 'selected' : ''}>${st}</option>`;
             });
-            selectHtml += `</select>`;
-
-            var statusDisplay = `<span class="status-badge ${badgeClass}">${currentStatus}</span>`;
+            selectHtml += '</select>';
 
             tr.innerHTML = `
                 <td style="font-weight:700;">${driver}</td>
-                <td>${statusDisplay}</td>
+                <td><span class="status-badge ${badgeClass}">${currentStatus}</span></td>
                 <td>${selectHtml}</td>
             `;
             dBody.appendChild(tr);
         });
 
         var bBody = document.getElementById('busesStatusTableBody');
-        bBody.innerHTML = "";
-        var busStatuses = ["الاحتياط", "الإصلاح", "الصيانة", "متوقفة"];
+        bBody.innerHTML = '';
+        var busStatuses = ['الاحتياط', 'الإصلاح', 'الصيانة', 'متوقفة'];
 
         var filteredBusesList = busesList.filter(function(bus) {
-            var isInWork = activeBusesSet.has(bus);
-            if (isInWork) {
-                if (busesCustomStatus[bus]) {
-                    delete busesCustomStatus[bus];
-                }
-                return false;
-            }
-            if (busesCustomStatus[bus] === undefined) {
-                busesCustomStatus[bus] = "الاحتياط";
-            }
+            if (activeBusesSet.has(bus)) return false;
+            if (busesCustomStatus[bus] === undefined) busesCustomStatus[bus] = 'الاحتياط';
             return true;
         });
 
         filteredBusesList.forEach(function(bus) {
-            var currentStatus = busesCustomStatus[bus] || "الاحتياط";
-
-            var badgeClass = "status-admin";
-            if (currentStatus === "الاحتياط") badgeClass = "status-spare";
-            else if (currentStatus === "الإصلاح" || currentStatus === "الصيانة") badgeClass = "status-repair";
-            else if (currentStatus === "متوقفة") badgeClass = "status-absence";
+            var currentStatus = busesCustomStatus[bus] || 'الاحتياط';
+            var badgeClass = 'status-admin';
+            if (currentStatus === 'الاحتياط') badgeClass = 'status-spare';
+            else if (currentStatus === 'الإصلاح' || currentStatus === 'الصيانة') badgeClass = 'status-repair';
+            else if (currentStatus === 'متوقفة') badgeClass = 'status-absence';
 
             var tr = document.createElement('tr');
-            var selectHtml = `<select onchange="changeBusStatus('${bus}', this.value)" style="width:100%; padding: 4px;">`;
+            var selectHtml = `<select onchange="changeBusStatus('${bus}', this.value)" style="width:100%; padding:4px;">`;
             busStatuses.forEach(function(st) {
                 selectHtml += `<option value="${st}" ${currentStatus === st ? 'selected' : ''}>${st}</option>`;
             });
-            selectHtml += `</select>`;
-
-            var statusDisplay = `<span class="status-badge ${badgeClass}">${currentStatus}</span>`;
+            selectHtml += '</select>';
 
             tr.innerHTML = `
                 <td><span class="bus-number">${bus}</span></td>
-                <td>${statusDisplay}</td>
+                <td><span class="status-badge ${badgeClass}">${currentStatus}</span></td>
                 <td>${selectHtml}</td>
             `;
             bBody.appendChild(tr);
@@ -1730,9 +1716,13 @@
     }
 
     function changeDriverStatus(driver, status) {
+        status = String(status || '').trim();
         driversCustomStatus[driver] = status;
         saveDataToStorage();
         renderStatusTables();
+        updateStats();
+        if (typeof updateRestExportSheet === 'function') updateRestExportSheet();
+        if (window.__supabaseReady && typeof window.__queueSupabaseSave === 'function') window.__queueSupabaseSave();
     }
 
     function changeBusStatus(bus, status) {
@@ -1744,37 +1734,38 @@
     function updateRestExportSheet() {
         var activeDriversSet = new Set();
         busData.forEach(function(item) {
+            if (!item.driver) return;
             item.driver.split('/').forEach(function(d) {
-                if (d.trim()) activeDriversSet.add(d.trim());
+                var name = d.trim();
+                if (name) activeDriversSet.add(name);
             });
         });
 
         var categories = {
-            "الراحة": { countId: "headerRestCount", bodyId: "bodyRestNames", title: "الراحة" },
-            "العطلة السنوية": { countId: "headerVacationCount", bodyId: "bodyVacationNames", title: "العطلة السنوية" },
-            "الإدارة": { countId: "headerAdminCount", bodyId: "bodyAdminNames", title: "الإدارة" },
-            "الغياب": { countId: "headerAbsenceCount", bodyId: "bodyAbsenceNames", title: "الغياب" },
-            "الترخيص": { countId: "headerLicenseCount", bodyId: "bodyLicenseNames", title: "الترخيص" },
-           " انتظار اصلاح الحافلة ": { countId: "headerRepairCount", bodyId: "bodyRepairNames", title: " انتظار اصلاح الحافلة " },
-            "المرض": { countId: "headerSickCount", bodyId: "bodySickNames", title: "المرض" }
+            'الراحة': { countId: 'headerRestCount', bodyId: 'bodyRestNames', title: 'الراحة' },
+            'العطلة السنوية': { countId: 'headerVacationCount', bodyId: 'bodyVacationNames', title: 'العطلة السنوية' },
+            'الإدارة': { countId: 'headerAdminCount', bodyId: 'bodyAdminNames', title: 'الإدارة' },
+            'الغياب': { countId: 'headerAbsenceCount', bodyId: 'bodyAbsenceNames', title: 'الغياب' },
+            'الترخيص': { countId: 'headerLicenseCount', bodyId: 'bodyLicenseNames', title: 'الترخيص' },
+            'انتظار اصلاح الحافلة': { countId: 'headerRepairCount', bodyId: 'bodyRepairNames', title: 'انتظار اصلاح الحافلة' },
+            'المرض': { countId: 'headerSickCount', bodyId: 'bodySickNames', title: 'المرض' }
         };
 
         for (var cat in categories) {
             var matchedDrivers = [];
-            driversList.forEach(function(d) {
-                if (!activeDriversSet.has(d)) {
-                    var currentStatus = driversCustomStatus[d] || "الراحة";
-                    if (currentStatus === cat) {
-                        matchedDrivers.push(d);
-                    }
-                }
+            driversList.forEach(function(driver) {
+                var currentStatus = String(driversCustomStatus[driver] || 'الراحة').trim();
+
+                // جميع الحالات العادية تستبعد السائق العامل.
+                // الاستثناء: انتظار اصلاح الحافلة يظهر حتى لو كان السائق مربوطاً بحافلة.
+                if (cat !== 'انتظار اصلاح الحافلة' && activeDriversSet.has(driver)) return;
+
+                if (currentStatus === cat) matchedDrivers.push(driver);
             });
 
-            var countStr = matchedDrivers.length < 10 ? "0" + matchedDrivers.length : matchedDrivers.length;
-            document.getElementById(categories[cat].countId).innerText = categories[cat].title + " " + countStr;
-            
-            var namesText = matchedDrivers.length > 0 ? matchedDrivers.join(' ، ') : "***";
-            document.getElementById(categories[cat].bodyId).innerText = namesText;
+            var countStr = matchedDrivers.length < 10 ? '0' + matchedDrivers.length : matchedDrivers.length;
+            document.getElementById(categories[cat].countId).innerText = categories[cat].title + ' ' + countStr;
+            document.getElementById(categories[cat].bodyId).innerText = matchedDrivers.length ? matchedDrivers.join(' ، ') : '***';
         }
     }
 
