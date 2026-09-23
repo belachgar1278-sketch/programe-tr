@@ -1634,7 +1634,7 @@
 
         var dBody = document.getElementById('driversStatusTableBody');
         dBody.innerHTML = "";
-        var statuses = ["الراحة", "الغياب", "المرض", "الترخيص", "العطلة السنوية", "مهمة بالمراب", "الإدارة"];
+        var statuses = ["الراحة", "الغياب", "المرض", "الترخيص", "العطلة السنوية", "انتظار اصلاح الحافلة", "الإدارة"];
 
         var filteredDriversList = driversList.filter(function(driver) {
             var isInWork = activeDriversSet.has(driver);
@@ -1663,7 +1663,7 @@
             else if (currentStatus === "المرض") badgeClass = "status-sick";
             else if (currentStatus === "الترخيص") badgeClass = "status-license";
             else if (currentStatus === "العطلة السنوية") badgeClass = "status-vacation";
-            else if (currentStatus === "مهمة بالمراب") badgeClass = "status-repair";
+           else if (currentStatus === " انتظار اصلاح الحافلة ") badgeClass = "status-repair";
             else if (currentStatus === "الإدارة") badgeClass = "status-admin";
 
             var tr = document.createElement('tr');
@@ -1755,7 +1755,7 @@
             "الإدارة": { countId: "headerAdminCount", bodyId: "bodyAdminNames", title: "الإدارة" },
             "الغياب": { countId: "headerAbsenceCount", bodyId: "bodyAbsenceNames", title: "الغياب" },
             "الترخيص": { countId: "headerLicenseCount", bodyId: "bodyLicenseNames", title: "الترخيص" },
-            "مهمة بالمراب": { countId: "headerRepairCount", bodyId: "bodyRepairNames", title: "مهمة بالمراب" },
+           " انتظار اصلاح الحافلة ": { countId: "headerRepairCount", bodyId: "bodyRepairNames", title: " انتظار اصلاح الحافلة " },
             "المرض": { countId: "headerSickCount", bodyId: "bodySickNames", title: "المرض" }
         };
 
