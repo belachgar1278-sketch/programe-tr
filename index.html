@@ -7,6 +7,7 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --primary: #4f46e5;
@@ -483,9 +484,48 @@
         .form-row { display: flex; gap: 6px; }
 
         .exporting .action-column, .exporting .btn-inline-add { display: none !important; }
+    
+        /* ===== Supabase Login - does not alter the original program UI ===== */
+        body.auth-locked > .container { visibility: hidden; }
+        #supabaseLoginOverlay {
+            position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); padding: 20px;
+        }
+        #supabaseLoginOverlay .login-card {
+            width: min(420px, 100%); background: #fff; border-radius: 14px; padding: 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,.25); text-align: right;
+        }
+        #supabaseLoginOverlay h2 { margin: 0 0 6px; color: #1e1b4b; font-size: 1.35rem; }
+        #supabaseLoginOverlay p { color: #64748b; margin: 0 0 20px; font-size: .9rem; }
+        #supabaseLoginOverlay label { display:block; font-weight:700; margin: 12px 0 6px; color:#334155; }
+        #supabaseLoginOverlay input { width:100%; padding:11px 12px; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; font-size:1rem; }
+        #supabaseLoginOverlay button { width:100%; border:0; border-radius:8px; padding:11px 14px; margin-top:16px; background:#4f46e5; color:#fff; font-weight:700; cursor:pointer; font-family:inherit; }
+        #supabaseLoginOverlay button:disabled { opacity:.65; cursor:wait; }
+        #supabaseLoginError { color:#dc2626; min-height:22px; margin-top:10px; font-size:.88rem; }
+        #supabaseLoginStatus { color:#64748b; font-size:.78rem; margin-top:10px; }
+        .supabase-user-chip { font-size:.78rem; color:#c7d2fe; align-self:center; }
+        .supabase-logout-btn { background:#b91c1c !important; color:#fff !important; }
+        @media print { #supabaseLoginOverlay { display:none !important; } }
+
     </style>
 </head>
-<body>
+<body class="auth-locked">
+<div id="supabaseLoginOverlay">
+  <div class="login-card">
+    <h2>🚍 برنامج حافلات تارودانت</h2>
+    <p>تسجيل الدخول إلى لوحة البرنامج وقاعدة بيانات Supabase</p>
+    <form id="supabaseLoginForm">
+      <label for="supabaseEmail">البريد الإلكتروني</label>
+      <input id="supabaseEmail" type="email" autocomplete="username" required>
+      <label for="supabasePassword">كلمة المرور</label>
+      <input id="supabasePassword" type="password" autocomplete="current-password" required>
+      <button id="supabaseLoginBtn" type="submit">تسجيل الدخول</button>
+      <div id="supabaseLoginError"></div>
+      <div id="supabaseLoginStatus">الاتصال بقاعدة البيانات مطلوب بعد تسجيل الدخول.</div>
+    </form>
+  </div>
+</div>
+
 
 <div class="container">
     <header>
@@ -500,6 +540,7 @@
             <button class="btn btn-purple" onclick="openBusesModal()">🚌 إدارة الحافلات</button>
             <button class="btn btn-warning" onclick="openNewLineModal()">+ إضافة خط</button>
             <button class="btn btn-primary" onclick="openModal()">+ إضافة حافلة</button>
+            <button class="btn btn-danger supabase-logout-btn no-print" id="supabaseLogoutBtn" type="button">تسجيل الخروج</button>
         </div>
     </header>
 
@@ -608,7 +649,7 @@
 
     <div class="status-section">
         <h3>📋 حالات السائقين (بدون العاملين)</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">تم إخفاء السائقين الذين في العمل لعرض المتواجدين في الراحة أو الحالات الأخرى فقط.</p>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">تم إخفاء السائقين الذين في العمل وعرض المتواجدين في الراحة أو الحالات الأخرى فقط (يتم التحيين تلقائياً عند تعديل الحافلات).</p>
         <table>
             <thead>
                 <tr>
@@ -624,7 +665,7 @@
 
     <div class="status-section" style="margin-top: 20px;">
         <h3>🚍 حالات الحافلات (بدون العاملة في الخطوط)</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">تم إخفاء الحافلات التي في العمل (المدرجة في الجدول) وعرض الحافلات غير المدرجة في العمل أو في الإصلاح فقط.</p>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">تم إخفاء الحافلات التي في العمل وعرض الحافلات الاحتياطية أو المتوقفة أو في الإصلاح فقط.</p>
         <table>
             <thead>
                 <tr>
@@ -747,80 +788,188 @@
 </div>
 
 <script>
-    var driversList = [
-        "بن بلعيد الحسن", "اسوان خالد", "بادي محمد", "الناجي كنتاوي", "بوهرير عبد الرحيم",
-        "بوكليد عبد العزيز", "ناصر عبد الله", "قيبوشي حسن", "فرهي عبد الله", "المشتوح منير",
-        "عملوك مصطفى", "مبارك ايت علي", "ايت ناصر عبد العزيز", "حسني م عبد الله", "مفتاح عبد الفتاح",
-        "ايت قاسي عبد العالي", "لوديني حمزة", "اكزداو مهدي", "حوري حسن", "ابركة احمد",
-        "البحار عبد الله", "اولحاج محمد", "حجاج عمر", "طالب رشيد", "ايوب اد العربي",
-        "كمال الساخي", "اجساسي رشيد", "حقي ابراهيم", "الرابحي احمد", "الكادي عزيز",
-        "البشير عبد الرحمان", "عفو مصطفى", "ابراشن لحسن", "جداب رشيد", "زبيلا عبد المجيد",
-        "النماط عبد الواحد", "بوي عمر", "عبد اللطيف ايت سعيد", "الصبار الحسين", "بوكنين نور الدين",
-        "اولحاج عبد الله", "اعدار عبد الله", "العسري محمد", "قاضي حسن", "ازكري محمد",
-        "الصبير هشام", "اجرارحين محمد", "اسندال محمد", "الشتوكي الحسن", "قابا محمد",
-        "حلومي عبد الغفور", "المسعودي محمد", "ابوري محمد", "بلاحمو هشام", "بن الفقير عبد الرحيم",
-        "منير كبير", "حفضي علي", "الغرابي محمد", "اوبلا احمد", "رضوان ايت علي اوعبد الله",
-        "الدلوجي عبد العزيز", "اوقديم مصطفى", "صديقي م محمد", "ايت يعيش الحسين", "ازم هشام",
-        "ايت عدي رشيد", "احموش عبد العزيز", "بن سلام مصطفى", "سمير عليلو", "ايت حمو رشيد",
-        "كنزة اتويبا", "الناجي زكرياء", "براعوس عبد الله"
+    // قائمة السائقين المعتمدة تماماً كما حددتها
+    var defaultDriversList = [
+        "بن بلعيد الحسن",
+        "اسوان خالد",
+        "بادي محمد",
+        "الناجي كنتاوي",
+        "بوهرير عبد الرحيم",
+        "بوكليد عبد العزيز",
+        "ناصر عبد الله",
+        "قيبوشي حسن",
+        "فرهي عبد الله",
+        "المشتوح منير",
+        "عملوك مصطفى",
+        "مبارك ايت علي",
+        "ايت ناصر عبد العزيز",
+        "حسني م عبد الله",
+        "مفتاح عبد الفتاح",
+        "ايت قاسي عبد العالي",
+        "لوديني حمزة",
+        "اكزداو مهدي",
+        "حوري حسن",
+        "ابركة احمد",
+        "البحار عبد الله",
+        "اولحاج محمد",
+        "حجاج عمر",
+        "طالب رشيد",
+        "ايوب اد العربي",
+        "كمال الساخي",
+        "اجساسي رشيد",
+        "حقي ابراهيم",
+        "الرابحي احمد",
+        "الكادي عزيز",
+        "البشير عبد الرحمان",
+        "عفو مصطفى",
+        "ابراشن لحسن",
+        "جداب رشيد",
+        "زبيلا عبد المجيد",
+        "النماط عبد الواحد",
+        "بوي عمر",
+        "عبد اللطيف ايت سعيد",
+        "الصبار الحسين",
+        "بوكنين نور الدين",
+        "اولحاج عبد الله",
+        "اعدار عبد الله",
+        "العسري محمد",
+        "قاضي حسن",
+        "ازكري محمد",
+        "الصبير هشام",
+        "اجرارحين محمد",
+        "اسندال محمد",
+        "الشتوكي الحسن",
+        "قابا محمد",
+        "حلومي عبد الغفور",
+        "المسعودي محمد",
+        "ابوري محمد",
+        "بلاحمو هشام",
+        "بن الفقير عبد الرحيم",
+        "منير كبير",
+        "حفضي علي",
+        "الغرابي محمد",
+        "اوبلا احمد",
+        "رضوان ايت علي اوعبد الله",
+        "الدلوجي عبد العزيز",
+        "اوقديم مصطفى",
+        "صديقي م محمد",
+        "ايت يعيش الحسين",
+        "ازم هشام",
+        "ايت عدي رشيد",
+        "احموش عبد العزيز",
+        "بن سلام مصطفى",
+        "سمير عليلو",
+        "ايت حمو رشيد",
+        "كنزة اتويبا",
+        "براعسو عبد الله",
+        "الناجي زكرياء"
     ];
 
-    var busesList = [];
-    for (var bId = 401; bId <= 411; bId++) busesList.push(String(bId));
-    for (var bId2 = 422; bId2 <= 480; bId2++) busesList.push(String(bId2));
+    var defaultBusesList = [];
+    for (var bId = 401; bId <= 411; bId++) defaultBusesList.push(String(bId));
+    for (var bId2 = 422; bId2 <= 480; bId2++) defaultBusesList.push(String(bId2));
 
-    var driversCustomStatus = {};
-    var busesCustomStatus = {};
-
-    var lineDefaults = {
-        "01 برحيل": { interval: "15 دقيقة", duration: "90 دقيقة" },
-        "1/2 اولاد عرفة": { interval: "30 دقيقة", duration: "45 دقيقة" },
-        "ايت عزة / تارودانت": { interval: "30 دقيقة", duration: "30 دقيقة" },
-        "02 موسى الحمري": { interval: "60 دقيقة", duration: "60 دقيقة" },
-        "3/1 سبت الكردان": { interval: "18 دقيقة", duration: "40/50 دقيقة" },
-        "3/2 اولاد تايمة": { interval: "20 دقيقة", duration: "75 دقيقة" },
-        "04 ارزان": { interval: "20 دقيقة", duration: "75 دقيقة" },
-        "5/1 برحيل اولوز": { interval: "40 دقيقة", duration: "80 دقيقة" },
-        "5/2 تالوين": { interval: "30 دقيقة", duration: "60 دقيقة" },
-        "7 تازمورت": { interval: "40 دقيقة", duration: "60 دقيقة" },
-        "12 اهل الرمل": { interval: "45 دقيقة", duration: "60 دقيقة" }
+    var defaultLineDefaults = {
+        "الخط 01 برحيل": { interval: "15 دقيقة", duration: "90 دقيقة" },
+        "الخط 1/2 اولاد عرفة": { interval: "30 دقيقة", duration: "45 دقيقة" },
+        "الخط ايت عزة / تارودانت": { interval: "30 دقيقة", duration: "30 دقيقة" },
+        "الخط 02 موسى الحمري": { interval: "60 دقيقة", duration: "60 دقيقة" },
+        "الخط 3/1 سبت الكردان": { interval: "18 دقيقة", duration: "50 دقيقة" },
+        "الخط 3/2 اولاد تايمة": { interval: "20 دقيقة", duration: "75 دقيقة" },
+        "الخط 04 ارزان": { interval: "20 دقيقة", duration: "75 دقيقة" },
+        "الخط 5/1 برحيل اولوز": { interval: "40 دقيقة", duration: "80 دقيقة" },
+        "الخط 5/2 تالوين": { interval: "30 دقيقة", duration: "60 دقيقة" },
+        "الخط 7 تازمورت": { interval: "40 دقيقة", duration: "90 دقيقة" },
+        "الخط 12 اهل الرمل": { interval: "45 دقيقة", duration: "64 دقيقة" }
     };
 
-    var busData = [
-        { line: "01 برحيل", bus: "451", driver: "احموش عبد العزيز / العسري محمد", departures: [{time: "06:30", from: "أيت إعزة", note: ""}, {time: "07:00", from: "تارودانت", note: ""}] },
-        { line: "01 برحيل", bus: "479", driver: "زبيلا عبد المجيد", departures: [{time: "06:45", from: "أيت إعزة", note: ""}, {time: "07:16", from: "تارودانت", note: ""}] },
-        { line: "01 برحيل", bus: "465", driver: "اولحاج عبد الله", departures: [{time: "07:00", from: "أيت إعزة", note: ""}, {time: "07:32", from: "تارودانت", note: ""}] },
-        { line: "01 برحيل", bus: "476", driver: "هشام ازم", departures: [{time: "07:00", from: "المرآب", note: ""}, {time: "07:48", from: "تارودانت", note: ""}] },
-        { line: "01 برحيل", bus: "472", driver: "بوهرير عبد الرحيم", departures: [{time: "06:50", from: "اكلي", note: ""}, {time: "08:04", from: "تارودانت", note: ""}] },
-        { line: "01 برحيل", bus: "458", driver: "الغرابي محمد", departures: [{time: "06:44", from: "برحيل", note: ""}] },
-        { line: "01 برحيل", bus: "477", driver: "حجاج عمر", departures: [{time: "07:00", from: "برحيل", note: ""}] },
-        { line: "01 برحيل", bus: "473", driver: "حفضي علي", departures: [{time: "07:16", from: "برحيل", note: ""}] },
-        { line: "01 برحيل", bus: "448", driver: "ايت عدي رشيد", departures: [{time: "06:20", from: "المرآب", note: ""}] },
-        { line: "01 برحيل", bus: "474", driver: "المسعودي محمد", departures: [{time: "06:30", from: "المرآب", note: ""}] },
-        { line: "01 برحيل", bus: "454", driver: "ايت ناصر عبد العزيز", departures: [{time: "06:28", from: "تارودانت", note: ""}] },
-        { line: "1/2 اولاد عرفة", bus: "431", driver: "قابا محمد", departures: [{time: "06:45", from: "تارودانت", note: ""}] },
-        { line: "ايت عزة / تارودانت", bus: "437", driver: "اوقديم مصطفى", departures: [{time: "06:45", from: "أيت إعزة", note: ""}] },
-        { line: "02 موسى الحمري", bus: "407", driver: "قاضي حسن", departures: [{time: "07:00", from: "تارودانت", note: ""}] },
-        { line: "02 موسى الحمري", bus: "411", driver: "الصبير هشام", departures: [{time: "07:00", from: "سيدي موسى", note: ""}] },
-        { line: "3/1 سبت الكردان", bus: "428", driver: "بن سلام مصطفى", departures: [{time: "06:30", from: "السبت", note: ""}] },
-        { line: "3/1 سبت الكردان", bus: "426", driver: "ازكري محمد", departures: [{time: "06:30", from: "تارودانت", note: ""}] },
-        { line: "3/1 سبت الكردان", bus: "424", driver: "ايت يعيش الحسين", departures: [{time: "06:45", from: "تارودانت", note: ""}] },
-        { line: "3/1 سبت الكردان", bus: "406", driver: "عفو مصطفى", departures: [{time: "07:00", from: "تارودانت", note: ""}] },
-        { line: "3/1 سبت الكردان", bus: "404", driver: "حقي ابراهيم / ناصر عبد الله", departures: [{time: "07:18", from: "تارودانت", note: ""}] },
-        { line: "3/2 اولاد تايمة", bus: "453", driver: "بادي محمد", departures: [{time: "06:35", from: "تارودانت", note: ""}] },
-        { line: "3/2 اولاد تايمة", bus: "460", driver: "منير كبير", departures: [{time: "07:00", from: "الخنافيف", note: ""}] },
-        { line: "3/2 اولاد تايمة", bus: "463", driver: "كنزة اتويبا", departures: [{time: "07:25", from: "تارودانت", note: ""}] },
-        { line: "3/2 اولاد تايمة", bus: "408", driver: "صديقي م محمد", departures: [{time: "07:00", from: "تارودانت", note: ""}] },
-        { line: "3/2 اولاد تايمة", bus: "452", driver: "حوري حسن", departures: [{time: "07:25", from: "هوارة", note: ""}] },
-        { line: "3/2 اولاد تايمة", bus: "402", driver: "ابوري محمد", departures: [{time: "08:15", from: "تارودانت", note: "عوضت الحافلة 459 بخط اولاد تايمة بسبب غياب السائق"}] },
-        { line: "04 ارزان", bus: "468", driver: "ايت قاسي عبد العالي", departures: [{time: "06:40", from: "تارودانت", note: ""}] },
-        { line: "04 ارزان", bus: "430", driver: "قيبوشي حسن", departures: [{time: "06:35", from: "أيت إعزة", note: ""}] },
-        { line: "04 ارزان", bus: "433", driver: "الناجي كنتاوي", departures: [{time: "07:00", from: "أيت إعزة", note: ""}] },
-        { line: "04 ارزان", bus: "401", driver: "الصبار الحسين", departures: [{time: "07:00", from: "تارودانت", note: ""}] }
+    // البيانات المستخرجة بدقة من الصورة المطابقة للأسماء المصرح بها
+    var defaultBusData = [
+        { line: "الخط 01 برحيل", bus: "448", driver: "ايت عدي رشيد", departures: [{time: "06:20", from: "تارودانت", note: ""}, {time: "06:50", from: "برحيل", note: ""}] },
+        { line: "الخط 01 برحيل", bus: "474", driver: "المسعودي محمد", departures: [{time: "06:45", from: "تارودانت", note: ""}] },
+        { line: "الخط 01 برحيل", bus: "454", driver: "ايت ناصر عبد العزيز", departures: [{time: "06:35", from: "أيت إعزة", note: ""}] },
+        { line: "الخط 01 برحيل", bus: "471", driver: "رضوان ايت علي اوعبد الله", departures: [{time: "07:18", from: "تارودانت", note: ""}] },
+        { line: "الخط 01 برحيل", bus: "451", driver: "احموش عبد العزيز", departures: [{time: "06:50", from: "أيت إعزة", note: ""}, {time: "07:20", from: "تارودانت", note: ""}] },
+        { line: "الخط 01 برحيل", bus: "479", driver: "زبيلا عبد المجيد", departures: [{time: "06:40", from: "ولاد عيسى", note: "07:45 الكردان"}] },
+        { line: "الخط 01 برحيل", bus: "467", driver: "اولحاج عبد الله", departures: [{time: "08:00", from: "برحيل", note: ""}] },
+        { line: "الخط 01 برحيل", bus: "475", driver: "فرهي عبد الله", departures: [{time: "08:44", from: "برحيل", note: ""}] },
+        { line: "الخط 01 برحيل", bus: "472", driver: "بوهرير عبد الرحيم", departures: [{time: "07:45", from: "برحيل", note: ""}] },
+        { line: "الخط 01 برحيل", bus: "458", driver: "الغرابي محمد", departures: [{time: "08:05", from: "برحيل", note: ""}] },
+        { line: "الخط 01 برحيل", bus: "477", driver: "حجاج عمر", departures: [{time: "07:10", from: "العمران", note: "09:25 برحيل"}] },
+        { line: "الخط 01 برحيل", bus: "473", driver: "حفضي علي", departures: [{time: "07:40", from: "العمران", note: ""}] },
+
+        { line: "الخط 1/2 اولاد عرفة", bus: "431", driver: "قابا محمد / كنزة اتويبا", departures: [{time: "06:30", from: "تارودانت", note: ""}] },
+        { line: "الخط 1/2 اولاد عرفة", bus: "437", driver: "اوقديم مصطفى", departures: [{time: "06:45", from: "أيت إعزة", note: ""}] },
+
+        { line: "الخط 02 موسى الحمري", bus: "407", driver: "قاضي حسن", departures: [{time: "07:00", from: "سيدي موسى", note: ""}] },
+        { line: "الخط 02 موسى الحمري", bus: "411", driver: "الصبير هشام", departures: [{time: "07:00", from: "تارودانت", note: ""}] },
+
+        { line: "الخط 3/1 سبت الكردان", bus: "428", driver: "بن سلام مصطفى", departures: [{time: "06:30", from: "السبت", note: ""}] },
+        { line: "الخط 3/1 سبت الكردان", bus: "426", driver: "ابراشن لحسن", departures: [{time: "06:30", from: "تارودانت", note: ""}] },
+        { line: "الخط 3/1 سبت الكردان", bus: "424", driver: "ايت يعيش الحسين", departures: [{time: "06:45", from: "تارودانت", note: ""}] },
+        { line: "الخط 3/1 سبت الكردان", bus: "406", driver: "عفو مصطفى", departures: [{time: "07:00", from: "تارودانت", note: ""}] },
+        { line: "الخط 3/1 سبت الكردان", bus: "404", driver: "ناصر عبد الله / حقي ابراهيم", departures: [{time: "07:18", from: "تارودانت", note: ""}] },
+
+        { line: "الخط 3/2 اولاد تايمة", bus: "453", driver: "بادي محمد", departures: [{time: "06:35", from: "تارودانت", note: ""}] },
+        { line: "الخط 3/2 اولاد تايمة", bus: "460", driver: "منير كبير", departures: [{time: "07:00", from: "الخنافيف", note: ""}] },
+        { line: "الخط 3/2 اولاد تايمة", bus: "463", driver: "حوري حسن", departures: [{time: "07:25", from: "تارودانت", note: ""}] },
+        { line: "الخط 3/2 اولاد تايمة", bus: "408", driver: "صديقي م محمد", departures: [{time: "07:00", from: "تارودانت", note: ""}] },
+        { line: "الخط 3/2 اولاد تايمة", bus: "452", driver: "بوكليد عبد العزيز", departures: [{time: "07:25", from: "هوارة", note: ""}] },
+        { line: "الخط 3/2 اولاد تايمة", bus: "402", driver: "ابوري محمد", departures: [{time: "08:15", from: "تارودانت", note: ""}] },
+
+        { line: "الخط 04 ارزان", bus: "468", driver: "اويلا احمد", departures: [{time: "06:40", from: "تارودانت", note: ""}] },
+        { line: "الخط 04 ارزان", bus: "430", driver: "المشتوح منير / قيبوشي حسن", departures: [{time: "06:35", from: "أيت إعزة", note: "07:00 تارودانت"}] },
+        { line: "الخط 04 ارزان", bus: "469", driver: "ايت قاسي عبد العالي", departures: [{time: "07:00", from: "أيت إعزة", note: ""}] },
+        { line: "الخط 04 ارزان", bus: "433", driver: "الناجي كنتاوي", departures: [{time: "06:45", from: "ارزان", note: "تارودانت"}] },
+        { line: "الخط 04 ارزان", bus: "401", driver: "الصبار الحسين", departures: [{time: "07:00", from: "ارزان", note: ""}] },
+        { line: "الخط 04 ارزان", bus: "403", driver: "بوي عمر", departures: [{time: "08:15", from: "تارودانت", note: ""}] },
+
+        { line: "الخط 5/1 برحيل اولوز", bus: "475", driver: "البشير عبد الرحمان", departures: [{time: "07:20", from: "برحيل", note: ""}] },
+        { line: "الخط 5/1 برحيل اولوز", bus: "444", driver: "بلاحمو هشام / الناجي زكرياء", departures: [{time: "06:40", from: "برحيل", note: ""}] },
+        { line: "الخط 5/1 برحيل اولوز", bus: "435", driver: "البحار عبد الله", departures: [{time: "07:20", from: "اولوز", note: ""}] },
+        { line: "الخط 5/1 برحيل اولوز", bus: "445", driver: "سمير عليلو", departures: [{time: "08:00", from: "الحصيسن", note: ""}] },
+
+        { line: "الخط 5/2 تالوين", bus: "441", driver: "حسني م عبد الله / عبد العزيز", departures: [{time: "06:40", from: "أيت إعزة", note: ""}] },
+        { line: "الخط 5/2 تالوين", bus: "443", driver: "اسندال محمد / فرهي عبد الله", departures: [{time: "07:00", from: "اولوز", note: ""}] },
+        { line: "الخط 5/2 تالوين", bus: "446", driver: "مبارك ايت علي / براعسو عبد الله", departures: [{time: "07:15", from: "تالوين", note: ""}] },
+
+        { line: "الخط 7 تازمورت", bus: "480", driver: "اسوان خالد", departures: [{time: "06:45", from: "تارودانت", note: ""}] },
+        { line: "الخط 7 تازمورت", bus: "465", driver: "بن بلعيد الحسن", departures: [{time: "07:00", from: "تارودانت", note: ""}] },
+
+        { line: "الخط 12 اهل الرمل", bus: "438", driver: "الكادي عزيز / طالب رشيد", departures: [{time: "07:15", from: "اهل الرمل", note: ""}] },
+        { line: "الخط 12 اهل الرمل", bus: "440", driver: "ايت ناصر عبد العزيز / ايت حمو رشيد", departures: [{time: "07:00", from: "هوارة", note: ""}] }
     ];
 
+    // تصفية المعطيات والتأكد من تطابق السائقين تماماً مع القائمة
+    var validDriversSet = new Set(defaultDriversList);
+    defaultBusData.forEach(function(item) {
+        var cleanedDrivers = item.driver.split('/').map(function(d) { return d.trim(); }).filter(function(d) {
+            return validDriversSet.has(d);
+        });
+        if (cleanedDrivers.length > 0) {
+            item.driver = cleanedDrivers.join(' / ');
+        }
+    });
+
+    var driversList = JSON.parse(localStorage.getItem('taroudant_driversList')) || defaultDriversList;
+    var busesList = JSON.parse(localStorage.getItem('taroudant_busesList')) || defaultBusesList;
+    var lineDefaults = JSON.parse(localStorage.getItem('taroudant_lineDefaults')) || defaultLineDefaults;
+    var busData = JSON.parse(localStorage.getItem('taroudant_busData')) || defaultBusData;
+    var driversCustomStatus = JSON.parse(localStorage.getItem('taroudant_driversCustomStatus')) || {};
+    var busesCustomStatus = JSON.parse(localStorage.getItem('taroudant_busesCustomStatus')) || {};
+
+    function saveDataToStorage() {
+        localStorage.setItem('taroudant_driversList', JSON.stringify(driversList));
+        localStorage.setItem('taroudant_busesList', JSON.stringify(busesList));
+        localStorage.setItem('taroudant_lineDefaults', JSON.stringify(lineDefaults));
+        localStorage.setItem('taroudant_busData', JSON.stringify(busData));
+        localStorage.setItem('taroudant_driversCustomStatus', JSON.stringify(driversCustomStatus));
+        localStorage.setItem('taroudant_busesCustomStatus', JSON.stringify(busesCustomStatus));
+        if (window.__supabaseReady && !window.__supabaseLoading) window.__queueSupabaseSave();
+    }
+
     window.onload = function() {
-        var today = new Date().toISOString().split('T')[0];
+        var today = "2026-09-22";
         document.getElementById('programDate').value = today;
         updateHeaderTitle();
         initDropdowns();
@@ -989,24 +1138,30 @@
             if (item.bus) activeBusesSet.add(item.bus.trim());
         });
 
-        // 1. جدول السائقين (استبعاد من هم في العمل)
         var dBody = document.getElementById('driversStatusTableBody');
         dBody.innerHTML = "";
         var statuses = ["الراحة", "الغياب", "المرض", "الترخيص", "العطلة السنوية", "مهمة بالمراب", "الإدارة"];
 
         var filteredDriversList = driversList.filter(function(driver) {
             var isInWork = activeDriversSet.has(driver);
-            var defaultAutoStatus = isInWork ? "في العمل" : "الراحة";
-            var currentStatus = driversCustomStatus[driver] !== undefined ? driversCustomStatus[driver] : defaultAutoStatus;
-            return currentStatus !== "في العمل";
+            if (isInWork) {
+                if (driversCustomStatus[driver]) {
+                    delete driversCustomStatus[driver];
+                }
+                return false;
+            }
+            if (driversCustomStatus[driver] === undefined) {
+                driversCustomStatus[driver] = "الراحة";
+            }
+            return true;
         });
+
+        saveDataToStorage();
 
         filteredDriversList.sort(function(a, b) { return a.localeCompare(b); });
 
         filteredDriversList.forEach(function(driver) {
-            var isInWork = activeDriversSet.has(driver);
-            var defaultAutoStatus = isInWork ? "في العمل" : "الراحة";
-            var currentStatus = driversCustomStatus[driver] !== undefined ? driversCustomStatus[driver] : defaultAutoStatus;
+            var currentStatus = driversCustomStatus[driver] || "الراحة";
 
             var badgeClass = "status-admin";
             if (currentStatus === "الراحة") badgeClass = "status-rest";
@@ -1034,25 +1189,29 @@
             dBody.appendChild(tr);
         });
 
-        // 2. جدول الحافلات (استبعاد الحافلات التي في العمل في الجدول، الحالة الافتراضية غير المدرجة "غير مدرجة في العمل")
         var bBody = document.getElementById('busesStatusTableBody');
         bBody.innerHTML = "";
-        var busStatuses = ["غير مدرجة في العمل", "الإصلاح", "الصيانة", "متوقفة"];
+        var busStatuses = ["الاحتياط", "الإصلاح", "الصيانة", "متوقفة"];
 
         var filteredBusesList = busesList.filter(function(bus) {
             var isInWork = activeBusesSet.has(bus);
-            var defaultAutoBusStatus = isInWork ? "في العمل" : "غير مدرجة في العمل";
-            var currentStatus = busesCustomStatus[bus] !== undefined ? busesCustomStatus[bus] : defaultAutoBusStatus;
-            return currentStatus !== "في العمل";
+            if (isInWork) {
+                if (busesCustomStatus[bus]) {
+                    delete busesCustomStatus[bus];
+                }
+                return false;
+            }
+            if (busesCustomStatus[bus] === undefined) {
+                busesCustomStatus[bus] = "الاحتياط";
+            }
+            return true;
         });
 
         filteredBusesList.forEach(function(bus) {
-            var isInWork = activeBusesSet.has(bus);
-            var defaultAutoBusStatus = isInWork ? "في العمل" : "غير مدرجة في العمل";
-            var currentStatus = busesCustomStatus[bus] !== undefined ? busesCustomStatus[bus] : defaultAutoBusStatus;
+            var currentStatus = busesCustomStatus[bus] || "الاحتياط";
 
             var badgeClass = "status-admin";
-            if (currentStatus === "غير مدرجة في العمل") badgeClass = "status-spare";
+            if (currentStatus === "الاحتياط") badgeClass = "status-spare";
             else if (currentStatus === "الإصلاح" || currentStatus === "الصيانة") badgeClass = "status-repair";
             else if (currentStatus === "متوقفة") badgeClass = "status-absence";
 
@@ -1077,34 +1236,14 @@
     }
 
     function changeDriverStatus(driver, status) {
-        var activeDriversSet = new Set();
-        busData.forEach(function(item) {
-            item.driver.split('/').forEach(function(d) {
-                if (d.trim()) activeDriversSet.add(d.trim());
-            });
-        });
-        var defaultAutoStatus = activeDriversSet.has(driver) ? "في العمل" : "الراحة";
-
-        if (status === defaultAutoStatus) {
-            delete driversCustomStatus[driver];
-        } else {
-            driversCustomStatus[driver] = status;
-        }
+        driversCustomStatus[driver] = status;
+        saveDataToStorage();
         renderStatusTables();
     }
 
     function changeBusStatus(bus, status) {
-        var activeBusesSet = new Set();
-        busData.forEach(function(item) {
-            if (item.bus) activeBusesSet.add(item.bus.trim());
-        });
-        var defaultAutoBusStatus = activeBusesSet.has(bus) ? "في العمل" : "غير مدرجة في العمل";
-
-        if (status === defaultAutoBusStatus) {
-            delete busesCustomStatus[bus];
-        } else {
-            busesCustomStatus[bus] = status;
-        }
+        busesCustomStatus[bus] = status;
+        saveDataToStorage();
         renderStatusTables();
     }
 
@@ -1129,11 +1268,11 @@
         for (var cat in categories) {
             var matchedDrivers = [];
             driversList.forEach(function(d) {
-                var isInWork = activeDriversSet.has(d);
-                var defaultAutoStatus = isInWork ? "في العمل" : "الراحة";
-                var currentStatus = driversCustomStatus[d] !== undefined ? driversCustomStatus[d] : defaultAutoStatus;
-                if (currentStatus === cat) {
-                    matchedDrivers.push(d);
+                if (!activeDriversSet.has(d)) {
+                    var currentStatus = driversCustomStatus[d] || "الراحة";
+                    if (currentStatus === cat) {
+                        matchedDrivers.push(d);
+                    }
                 }
             });
 
@@ -1218,6 +1357,7 @@
         if (name && !driversList.includes(name)) {
             driversList.push(name);
             input.value = "";
+            saveDataToStorage();
             renderDriversManagementList();
             updateDatalists();
             renderStatusTables();
@@ -1227,6 +1367,7 @@
 
     function removeDriver(index) {
         driversList.splice(index, 1);
+        saveDataToStorage();
         renderDriversManagementList();
         updateDatalists();
         renderStatusTables();
@@ -1253,6 +1394,7 @@
         if (name && !busesList.includes(name)) {
             busesList.push(name);
             input.value = "";
+            saveDataToStorage();
             renderBusesManagementList();
             updateDatalists();
             renderStatusTables();
@@ -1261,6 +1403,7 @@
 
     function removeBusFromList(index) {
         busesList.splice(index, 1);
+        saveDataToStorage();
         renderBusesManagementList();
         updateDatalists();
         renderStatusTables();
@@ -1299,6 +1442,7 @@
             busData[index] = newItem;
         }
 
+        saveDataToStorage();
         closeModal();
         renderTable();
         renderStatusTables();
@@ -1342,6 +1486,7 @@
     function deleteBus(index) {
         if (confirm("هل أنت متأكد من حذف هذه الحافلة من الجدول؟")) {
             busData.splice(index, 1);
+            saveDataToStorage();
             renderTable();
             renderStatusTables();
             updateStats();
@@ -1356,6 +1501,7 @@
 
         if (name && !lineDefaults[name]) {
             lineDefaults[name] = { interval: interval, duration: duration };
+            saveDataToStorage();
             initDropdowns();
             closeLineModal();
             renderTable();
@@ -1396,5 +1542,124 @@
     }
 </script>
 
+
+<script>
+(function(){
+  // Supabase configuration: publishable/anon key only. Never put service_role here.
+  const SUPABASE_URL = "https://hycokhbjhnkyyobzgtqg.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_zs0CMICbuA90TyOSXe1Kew_gajsj1_D";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  window.__supabaseReady = false;
+  window.__supabaseLoading = false;
+  let saveTimer = null;
+
+  function statePayload(){
+    return {
+      driversList: driversList,
+      busesList: busesList,
+      lineDefaults: lineDefaults,
+      busData: busData,
+      driversCustomStatus: driversCustomStatus,
+      busesCustomStatus: busesCustomStatus,
+      programDate: document.getElementById('programDate')?.value || ''
+    };
+  }
+
+  async function saveRemoteNow(){
+    if(!window.__supabaseReady) return;
+    const row = { id: 1, state: statePayload(), updated_at: new Date().toISOString() };
+    const {error} = await sb.from('taroudant_app_state').upsert(row, {onConflict:'id'});
+    if(error) console.error('Supabase save:', error);
+  }
+
+  window.__queueSupabaseSave = function(){
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(saveRemoteNow, 500);
+  };
+
+  async function loadRemote(){
+    window.__supabaseLoading = true;
+    const {data, error} = await sb.from('taroudant_app_state').select('state').eq('id',1).maybeSingle();
+    if(error){ window.__supabaseLoading=false; throw error; }
+
+    if(data && data.state){
+      const st=data.state;
+      if(Array.isArray(st.driversList) && st.driversList.length) driversList=st.driversList;
+      if(Array.isArray(st.busesList) && st.busesList.length) busesList=st.busesList;
+      if(st.lineDefaults && Object.keys(st.lineDefaults).length) lineDefaults=st.lineDefaults;
+      if(Array.isArray(st.busData) && st.busData.length) busData=st.busData;
+      if(st.driversCustomStatus) driversCustomStatus=st.driversCustomStatus;
+      if(st.busesCustomStatus) busesCustomStatus=st.busesCustomStatus;
+      if(st.programDate) document.getElementById('programDate').value=st.programDate;
+      saveDataToStorage();
+    } else {
+      // First login: keep the exact original embedded defaults and upload them.
+      await saveRemoteNow();
+    }
+    window.__supabaseLoading=false;
+    updateHeaderTitle();
+    initDropdowns();
+    renderTable();
+    renderStatusTables();
+    updateStats();
+  }
+
+  function unlock(user){
+    document.body.classList.remove('auth-locked');
+    const overlay=document.getElementById('supabaseLoginOverlay');
+    overlay.style.display='none';
+    window.__supabaseReady=true;
+    const chip=document.createElement('span');
+    chip.className='supabase-user-chip no-print';
+    chip.textContent='متصل: '+(user.email||'المستخدم');
+    const actions=document.querySelector('header .header-actions');
+    if(actions && !document.getElementById('supabaseUserChip')){ chip.id='supabaseUserChip'; actions.prepend(chip); }
+  }
+
+  function lock(msg){
+    window.__supabaseReady=false;
+    document.body.classList.add('auth-locked');
+    document.getElementById('supabaseLoginOverlay').style.display='flex';
+    if(msg) document.getElementById('supabaseLoginError').textContent=msg;
+  }
+
+  document.getElementById('supabaseLoginForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const btn=document.getElementById('supabaseLoginBtn');
+    const err=document.getElementById('supabaseLoginError');
+    err.textContent=''; btn.disabled=true; btn.textContent='جارٍ تسجيل الدخول...';
+    try{
+      const email=document.getElementById('supabaseEmail').value.trim();
+      const password=document.getElementById('supabasePassword').value;
+      const {data,error}=await sb.auth.signInWithPassword({email,password});
+      if(error) throw error;
+      unlock(data.user);
+      await loadRemote();
+      document.getElementById('supabaseLoginStatus').textContent='تم الاتصال بقاعدة البيانات بنجاح.';
+    }catch(e){
+      err.textContent='فشل تسجيل الدخول: '+(e.message||'تحقق من البريد وكلمة المرور.');
+    }finally{ btn.disabled=false; btn.textContent='تسجيل الدخول'; }
+  });
+
+  document.getElementById('supabaseLogoutBtn').addEventListener('click', async function(){
+    await saveRemoteNow();
+    await sb.auth.signOut();
+    location.reload();
+  });
+
+  document.getElementById('programDate').addEventListener('change', function(){
+    if(window.__supabaseReady) window.__queueSupabaseSave();
+  });
+
+  sb.auth.getSession().then(async function(res){
+    if(res.data && res.data.session){
+      unlock(res.data.session.user);
+      try{ await loadRemote(); }catch(e){ lock('تعذر تحميل البيانات من Supabase: '+e.message); }
+    }else{
+      lock();
+    }
+  });
+})();
+</script>
 </body>
 </html>
