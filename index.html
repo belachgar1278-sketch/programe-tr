@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title> تارودانت - نسخة الهاتف</title>
+    <title>برنامج حافلات تارودانت - نسخة الهاتف</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -791,7 +791,126 @@
   .mobile-only{display:none!important}
 }
 
-    </style>
+    
+/* =========================================================
+   EXPORT ON PHONE = EXACT DESKTOP PROGRAM LAYOUT
+   The application UI stays mobile, but the generated image uses
+   the same table layout as the computer version.
+   ========================================================= */
+@media (max-width:700px){
+  #exportSheet.exporting{
+    width:100%;
+    min-width:0;
+    padding:24px;
+    border-radius:12px;
+    overflow:visible;
+    background:#fff;
+  }
+  #exportSheet.exporting .print-header{
+    display:block;
+    padding-bottom:12px;
+    margin-bottom:16px;
+    border-bottom:3px solid var(--primary,#4f46e5);
+  }
+  #exportSheet.exporting .print-header h2{
+    font-size:1.8rem;
+    line-height:1.45;
+    font-weight:800;
+  }
+  #exportSheet.exporting table{
+    display:table;
+    width:100%;
+    border-collapse:collapse;
+    table-layout:auto;
+  }
+  #exportSheet.exporting thead{display:table-header-group;}
+  #exportSheet.exporting tbody{display:table-row-group;}
+  #exportSheet.exporting tfoot{display:table-footer-group;}
+  #exportSheet.exporting tr{display:table-row!important; margin:0!important; padding:0!important; background:transparent!important; border:0!important; box-shadow:none!important;}
+  #exportSheet.exporting th,
+  #exportSheet.exporting td{
+    display:table-cell!important;
+    border:1.5px solid var(--border,#cbd5e1)!important;
+    padding:8px 12px!important;
+    font-size:.95rem!important;
+    vertical-align:middle!important;
+    min-width:0!important;
+    border-radius:0!important;
+  }
+  #exportSheet.exporting th{
+    background:#f1f5f9!important;
+    font-weight:800!important;
+    font-size:1rem!important;
+  }
+  #exportSheet.exporting tr.line-group-header td{
+    display:table-cell!important;
+    width:auto!important;
+    background:#e2e8f0!important;
+    color:#1e1b4b!important;
+    font-weight:800!important;
+    font-size:1rem!important;
+    padding:8px 12px!important;
+    border:1.5px solid var(--border,#cbd5e1)!important;
+    border-radius:0!important;
+  }
+  #exportSheet.exporting .line-row-flex{
+    display:flex!important;
+    justify-content:space-between!important;
+    align-items:center!important;
+    width:100%!important;
+    gap:10px!important;
+    flex-wrap:wrap!important;
+  }
+  #exportSheet.exporting .line-info-container{
+    display:flex!important;
+    align-items:center!important;
+    gap:8px!important;
+    flex-wrap:wrap!important;
+  }
+  #exportSheet.exporting .line-info-container>span:first-child{
+    width:auto!important;
+    font-size:inherit!important;
+    line-height:normal!important;
+  }
+  #exportSheet.exporting .line-info-badge{font-size:.8rem!important;padding:3px 7px!important;}
+  #exportSheet.exporting .bus-number{
+    font-size:1rem!important;
+    padding:4px 9px!important;
+    min-width:auto!important;
+    border-radius:5px!important;
+  }
+  #exportSheet.exporting .driver-tag-primary,
+  #exportSheet.exporting .driver-tag-secondary{
+    font-size:.9rem!important;
+    padding:3px 7px!important;
+    line-height:1.45!important;
+  }
+  #exportSheet.exporting .departures-container{
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    gap:2px!important;
+    flex-wrap:wrap!important;
+  }
+  #exportSheet.exporting .departure-pill{font-size:.9rem!important;border-radius:6px!important;}
+  #exportSheet.exporting .dep-time,
+  #exportSheet.exporting .dep-place{padding:3px 7px!important;}
+  #exportSheet.exporting .note-tag{font-size:.82rem!important;padding:2px 5px!important;}
+  #exportSheet.exporting .manual-move-controls,
+  #exportSheet.exporting .btn-inline-add,
+  #exportSheet.exporting .action-column,
+  #exportSheet.exporting .actions-col{display:none!important;}
+  #exportSheet.exporting tfoot td{
+    display:table-cell!important;
+    background:#1e1b4b!important;
+    color:#fff!important;
+    font-weight:800!important;
+    text-align:center!important;
+    font-size:.95rem!important;
+  }
+}
+
+</style>
 </head>
 <body class="auth-locked">
 <div class="modal" id="programHistoryModal">
