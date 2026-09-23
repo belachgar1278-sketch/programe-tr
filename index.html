@@ -683,13 +683,13 @@
 <div class="modal" id="programHistoryModal">
     <div class="modal-content program-history-modal">
         <div class="modal-header">
-            <h3>📅 سجل البرامج حسب اليوم</h3>
+            <h3> سجل البرامج حسب اليوم</h3>
             <button class="close-modal" type="button" onclick="closeProgramHistory()">×</button>
         </div>
         <div class="modal-body">
             <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
-                <span>كل يوم محفوظ يظهر هنا، ويمكن تحميله للعمل عليه.</span>
-                <button class="btn btn-success" type="button" onclick="saveCurrentProgramToHistory()">💾 حفظ اليوم الحالي</button>
+                <span>كل برنامج يومي يظهر هنا، ويمكن تحميله للعمل عليه.</span>
+                <button class="btn btn-success" type="button" onclick="saveCurrentProgramToHistory()"> حفظ البرنامج الحالي</button>
             </div>
             <div id="programHistoryList"></div>
         </div>
@@ -698,7 +698,7 @@
 
 <div id="supabaseLoginOverlay">
   <div class="login-card">
-    <h2>🚍 برنامج حافلات تارودانت</h2>
+    <h2> برنامج حافلات تارودانت</h2>
     <p>تسجيل الدخول إلى لوحة البرنامج وقاعدة بيانات Supabase</p>
     <form id="supabaseLoginForm">
       <label for="supabaseEmail">البريد الإلكتروني</label>
@@ -716,16 +716,16 @@
 <div class="container">
     <header>
         <div class="header-title">
-            <h1>🚍 برنامج حافلات تارودانت</h1>
-            <p>منظومة إدارة وتوليد جدول الرحلات الموحد</p>
+            <h1> برنامج حافلات تارودانت</h1>
+            <p> إدارة وتوليد جدول الرحلات </p>
         </div>
         <div class="header-actions">
-            <button class="btn btn-success" id="exportBtn" onclick="exportAsImage()">▣ استخراج صورة الحافلات</button>
-            <button class="btn btn-warning" id="exportRestBtn" onclick="exportRestAsImage()">▣ استخراج برنامج الراحة</button>
-            <button class="btn btn-info" id="monitorBtn" onclick="openMonitorsModal()">👁 إدارة المراقبين</button>
-            <button class="btn btn-success" id="exportMonitorBtn" onclick="exportMonitorAsImage()">▣ استخراج برنامج المراقبين</button>
-            <button class="btn btn-info" onclick="openDriversModal()">👥 السائقون</button>
-            <button class="btn btn-purple" onclick="openBusesModal()">🚌 الحافلات</button>
+            <button class="btn btn-success" id="exportBtn" onclick="exportAsImage()"> استخراج برنامج الحافلات</button>
+            <button class="btn btn-warning" id="exportRestBtn" onclick="exportRestAsImage()"> استخراج برنامج الراحة</button>
+            <button class="btn btn-info" id="monitorBtn" onclick="openMonitorsModal()"> إدارة المراقبين</button>
+            <button class="btn btn-success" id="exportMonitorBtn" onclick="exportMonitorAsImage()"> استخراج برنامج المراقبين</button>
+            <button class="btn btn-info" onclick="openDriversModal()"> السائقون</button>
+            <button class="btn btn-purple" onclick="openBusesModal()"> الحافلات</button>
             <button class="btn btn-warning" onclick="openNewLineModal()">+ إضافة خط</button>
             <button class="btn btn-primary" onclick="openModal()">+ إضافة حافلة</button>
             <button class="btn btn-danger supabase-logout-btn no-print" id="supabaseLogoutBtn" type="button">خروج</button>
@@ -733,15 +733,13 @@
     </header>
 
     <div class="admin-date-box">
-        <label for="programDate">تاريخ البرنامج (تحديد الأدمن):</label>
+        <label for="programDate">تاريخ البرنامج :</label>
         <input type="date" id="programDate" onchange="updateHeaderTitle()">
         <div class="program-actions no-print">
             <button class="btn btn-rotate" type="button" onclick="rotateToNextProgram()">↻ تدوير لليوم الموالي</button>
-            <button class="btn btn-history" type="button" onclick="openProgramHistory()">▣ سجل البرامج</button>
+            <button class="btn btn-history" type="button" onclick="openProgramHistory()"> سجل البرامج</button>
         </div>
-        <div class="rotation-info no-print">
-            عند التدوير: تبقى التوقيتات وأماكن الانطلاق والملاحظات ثابتة، بينما تنتقل الحافلة مع سائقها إلى الترتيب الجديد. آخر حافلة في كل خط تصبح الأولى، وجميع الحافلات الأخرى تتقدم مركزًا واحدًا.
-        </div>
+       
     </div>
 
     <div class="stats-container">
