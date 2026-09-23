@@ -3,10 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>برنامج حافلات تارودانت</title>
+    <title>برنامج حافلات تارودانت - نسخة الهاتف</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root {
             --primary: #4f46e5;
@@ -67,13 +68,30 @@
 
         .header-actions {
             display: flex;
-            gap: 10px;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 7px;
             flex-wrap: wrap;
+            max-width: 760px;
+        }
+
+        .header-actions .btn {
+            min-height: 38px;
+            padding: 8px 12px;
+            border-radius: 9px;
+            border: 1px solid rgba(255,255,255,.16);
+            box-shadow: 0 2px 5px rgba(0,0,0,.10);
+            white-space: nowrap;
+        }
+
+        .header-actions .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 9px rgba(0,0,0,.16);
         }
 
         .admin-date-box {
             background: var(--card-bg);
-            padding: 12px 18px;
+            padding: 14px 18px;
             border-radius: var(--radius);
             box-shadow: var(--shadow-sm);
             border: 1px solid var(--border-color);
@@ -81,6 +99,7 @@
             display: flex;
             align-items: center;
             gap: 12px;
+            flex-wrap: wrap;
         }
 
         .admin-date-box label {
@@ -90,12 +109,35 @@
         }
 
         .admin-date-box input[type="date"] {
-            padding: 6px 12px;
-            border-radius: 8px;
-            border: 1px solid var(--border-color);
+            appearance: none;
+            -webkit-appearance: none;
+            min-width: 190px;
+            height: 42px;
+            padding: 7px 12px;
+            border-radius: 9px;
+            border: 1px solid #cbd5e1;
             outline: none;
-            font-weight: 700;
-            color: var(--primary);
+            font-weight: 800;
+            color: #312e81;
+            background: #f8fafc;
+            cursor: pointer;
+            direction: ltr;
+            text-align: center;
+        }
+        .admin-date-box input[type="date"]:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(79,70,229,.12);
+            background: #fff;
+        }
+        .admin-date-box input[type="date"]::-webkit-calendar-picker-indicator {
+            cursor: pointer;
+            opacity: .9;
+            padding: 3px;
+        }
+        @media (max-width: 700px) {
+            .admin-date-box { align-items: stretch; }
+            .admin-date-box input[type="date"] { width: 100%; min-width: 0; }
+            .program-actions { width: 100%; }
         }
 
         .btn {
@@ -107,8 +149,56 @@
             cursor: pointer;
             display: inline-flex;
             align-items: center;
+            justify-content: center;
             gap: 6px;
-            transition: all 0.2s ease;
+            transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+        }
+
+        .program-actions {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .program-actions .btn {
+            min-height: 40px;
+            padding: 8px 14px;
+            border-radius: 9px;
+            box-shadow: var(--shadow-sm);
+            border: 1px solid rgba(15,23,42,.08);
+        }
+
+        .program-actions .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: var(--shadow-md);
+        }
+
+        .btn-rotate {
+            background: #4f46e5;
+            color: #fff;
+        }
+
+        .btn-rotate:hover { background: #4338ca; }
+
+        .btn-history {
+            background: #fff;
+            color: #0369a1;
+            border-color: #bae6fd !important;
+        }
+
+        .btn-history:hover { background: #f0f9ff; }
+
+        .rotation-info {
+            margin-top: 9px;
+            padding: 8px 11px;
+            border-radius: 8px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            color: #64748b;
+            font-size: .78rem;
+            line-height: 1.7;
         }
 
         .btn-primary { background: var(--primary); color: white; }
@@ -141,6 +231,27 @@
             white-space: nowrap;
         }
         .btn-inline-add:hover { background: #047857; }
+
+        @media (max-width: 900px) {
+            header {
+                align-items: flex-start;
+                flex-direction: column;
+            }
+            .header-actions {
+                width: 100%;
+                max-width: none;
+                justify-content: flex-start;
+            }
+        }
+
+        @media (max-width: 600px) {
+            .header-actions .btn, .program-actions .btn {
+                flex: 1 1 auto;
+            }
+            .program-actions {
+                width: 100%;
+            }
+        }
 
         .stats-container {
             display: grid;
@@ -483,29 +594,410 @@
         .form-row { display: flex; gap: 6px; }
 
         .exporting .action-column, .exporting .btn-inline-add { display: none !important; }
-    </style>
+
+        .manual-move-controls {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-right: 6px;
+            direction: ltr;
+        }
+        .btn-move {
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border: 1px solid #cbd5e1;
+            border-radius: 7px;
+            background: #f8fafc;
+            color: #334155;
+            font-size: 16px;
+            font-weight: 800;
+            line-height: 1;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            transition: .15s ease;
+        }
+        .btn-move:hover { background: #e0e7ff; color: #3730a3; border-color: #a5b4fc; transform: translateY(-1px); }
+        .btn-move:disabled { opacity: .35; cursor: not-allowed; transform: none; }
+        .move-label { font-size: .72rem; color: #64748b; font-weight: 700; margin-left: 3px; }
+        .exporting .manual-move-controls { display: none !important; }
+    
+        /* ===== Supabase Login - does not alter the original program UI ===== */
+        body.auth-locked > .container { visibility: hidden; }
+        #supabaseLoginOverlay {
+            position: fixed; inset: 0; z-index: 99999; display: flex; align-items: center; justify-content: center;
+            background: linear-gradient(135deg, #1e1b4b 0%, #312e81 100%); padding: 20px;
+        }
+        #supabaseLoginOverlay .login-card {
+            width: min(420px, 100%); background: #fff; border-radius: 14px; padding: 28px;
+            box-shadow: 0 20px 60px rgba(0,0,0,.25); text-align: right;
+        }
+        #supabaseLoginOverlay h2 { margin: 0 0 6px; color: #1e1b4b; font-size: 1.35rem; }
+        #supabaseLoginOverlay p { color: #64748b; margin: 0 0 20px; font-size: .9rem; }
+        #supabaseLoginOverlay label { display:block; font-weight:700; margin: 12px 0 6px; color:#334155; }
+        #supabaseLoginOverlay input { width:100%; padding:11px 12px; border:1px solid #cbd5e1; border-radius:8px; font-family:inherit; font-size:1rem; }
+        #supabaseLoginOverlay button { width:100%; border:0; border-radius:8px; padding:11px 14px; margin-top:16px; background:#4f46e5; color:#fff; font-weight:700; cursor:pointer; font-family:inherit; }
+        #supabaseLoginOverlay button:disabled { opacity:.65; cursor:wait; }
+        #supabaseLoginError { color:#dc2626; min-height:22px; margin-top:10px; font-size:.88rem; }
+        #supabaseLoginStatus { color:#64748b; font-size:.78rem; margin-top:10px; }
+        .supabase-user-chip { font-size:.78rem; color:#c7d2fe; align-self:center; }
+        .supabase-logout-btn { background:#b91c1c !important; color:#fff !important; }
+        .program-history-modal { max-width: 760px !important; }
+        .history-table { width:100%; border-collapse:collapse; margin-top:12px; }
+        .history-table th,.history-table td { border:1px solid #dbe3ef; padding:8px; text-align:center; }
+        .history-table th { background:#eef2f7; }
+        .history-empty { text-align:center; color:#64748b; padding:20px; }
+        .rotation-info { background:#eef6ff; border:1px solid #bfdbfe; color:#1e3a8a; padding:10px 12px; border-radius:8px; margin-top:10px; line-height:1.7; }
+        /* تصميم صورة برنامج المراقبين - واضح وكبير للطباعة */
+        .monitor-export-sheet { display:none; background:#f8fafc; color:#172033; width:1500px; margin:20px auto; padding:34px 38px 40px; direction:rtl; font-family:Arial, Tahoma, sans-serif; }
+        .monitor-export-title { text-align:center; font-size:38px; line-height:1.35; font-weight:900; color:#123b63; margin:0 0 28px; padding:18px 22px; background:#eaf3fb; border:2px solid #b8d2e8; border-radius:14px; }
+        .monitor-export-section { margin-top:24px; }
+        .monitor-export-card { border:2px solid #c8d7e5; border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 4px 12px rgba(31,55,78,.08); }
+        .monitor-export-section-title { background:#1f5d8f; color:#fff; padding:15px 20px; margin:0; font-size:27px; line-height:1.35; font-weight:900; text-align:right; border-bottom:2px solid #17496f; }
+        .monitor-export-table { width:100%; border-collapse:collapse; table-layout:fixed; }
+        .monitor-export-table th,.monitor-export-table td { border:1.5px solid #c9d6e2; padding:16px 18px; text-align:right; vertical-align:middle; line-height:1.45; }
+        .monitor-export-table th { background:#dcebf7; color:#123b63; font-size:23px; font-weight:900; }
+        .monitor-export-table td { font-size:22px; font-weight:600; min-height:58px; }
+        .monitor-export-table tbody tr:nth-child(even) { background:#f5f9fc; }
+        .monitor-export-table tbody tr:nth-child(odd) { background:#ffffff; }
+        .monitor-export-table tbody tr:hover { background:#edf6fc; }
+        .monitor-export-card.untitled-status-card { margin-top:18px; }
+        .monitor-export-table .time-cell { text-align:center; direction:rtl; font-weight:800; white-space:nowrap; font-size:21px; }
+        .monitor-export-sheet .monitor-export-card:last-child { border-color:#d5c79a; }
+        .monitor-export-sheet .monitor-export-card:last-child .monitor-export-table th { background:#f5edd2; color:#5f4b12; }
+        .monitor-export-sheet .monitor-export-card:last-child .monitor-export-table td { font-size:22px; }
+        .monitor-manager-table { width:100%; border-collapse:collapse; margin-top:10px; }
+        .monitor-manager-table th,.monitor-manager-table td { border:1px solid #dbe3ef; padding:7px; }
+        .monitor-manager-table input { width:100%; padding:7px; border:1px solid #cbd5e1; border-radius:6px; }
+        .monitor-section-card { border:1px solid #dbe3ef; border-radius:10px; padding:12px; margin-bottom:14px; background:#f8fafc; }
+        .monitor-section-head { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-bottom:8px; }
+        .monitor-section-head h4 { margin:0; color:#1e1b4b; }
+
+        @media print { #supabaseLoginOverlay { display:none !important; } }
+
+
+/* =========================================================
+   MOBILE EDITION - same data/functions/Supabase, phone UI only
+   ========================================================= */
+@media (max-width: 700px){
+  html,body{width:100%;overflow-x:hidden}
+  body{padding:8px;background:#f1f5f9}
+  .container{width:100%;max-width:none;margin:0}
+
+  header{position:sticky;top:0;z-index:500;padding:12px;border-radius:14px;margin-bottom:8px;display:block;background:linear-gradient(145deg,#17143d,#3730a3);box-shadow:0 5px 18px rgba(15,23,42,.18)}
+  .header-title{text-align:center;margin-bottom:10px}
+  .header-title h1{font-size:1.08rem;line-height:1.4}
+  .header-title p{font-size:.72rem}
+  .header-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px;width:100%;max-width:none}
+  .header-actions .btn{min-width:0;width:100%;min-height:40px;padding:7px 5px;font-size:.72rem;border-radius:9px;white-space:normal;line-height:1.25}
+  .supabase-user-chip{grid-column:1/-1;text-align:center;font-size:.68rem;order:-1}
+
+  .admin-date-box{padding:10px;border-radius:12px;margin-bottom:8px;display:block}
+  .admin-date-box label{display:block;font-size:.8rem;margin-bottom:5px}
+  .admin-date-box input[type=date]{width:100%;height:42px;min-width:0;font-size:.9rem}
+  .program-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;width:100%;margin-top:7px}
+  .program-actions .btn{min-height:40px;width:100%;font-size:.74rem;padding:7px 5px}
+
+  .stats-container{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:8px}
+  .stat-box{padding:8px 5px;min-width:0;border-radius:11px;display:block;text-align:center}
+  .stat-icon{width:31px;height:31px;margin:0 auto 3px;font-size:1rem;border-radius:8px}
+  .stat-data h4{font-size:.58rem;line-height:1.3}
+  .stat-data span{font-size:1.05rem}
+
+  .controls-card{padding:7px;display:grid;grid-template-columns:1fr;gap:6px;border-radius:11px;margin-bottom:8px}
+  .controls-card input,.controls-card select{width:100%;font-size:.78rem;height:40px;padding:7px 9px}
+
+  #exportSheet{padding:8px;border-radius:12px;margin-bottom:10px;overflow:hidden}
+  .print-header{padding-bottom:8px;margin-bottom:8px}
+  .print-header h2{font-size:1rem;line-height:1.45}
+
+  /* جدول البرنامج يتحول إلى بطاقات بدون فقد البيانات */
+  #exportSheet table,#exportSheet tbody{display:block;width:100%}
+  #exportSheet thead{display:none}
+  #exportSheet tfoot{display:block}
+  #exportSheet tfoot tr,#exportSheet tfoot td{display:block;width:100%}
+  #exportSheet tfoot td{font-size:.78rem;padding:8px;border-radius:0 0 8px 8px}
+  #exportSheet tr.line-group-header{display:block;margin:7px 0 4px}
+  #exportSheet tr.line-group-header td{display:block;width:100%;border:1px solid #cbd5e1;border-radius:10px;background:#e8edf5;padding:8px}
+  .line-row-flex{display:block}
+  .line-info-container{display:flex;gap:4px;align-items:center}
+  .line-info-container>span:first-child{width:100%;font-size:.76rem;line-height:1.5}
+  .line-info-badge{font-size:.62rem;padding:2px 5px}
+  .btn-inline-add{display:none!important}
+
+  #exportSheet tbody>tr:not(.line-group-header){display:grid;grid-template-columns:78px 1fr;grid-template-areas:"bus driver" "bus departure" "actions actions";gap:5px;margin:6px 0;padding:7px;background:#fff;border:1px solid #d7dee8;border-radius:11px;box-shadow:0 2px 7px rgba(15,23,42,.05)}
+  #exportSheet tbody>tr:not(.line-group-header)>td{display:block;border:0;padding:2px 3px;font-size:.72rem;min-width:0}
+  #exportSheet tbody>tr:not(.line-group-header)>td:nth-child(1){grid-area:bus;display:flex;align-items:flex-start;justify-content:center}
+  #exportSheet tbody>tr:not(.line-group-header)>td:nth-child(2){grid-area:driver}
+  #exportSheet tbody>tr:not(.line-group-header)>td:nth-child(3){grid-area:departure}
+  #exportSheet tbody>tr:not(.line-group-header)>td:nth-child(4){grid-area:actions;border-top:1px dashed #e2e8f0;padding-top:5px}
+  .bus-number{font-size:.9rem;padding:5px 7px;border-radius:7px;min-width:62px;text-align:center}
+  .driver-tag-primary,.driver-tag-secondary{font-size:.68rem;padding:3px 5px;margin:1px;line-height:1.45}
+  .departures-container{display:flex;gap:4px;align-items:flex-start;flex-direction:column}
+  .departure-pill{font-size:.67rem;border-radius:6px;max-width:100%}
+  .dep-time,.dep-place{padding:3px 5px}
+  .note-tag{font-size:.62rem;padding:2px 4px;margin:0}
+  .manual-move-controls{gap:3px;margin:0;float:left}
+  .btn-move{width:28px;height:28px;font-size:13px}
+  .btn-edit,.btn-delete{font-size:.64rem;padding:5px 7px}
+
+  .status-section{padding:9px;margin-top:8px;border-radius:11px;overflow:hidden}
+  .status-section h3{font-size:.9rem;margin-bottom:5px;padding-bottom:5px}
+  .status-section p{font-size:.65rem!important;line-height:1.5}
+  .status-section table{display:block;width:100%}
+  .status-section thead{display:none}
+  .status-section tbody{display:block}
+  .status-section tbody tr{display:grid;grid-template-columns:1fr 1fr;gap:5px;padding:7px;border-bottom:1px solid #e2e8f0}
+  .status-section tbody td{border:0;padding:2px;font-size:.68rem}
+  .status-section tbody td:first-child{grid-column:1/-1;font-weight:800}
+  .status-section tbody td:nth-child(3){grid-column:1/-1}
+  .status-section select{width:100%!important;height:34px;font-size:.68rem;padding:3px}
+  .status-badge{font-size:.63rem;padding:3px 6px}
+
+  .modal{align-items:flex-end;padding:0}
+  .modal-content{width:100%;max-width:none!important;max-height:92vh;overflow-y:auto;border-radius:18px 18px 0 0;padding:14px}
+  .modal-header{position:sticky;top:0;background:#fff;z-index:2;padding-bottom:7px}
+  .modal-content h3{font-size:1rem}
+  .form-group label{font-size:.73rem}
+  .form-row{display:grid;grid-template-columns:1fr;gap:5px}
+  .form-row input{width:100%!important;min-width:0}
+  .monitor-manager-table{font-size:.68rem;display:block;overflow-x:auto;white-space:nowrap}
+  .monitor-manager-table input{font-size:.68rem;min-width:120px}
+  .monitor-section-card{padding:8px}
+  .monitor-section-head h4{font-size:.82rem}
+  .history-table{font-size:.68rem;display:block;overflow-x:auto;white-space:nowrap}
+
+  #exportRestSheet{width:100%;padding:8px}
+  .rest-main-title{font-size:1rem;padding:8px}
+  .rest-section-header{font-size:.82rem;padding:5px}
+  .rest-section-body{font-size:.7rem;padding:7px}
+
+  #monitorExportSheet{width:100%!important;padding:10px!important}
+  .monitor-export-title{font-size:1.15rem;padding:10px;margin-bottom:10px}
+  .monitor-export-section-title{font-size:.9rem;padding:8px 10px}
+  .monitor-export-table th,.monitor-export-table td{font-size:.72rem!important;padding:7px 6px}
+  .monitor-export-table .time-cell{font-size:.68rem!important}
+
+  #supabaseLoginOverlay{padding:12px}
+  #supabaseLoginOverlay .login-card{width:100%;padding:20px;border-radius:16px}
+  #supabaseLoginOverlay h2{font-size:1.15rem}
+  #supabaseLoginOverlay input{height:43px;font-size:.9rem}
+  #supabaseLoginOverlay button{height:43px;font-size:.85rem}
+}
+
+@media (min-width:701px){
+  .mobile-only{display:none!important}
+}
+
+    
+/* =========================================================
+   MOBILE EXPORT — IDENTICAL DESKTOP EXPORT DIMENSIONS
+   The mobile interface remains responsive, but the exported
+   program is rendered on a fixed 1400px desktop canvas.
+   ========================================================= */
+@media (max-width:700px){
+  #exportSheet.exporting{
+    width:1400px!important;
+    min-width:1400px!important;
+    max-width:1400px!important;
+    box-sizing:border-box!important;
+    padding:24px!important;
+    margin:0!important;
+    border-radius:var(--radius,12px)!important;
+    overflow:visible!important;
+    background:#fff!important;
+    box-shadow:var(--shadow-sm,0 1px 3px rgba(0,0,0,.08))!important;
+    border:1px solid var(--border-color,#cbd5e1)!important;
+  }
+
+  #exportSheet.exporting .print-header{
+    display:block!important;
+    text-align:center!important;
+    border-bottom:3px solid var(--primary,#4f46e5)!important;
+    padding-bottom:12px!important;
+    margin-bottom:16px!important;
+  }
+  #exportSheet.exporting .print-header h2{
+    color:var(--secondary,#1e1b4b)!important;
+    font-size:1.8rem!important;
+    line-height:1.45!important;
+    font-weight:800!important;
+  }
+
+  #exportSheet.exporting table{
+    display:table!important;
+    width:100%!important;
+    min-width:0!important;
+    max-width:none!important;
+    border-collapse:collapse!important;
+    table-layout:auto!important;
+  }
+  #exportSheet.exporting thead{display:table-header-group!important;}
+  #exportSheet.exporting tbody{display:table-row-group!important;}
+  #exportSheet.exporting tfoot{display:table-footer-group!important;}
+
+  #exportSheet.exporting tr{
+    display:table-row!important;
+    margin:0!important;
+    padding:0!important;
+    background:transparent!important;
+    border:0!important;
+    box-shadow:none!important;
+  }
+  #exportSheet.exporting th,
+  #exportSheet.exporting td{
+    display:table-cell!important;
+    border:2px solid var(--border-color,#cbd5e1)!important;
+    padding:10px 12px!important;
+    font-size:inherit!important;
+    vertical-align:middle!important;
+    min-width:0!important;
+    border-radius:0!important;
+  }
+  #exportSheet.exporting th{
+    background:#f1f5f9!important;
+    color:var(--secondary,#1e1b4b)!important;
+    font-weight:800!important;
+    font-size:1rem!important;
+  }
+
+  #exportSheet.exporting tr.line-group-header td{
+    display:table-cell!important;
+    width:auto!important;
+    background:#e8edf5!important;
+    color:#1e1b4b!important;
+    font-weight:800!important;
+    font-size:1rem!important;
+    padding:8px 12px!important;
+    border:1px solid #cbd5e1!important;
+    border-radius:0!important;
+  }
+
+  #exportSheet.exporting .line-row-flex{
+    display:flex!important;
+    justify-content:space-between!important;
+    align-items:center!important;
+    width:100%!important;
+    gap:10px!important;
+    flex-wrap:nowrap!important;
+  }
+  #exportSheet.exporting .line-info-container{
+    display:flex!important;
+    align-items:center!important;
+    gap:8px!important;
+    flex-wrap:nowrap!important;
+  }
+  #exportSheet.exporting .line-info-container>span:first-child{
+    width:auto!important;
+    font-size:inherit!important;
+    line-height:normal!important;
+  }
+  #exportSheet.exporting .line-info-badge{font-size:.8rem!important;padding:3px 7px!important;}
+  #exportSheet.exporting .bus-number{
+    font-size:1rem!important;
+    padding:4px 9px!important;
+    min-width:auto!important;
+    border-radius:5px!important;
+  }
+  #exportSheet.exporting .driver-tag-primary,
+  #exportSheet.exporting .driver-tag-secondary{
+    font-size:.9rem!important;
+    padding:3px 7px!important;
+    line-height:1.45!important;
+  }
+  #exportSheet.exporting .departures-container{
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    gap:2px!important;
+    flex-wrap:wrap!important;
+  }
+  #exportSheet.exporting .departure-pill{font-size:.9rem!important;border-radius:6px!important;}
+  #exportSheet.exporting .dep-time,
+  #exportSheet.exporting .dep-place{padding:3px 7px!important;}
+  #exportSheet.exporting .note-tag{font-size:.82rem!important;padding:2px 5px!important;}
+
+  /* Never include controls in the exported desktop-style image. */
+  #exportSheet.exporting .manual-move-controls,
+  #exportSheet.exporting .btn-inline-add,
+  #exportSheet.exporting .action-column,
+  #exportSheet.exporting .actions-col{display:none!important;}
+
+  #exportSheet.exporting tfoot td{
+    display:table-cell!important;
+    background:#1e1b4b!important;
+    color:#fff!important;
+    font-weight:800!important;
+    text-align:center!important;
+    font-size:1rem!important;
+  }
+}
+
+</style>
 </head>
-<body>
+<body class="auth-locked">
+<div class="modal" id="programHistoryModal">
+    <div class="modal-content program-history-modal">
+        <div class="modal-header">
+            <h3> سجل البرامج حسب اليوم</h3>
+            <button class="close-modal" type="button" onclick="closeProgramHistory()">×</button>
+        </div>
+        <div class="modal-body">
+            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                <span>كل برنامج يومي يظهر هنا، ويمكن تحميله للعمل عليه.</span>
+                <button class="btn btn-success" type="button" onclick="saveCurrentProgramToHistory()"> حفظ البرنامج الحالي</button>
+            </div>
+            <div id="programHistoryList"></div>
+        </div>
+    </div>
+</div>
+
+<div id="supabaseLoginOverlay">
+  <div class="login-card">
+    <h2> برنامج حافلات تارودانت</h2>
+    <p>تسجيل الدخول إلى لوحة البرنامج وقاعدة بيانات Supabase</p>
+    <form id="supabaseLoginForm">
+      <label for="supabaseEmail">البريد الإلكتروني</label>
+      <input id="supabaseEmail" type="email" autocomplete="username" required>
+      <label for="supabasePassword">كلمة المرور</label>
+      <input id="supabasePassword" type="password" autocomplete="current-password" required>
+      <button id="supabaseLoginBtn" type="submit">تسجيل الدخول</button>
+      <div id="supabaseLoginError"></div>
+      <div id="supabaseLoginStatus">الاتصال بقاعدة البيانات مطلوب بعد تسجيل الدخول.</div>
+    </form>
+  </div>
+</div>
+
 
 <div class="container">
     <header>
         <div class="header-title">
-            <h1>🚍 برنامج حافلات تارودانت</h1>
-            <p>منظومة إدارة وتوليد جدول الرحلات الموحد</p>
+            <h1> برنامج حافلات تارودانت</h1>
+            <p> إدارة وتوليد جدول الرحلات </p>
         </div>
         <div class="header-actions">
-            <button class="btn btn-success" id="exportBtn" onclick="exportAsImage()">📸 استخراج صورة الحافلات HD</button>
-            <button class="btn btn-warning" id="exportRestBtn" onclick="exportRestAsImage()">📸 استخراج برنامج الراحة HD</button>
-            <button class="btn btn-info" onclick="openDriversModal()">👥 إدارة السائقين</button>
-            <button class="btn btn-purple" onclick="openBusesModal()">🚌 إدارة الحافلات</button>
+            <button class="btn btn-success" id="exportBtn" onclick="exportAsImage()"> استخراج برنامج الحافلات</button>
+            <button class="btn btn-warning" id="exportRestBtn" onclick="exportRestAsImage()"> استخراج برنامج الراحة</button>
+            <button class="btn btn-info" id="monitorBtn" onclick="openMonitorsModal()"> إدارة المراقبين</button>
+            <button class="btn btn-success" id="exportMonitorBtn" onclick="exportMonitorAsImage()"> استخراج برنامج المراقبين</button>
+            <button class="btn btn-info" onclick="openDriversModal()"> السائقون</button>
+            <button class="btn btn-purple" onclick="openBusesModal()"> الحافلات</button>
             <button class="btn btn-warning" onclick="openNewLineModal()">+ إضافة خط</button>
             <button class="btn btn-primary" onclick="openModal()">+ إضافة حافلة</button>
+            <button class="btn btn-danger supabase-logout-btn no-print" id="supabaseLogoutBtn" type="button">خروج</button>
         </div>
     </header>
 
     <div class="admin-date-box">
-        <label for="programDate">تاريخ البرنامج (تحديد الأدمن):</label>
+        <label for="programDate">تاريخ البرنامج :</label>
         <input type="date" id="programDate" onchange="updateHeaderTitle()">
+        <div class="program-actions no-print">
+            <button class="btn btn-rotate" type="button" onclick="rotateToNextProgram()">↻ تدوير لليوم الموالي</button>
+            <button class="btn btn-history" type="button" onclick="openProgramHistory()"> سجل البرامج</button>
+        </div>
+       
     </div>
 
     <div class="stats-container">
@@ -595,7 +1087,7 @@
             </div>
 
             <div class="rest-section-box">
-                <div class="rest-section-header" id="headerRepairCount">مهمة بالمراب 00</div>
+                <div class="rest-section-header" id="headerRepairCount">انتظار اصلاح الحافلة 00</div>
                 <div class="rest-section-body" id="bodyRepairNames">***</div>
             </div>
 
@@ -603,6 +1095,30 @@
                 <div class="rest-section-header" id="headerSickCount">المرض 00</div>
                 <div class="rest-section-body" id="bodySickNames">***</div>
             </div>
+        </div>
+    </div>
+
+    <div id="monitorExportSheet" class="monitor-export-sheet">
+        <div class="monitor-export-title" id="monitorExportTitle">برنامج المراقبين</div>
+        <div class="monitor-export-section monitor-export-card">
+            <div class="monitor-export-section-title">مراقبي المحطات</div>
+            <table class="monitor-export-table">
+                <thead><tr><th style="width:58%">المحطة</th><th style="width:42%">المراقب</th></tr></thead>
+                <tbody id="monitorStationsExportBody"></tbody>
+            </table>
+        </div>
+        <div class="monitor-export-section monitor-export-card">
+            <div class="monitor-export-section-title">مراقبي الخطوط</div>
+            <table class="monitor-export-table">
+                <thead><tr><th style="width:42%">الخط</th><th style="width:23%">التوقيت</th><th style="width:35%">المراقب</th></tr></thead>
+                <tbody id="monitorLinesExportBody"></tbody>
+            </table>
+        </div>
+        <div class="monitor-export-section monitor-export-card">
+            <table class="monitor-export-table">
+                <thead><tr><th style="width:58%">الحالة</th><th style="width:42%">المراقب</th></tr></thead>
+                <tbody id="monitorStatusesExportBody"></tbody>
+            </table>
         </div>
     </div>
 
@@ -636,6 +1152,21 @@
             <tbody id="busesStatusTableBody">
             </tbody>
         </table>
+    </div>
+</div>
+
+<div class="modal" id="monitorsModal">
+    <div class="modal-content" style="max-width:1100px; max-height:90vh; overflow-y:auto;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <h3>👁 إدارة برنامج المراقبين</h3>
+            <button class="close-modal" type="button" onclick="closeMonitorsModal()">×</button>
+        </div>
+        <p style="color:#64748b;font-size:.9rem;margin:8px 0 14px;">التاريخ المعتمد هو تاريخ البرنامج الذي يحدده الأدمن. يمكنك تعديل الأسماء والمحطات والخطوط والحالات، ثم حفظ البرنامج.</p>
+        <div id="monitorManagerContent"></div>
+        <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px;">
+            <button type="button" class="btn" style="background:#cbd5e1;color:#334155;" onclick="closeMonitorsModal()">إغلاق</button>
+            <button type="button" class="btn btn-success" onclick="saveMonitorProgram()">💾 حفظ برنامج المراقبين</button>
+        </div>
     </div>
 </div>
 
@@ -916,6 +1447,44 @@
     var busData = JSON.parse(localStorage.getItem('taroudant_busData')) || defaultBusData;
     var driversCustomStatus = JSON.parse(localStorage.getItem('taroudant_driversCustomStatus')) || {};
     var busesCustomStatus = JSON.parse(localStorage.getItem('taroudant_busesCustomStatus')) || {};
+    var programHistory = JSON.parse(localStorage.getItem('taroudant_programHistory')) || {};
+    var defaultMonitorProgram = {
+        stations: [
+            {name:'أيت بدني ياسين', assignment:'منسق الحركية'},
+            {name:'موسى الخموس', assignment:'محطة البلدية'},
+            {name:'محفوظ اوغيلاس', assignment:'محطة بوذهب'},
+            {name:'****', assignment:'محطة اولوز'},
+            {name:'بن عكوك سعيد', assignment:'محطة ايت اعزة'},
+            {name:'****', assignment:'محطة المعديات'},
+            {name:'', assignment:'محطة البلاليع'},
+            {name:'****', assignment:'محطة برحيل 1 و 5'},
+            {name:'ابخار حسن', assignment:'محطة سبت الكردان'},
+            {name:'', assignment:'محطة سبت الكردان ( السوق)'},
+            {name:'******', assignment:'محطة اولاد تايمة'}
+        ],
+        lines: [
+            {name:'حكيم بلقشاش', time:'06:00 إلى 14:00', assignment:'الخط برحيل'},
+            {name:'عثمان حطابي', time:'06:00 إلى 14:00', assignment:'الخط اولوز'},
+            {name:'الختير اوزالين', time:'06:00 إلى 14:00', assignment:'خط اولاد تايمة'},
+            {name:'وهيب عبد المجيد', time:'06:00 إلى 14:00', assignment:'خط سبت الكردان'},
+            {name:'****', time:'', assignment:'الخط مابين ( ارزان + ايت إعزة)'}
+        ],
+        statuses: [
+            {name:'****', assignment:'الراحة 00'},
+            {name:'****', assignment:'الادارة 00'},
+            {name:'******', assignment:'العطلة السنوية 00'},
+            {name:'أيت خلفت عبد الكريم + المال احمد', assignment:'الترخيص 01'},
+            {name:'هشام ايت علي', assignment:'مصلحة البطائق'},
+            {name:'*****', assignment:'المرض 00'},
+            {name:'****', assignment:'الغياب 00'}
+        ]
+    };
+    var monitorPrograms = JSON.parse(localStorage.getItem('taroudant_monitorPrograms')) || {'2026-09-14': defaultMonitorProgram};
+    var __switchingProgramDate = false;
+
+    function cloneData(value) {
+        return JSON.parse(JSON.stringify(value));
+    }
 
     function saveDataToStorage() {
         localStorage.setItem('taroudant_driversList', JSON.stringify(driversList));
@@ -924,26 +1493,195 @@
         localStorage.setItem('taroudant_busData', JSON.stringify(busData));
         localStorage.setItem('taroudant_driversCustomStatus', JSON.stringify(driversCustomStatus));
         localStorage.setItem('taroudant_busesCustomStatus', JSON.stringify(busesCustomStatus));
+        localStorage.setItem('taroudant_programHistory', JSON.stringify(programHistory));
+        localStorage.setItem('taroudant_monitorPrograms', JSON.stringify(monitorPrograms));
+        if (window.__supabaseReady && !window.__supabaseLoading && !__switchingProgramDate) window.__queueSupabaseSave();
     }
 
     window.onload = function() {
-        var today = "2026-09-22";
+        var today = new Date().toISOString().slice(0,10);
         document.getElementById('programDate').value = today;
+        window.__lastProgramDate = today;
+        if(!programHistory[today]) programHistory[today] = snapshotCurrentProgram();
         updateHeaderTitle();
         initDropdowns();
         renderTable();
         renderStatusTables();
         updateStats();
+        updateMonitorExportSheet();
     };
+
+    function getProgramDateValue() {
+        return document.getElementById('programDate').value;
+    }
+
+    function snapshotCurrentProgram() {
+        return {
+            busData: cloneData(busData),
+            lineDefaults: cloneData(lineDefaults),
+            driversCustomStatus: cloneData(driversCustomStatus),
+            busesCustomStatus: cloneData(busesCustomStatus),
+            savedAt: new Date().toISOString()
+        };
+    }
+
+    function saveCurrentProgramToHistory(dateValue) {
+        var date = dateValue || getProgramDateValue();
+        if (!date) return;
+        programHistory[date] = snapshotCurrentProgram();
+        saveDataToStorage();
+        renderProgramHistory();
+    }
+
+    function restoreProgramFromHistory(dateValue) {
+        var snap = programHistory[dateValue];
+        if (!snap) return false;
+        busData = cloneData(snap.busData || []);
+        if (snap.lineDefaults) lineDefaults = cloneData(snap.lineDefaults);
+        if (snap.driversCustomStatus) driversCustomStatus = cloneData(snap.driversCustomStatus);
+        if (snap.busesCustomStatus) busesCustomStatus = cloneData(snap.busesCustomStatus);
+        return true;
+    }
+
+    // التناوب الصحيح حسب المطلوب: التوقيتات وأماكن الانطلاق والملاحظات ثابتة.
+    // آخر حافلة في ترتيب كل خط تنتقل إلى الترتيب الأول، مع سائقها/سائقيها.
+    // مثال: 448،474،454،471 ...،473 تصبح: 473،448،474،454،471 ...
+    function rotateBusSchedulesForNextDay(sourceData) {
+        var grouped = {};
+        sourceData.forEach(function(item, index) {
+            if (!grouped[item.line]) grouped[item.line] = [];
+            grouped[item.line].push({ item:item, index:index });
+        });
+
+        var result = cloneData(sourceData);
+
+        Object.keys(grouped).forEach(function(line) {
+            var rows = grouped[line];
+            if (rows.length < 2) return;
+
+            // كل خانة تحتفظ بتوقيتها ومكانها وملاحظتها،
+            // وتأخذ الحافلة والسائق من الخانة السابقة في الترتيب؛
+            // الخانة الأولى تأخذ آخر حافلة.
+            rows.forEach(function(row, pos) {
+                var previous = rows[(pos - 1 + rows.length) % rows.length];
+                var current = sourceData[row.index];
+                var previousBus = sourceData[previous.index];
+
+                result[row.index].bus = previousBus.bus;
+                result[row.index].driver = previousBus.driver;
+                result[row.index].departures = cloneData(current.departures || []);
+                result[row.index].line = current.line;
+            });
+        });
+
+        return result;
+    }
+
+    async function rotateToNextProgram() {
+        var sourceDate = getProgramDateValue();
+        if (!sourceDate) return alert('حدد تاريخ البرنامج أولاً.');
+        var target = new Date(sourceDate + 'T12:00:00');
+        target.setDate(target.getDate() + 1);
+        var targetDate = target.toISOString().slice(0,10);
+        var exists = !!programHistory[targetDate];
+        var msg = exists
+            ? 'يوجد برنامج محفوظ لليوم الموالي. هل تريد استبداله بالتناوب الجديد؟'
+            : 'سيتم إنشاء برنامج ' + targetDate + ' بالتناوب بين حافلات كل خط. هل تريد المتابعة؟';
+        if (!confirm(msg)) return;
+
+        saveCurrentProgramToHistory(sourceDate);
+        var sourceSnapshot = programHistory[sourceDate];
+        var rotated = rotateBusSchedulesForNextDay(sourceSnapshot.busData);
+        programHistory[targetDate] = {
+            busData: rotated,
+            lineDefaults: cloneData(sourceSnapshot.lineDefaults),
+            driversCustomStatus: cloneData(sourceSnapshot.driversCustomStatus),
+            busesCustomStatus: cloneData(sourceSnapshot.busesCustomStatus),
+            sourceDate: sourceDate,
+            rotation: true,
+            savedAt: new Date().toISOString()
+        };
+
+        __switchingProgramDate = true;
+        document.getElementById('programDate').value = targetDate;
+        window.__lastProgramDate = targetDate;
+        restoreProgramFromHistory(targetDate);
+        updateHeaderTitle();
+        initDropdowns();
+        renderTable();
+        renderStatusTables();
+        updateStats();
+        __switchingProgramDate = false;
+        saveDataToStorage();
+        if(window.__supabaseReady) await window.__queueSupabaseSave(true);
+        alert('تم إنشاء برنامج اليوم الموالي بالتناوب وحفظه في السجل.');
+    }
+
+    function openProgramHistory() {
+        renderProgramHistory();
+        document.getElementById('programHistoryModal').style.display = 'flex';
+    }
+
+    function closeProgramHistory() {
+        document.getElementById('programHistoryModal').style.display = 'none';
+    }
+
+    function renderProgramHistory() {
+        var box = document.getElementById('programHistoryList');
+        if (!box) return;
+        var dates = Object.keys(programHistory).sort().reverse();
+        if (!dates.length) {
+            box.innerHTML = '<div class="history-empty">لا توجد برامج محفوظة بعد.</div>';
+            return;
+        }
+        var html = '<table class="history-table"><thead><tr><th>التاريخ</th><th>النوع</th><th>الحافلات</th><th>الإجراء</th></tr></thead><tbody>';
+        dates.forEach(function(date) {
+            var s = programHistory[date] || {};
+            var count = Array.isArray(s.busData) ? s.busData.length : 0;
+            var type = s.rotation ? 'تدوير من اليوم السابق' : 'برنامج محفوظ';
+            html += '<tr><td>' + date + '</td><td>' + type + '</td><td>' + count + '</td><td>' +
+                '<button class="btn btn-primary" type="button" onclick="loadProgramHistoryDate(\'' + date + '\')">فتح</button> ' +
+                '<button class="btn btn-danger" type="button" onclick="deleteProgramHistoryDate(\'' + date + '\')">حذف السجل</button></td></tr>';
+        });
+        html += '</tbody></table>';
+        box.innerHTML = html;
+    }
+
+    function loadProgramHistoryDate(dateValue) {
+        if (!programHistory[dateValue]) return;
+        saveCurrentProgramToHistory(getProgramDateValue());
+        __switchingProgramDate = true;
+        document.getElementById('programDate').value = dateValue;
+        window.__lastProgramDate = dateValue;
+        restoreProgramFromHistory(dateValue);
+        updateHeaderTitle();
+        initDropdowns();
+        renderTable();
+        renderStatusTables();
+        updateStats();
+        __switchingProgramDate = false;
+        saveDataToStorage();
+        closeProgramHistory();
+    }
+
+    function deleteProgramHistoryDate(dateValue) {
+        if (!confirm('حذف برنامج يوم ' + dateValue + ' من السجل؟')) return;
+        delete programHistory[dateValue];
+        saveDataToStorage();
+        renderProgramHistory();
+    }
 
     function updateHeaderTitle() {
         var dateVal = document.getElementById('programDate').value;
         if (!dateVal) return;
+        getMonitorProgramForDate(dateVal, true);
+        saveDataToStorage();
         var dateObj = new Date(dateVal);
         var options = { weekday: 'long', year: 'numeric', month: 'numeric', day: 'numeric' };
         var formattedDate = dateObj.toLocaleDateString('ar-MA', options);
         document.getElementById('mainHeaderTitle').innerText = "برنامج حافلات تارودانت ليوم " + formattedDate;
         document.getElementById('restSheetTitle').innerText = "برنامج الراحة للسائقين ليوم " + formattedDate;
+        updateMonitorExportSheet();
     }
 
     function initDropdowns() {
@@ -1069,7 +1807,11 @@
                     <td><span class="bus-number">${item.bus}</span></td>
                     <td>${formattedDrivers}</td>
                     <td><div class="departures-container">${departuresHtml}</div></td>
-                    <td class="action-column" style="text-align: center;">
+                    <td class="action-column" style="text-align: center; white-space: nowrap;">
+                        <div class="manual-move-controls" title="تحريك الحافلة مع سائقها بين خانات التوقيت دون تغيير التوقيت">
+                            <button class="btn-move" type="button" onclick="moveBusInLine(${item.originalIndex}, -1)" ${isFirstInLine(item.originalIndex) ? 'disabled' : ''} aria-label="تحريك للأعلى">▲</button>
+                            <button class="btn-move" type="button" onclick="moveBusInLine(${item.originalIndex}, 1)" ${isLastInLine(item.originalIndex) ? 'disabled' : ''} aria-label="تحريك للأسفل">▼</button>
+                        </div>
                         <button class="btn btn-edit" onclick="editBus(${item.originalIndex})">تعديل</button>
                         <button class="btn btn-delete" onclick="deleteBus(${item.originalIndex})">حذف</button>
                     </td>
@@ -1081,11 +1823,63 @@
         document.getElementById('footerTotalBusses').innerText = visibleBusesCount;
     }
 
+    function getLineIndexes(lineName) {
+        var indexes = [];
+        busData.forEach(function(item, index) {
+            if (item.line === lineName) indexes.push(index);
+        });
+        return indexes;
+    }
+
+    function isFirstInLine(index) {
+        var item = busData[index];
+        if (!item) return true;
+        var indexes = getLineIndexes(item.line);
+        return indexes.indexOf(index) <= 0;
+    }
+
+    function isLastInLine(index) {
+        var item = busData[index];
+        if (!item) return true;
+        var indexes = getLineIndexes(item.line);
+        return indexes.indexOf(index) === indexes.length - 1;
+    }
+
+    // تحريك يدوي: ننقل هوية الحافلة وسائقها فقط بين خانات الخط.
+    // التوقيت + مكان الانطلاق + الملاحظات تبقى ثابتة في الخانة نفسها.
+    function moveBusInLine(index, direction) {
+        if (!busData[index]) return;
+        var line = busData[index].line;
+        var indexes = getLineIndexes(line);
+        var pos = indexes.indexOf(index);
+        if (pos < 0) return;
+
+        var targetPos = pos + direction;
+        if (targetPos < 0 || targetPos >= indexes.length) return;
+
+        var targetIndex = indexes[targetPos];
+        var current = busData[index];
+        var target = busData[targetIndex];
+
+        // فقط الحافلة والسائق ينتقلان؛ departures لا تتغير إطلاقاً.
+        var tmpBus = current.bus;
+        var tmpDriver = current.driver;
+        current.bus = target.bus;
+        current.driver = target.driver;
+        target.bus = tmpBus;
+        target.driver = tmpDriver;
+
+        saveDataToStorage();
+        renderTable();
+        renderStatusTables();
+        updateStats();
+    }
+
     function renderStatusTables() {
         var activeDriversSet = new Set();
         busData.forEach(function(item) {
-            var splitted = item.driver.split('/');
-            splitted.forEach(function(d) {
+            if (!item.driver) return;
+            item.driver.split('/').forEach(function(d) {
                 var name = d.trim();
                 if (name) activeDriversSet.add(name);
             });
@@ -1097,94 +1891,80 @@
         });
 
         var dBody = document.getElementById('driversStatusTableBody');
-        dBody.innerHTML = "";
-        var statuses = ["الراحة", "الغياب", "المرض", "الترخيص", "العطلة السنوية", "مهمة بالمراب", "الإدارة"];
+        dBody.innerHTML = '';
+        var statuses = ['الراحة', 'الغياب', 'المرض', 'الترخيص', 'العطلة السنوية', 'انتظار اصلاح الحافلة', 'الإدارة'];
 
         var filteredDriversList = driversList.filter(function(driver) {
             var isInWork = activeDriversSet.has(driver);
+            var currentStatus = String(driversCustomStatus[driver] || '').trim();
+
+            // السائق العامل لا يظهر في الحالات العادية، لكنه يبقى ظاهراً
+            // إذا كانت حالته "انتظار اصلاح الحافلة".
             if (isInWork) {
-                if (driversCustomStatus[driver]) {
-                    delete driversCustomStatus[driver];
-                }
-                return false;
+                return currentStatus === 'انتظار اصلاح الحافلة';
             }
-            if (driversCustomStatus[driver] === undefined) {
-                driversCustomStatus[driver] = "الراحة";
+
+            if (!currentStatus) {
+                driversCustomStatus[driver] = 'الراحة';
             }
             return true;
         });
 
-        saveDataToStorage();
-
         filteredDriversList.sort(function(a, b) { return a.localeCompare(b); });
 
         filteredDriversList.forEach(function(driver) {
-            var currentStatus = driversCustomStatus[driver] || "الراحة";
-
-            var badgeClass = "status-admin";
-            if (currentStatus === "الراحة") badgeClass = "status-rest";
-            else if (currentStatus === "الغياب") badgeClass = "status-absence";
-            else if (currentStatus === "المرض") badgeClass = "status-sick";
-            else if (currentStatus === "الترخيص") badgeClass = "status-license";
-            else if (currentStatus === "العطلة السنوية") badgeClass = "status-vacation";
-            else if (currentStatus === "مهمة بالمراب") badgeClass = "status-repair";
-            else if (currentStatus === "الإدارة") badgeClass = "status-admin";
+            var currentStatus = String(driversCustomStatus[driver] || 'الراحة').trim();
+            var badgeClass = 'status-admin';
+            if (currentStatus === 'الراحة') badgeClass = 'status-rest';
+            else if (currentStatus === 'الغياب') badgeClass = 'status-absence';
+            else if (currentStatus === 'المرض') badgeClass = 'status-sick';
+            else if (currentStatus === 'الترخيص') badgeClass = 'status-license';
+            else if (currentStatus === 'العطلة السنوية') badgeClass = 'status-vacation';
+            else if (currentStatus === 'انتظار اصلاح الحافلة') badgeClass = 'status-repair';
+            else if (currentStatus === 'الإدارة') badgeClass = 'status-admin';
 
             var tr = document.createElement('tr');
-            var selectHtml = `<select onchange="changeDriverStatus('${driver}', this.value)" style="width:100%; padding: 4px;">`;
+            var selectHtml = `<select onchange="changeDriverStatus('${driver}', this.value)" style="width:100%; padding:4px;">`;
             statuses.forEach(function(st) {
                 selectHtml += `<option value="${st}" ${currentStatus === st ? 'selected' : ''}>${st}</option>`;
             });
-            selectHtml += `</select>`;
-
-            var statusDisplay = `<span class="status-badge ${badgeClass}">${currentStatus}</span>`;
+            selectHtml += '</select>';
 
             tr.innerHTML = `
                 <td style="font-weight:700;">${driver}</td>
-                <td>${statusDisplay}</td>
+                <td><span class="status-badge ${badgeClass}">${currentStatus}</span></td>
                 <td>${selectHtml}</td>
             `;
             dBody.appendChild(tr);
         });
 
         var bBody = document.getElementById('busesStatusTableBody');
-        bBody.innerHTML = "";
-        var busStatuses = ["الاحتياط", "الإصلاح", "الصيانة", "متوقفة"];
+        bBody.innerHTML = '';
+        var busStatuses = ['الاحتياط', 'الإصلاح', 'الصيانة', 'متوقفة'];
 
         var filteredBusesList = busesList.filter(function(bus) {
-            var isInWork = activeBusesSet.has(bus);
-            if (isInWork) {
-                if (busesCustomStatus[bus]) {
-                    delete busesCustomStatus[bus];
-                }
-                return false;
-            }
-            if (busesCustomStatus[bus] === undefined) {
-                busesCustomStatus[bus] = "الاحتياط";
-            }
+            if (activeBusesSet.has(bus)) return false;
+            if (busesCustomStatus[bus] === undefined) busesCustomStatus[bus] = 'الاحتياط';
             return true;
         });
 
         filteredBusesList.forEach(function(bus) {
-            var currentStatus = busesCustomStatus[bus] || "الاحتياط";
-
-            var badgeClass = "status-admin";
-            if (currentStatus === "الاحتياط") badgeClass = "status-spare";
-            else if (currentStatus === "الإصلاح" || currentStatus === "الصيانة") badgeClass = "status-repair";
-            else if (currentStatus === "متوقفة") badgeClass = "status-absence";
+            var currentStatus = busesCustomStatus[bus] || 'الاحتياط';
+            var badgeClass = 'status-admin';
+            if (currentStatus === 'الاحتياط') badgeClass = 'status-spare';
+            else if (currentStatus === 'الإصلاح' || currentStatus === 'الصيانة') badgeClass = 'status-repair';
+            else if (currentStatus === 'متوقفة') badgeClass = 'status-absence';
 
             var tr = document.createElement('tr');
-            var selectHtml = `<select onchange="changeBusStatus('${bus}', this.value)" style="width:100%; padding: 4px;">`;
+            var selectHtml = `<select onchange="changeBusStatus('${bus}', this.value)" style="width:100%; padding:4px;">`;
             busStatuses.forEach(function(st) {
                 selectHtml += `<option value="${st}" ${currentStatus === st ? 'selected' : ''}>${st}</option>`;
             });
-            selectHtml += `</select>`;
-
-            var statusDisplay = `<span class="status-badge ${badgeClass}">${currentStatus}</span>`;
+            selectHtml += '</select>';
 
             tr.innerHTML = `
                 <td><span class="bus-number">${bus}</span></td>
-                <td>${statusDisplay}</td>
+                <td><span class="status-badge ${badgeClass}">${currentStatus}</span></td>
                 <td>${selectHtml}</td>
             `;
             bBody.appendChild(tr);
@@ -1194,9 +1974,13 @@
     }
 
     function changeDriverStatus(driver, status) {
+        status = String(status || '').trim();
         driversCustomStatus[driver] = status;
         saveDataToStorage();
         renderStatusTables();
+        updateStats();
+        if (typeof updateRestExportSheet === 'function') updateRestExportSheet();
+        if (window.__supabaseReady && typeof window.__queueSupabaseSave === 'function') window.__queueSupabaseSave();
     }
 
     function changeBusStatus(bus, status) {
@@ -1208,38 +1992,152 @@
     function updateRestExportSheet() {
         var activeDriversSet = new Set();
         busData.forEach(function(item) {
+            if (!item.driver) return;
             item.driver.split('/').forEach(function(d) {
-                if (d.trim()) activeDriversSet.add(d.trim());
+                var name = d.trim();
+                if (name) activeDriversSet.add(name);
             });
         });
 
         var categories = {
-            "الراحة": { countId: "headerRestCount", bodyId: "bodyRestNames", title: "الراحة" },
-            "العطلة السنوية": { countId: "headerVacationCount", bodyId: "bodyVacationNames", title: "العطلة السنوية" },
-            "الإدارة": { countId: "headerAdminCount", bodyId: "bodyAdminNames", title: "الإدارة" },
-            "الغياب": { countId: "headerAbsenceCount", bodyId: "bodyAbsenceNames", title: "الغياب" },
-            "الترخيص": { countId: "headerLicenseCount", bodyId: "bodyLicenseNames", title: "الترخيص" },
-            "مهمة بالمراب": { countId: "headerRepairCount", bodyId: "bodyRepairNames", title: "مهمة بالمراب" },
-            "المرض": { countId: "headerSickCount", bodyId: "bodySickNames", title: "المرض" }
+            'الراحة': { countId: 'headerRestCount', bodyId: 'bodyRestNames', title: 'الراحة' },
+            'العطلة السنوية': { countId: 'headerVacationCount', bodyId: 'bodyVacationNames', title: 'العطلة السنوية' },
+            'الإدارة': { countId: 'headerAdminCount', bodyId: 'bodyAdminNames', title: 'الإدارة' },
+            'الغياب': { countId: 'headerAbsenceCount', bodyId: 'bodyAbsenceNames', title: 'الغياب' },
+            'الترخيص': { countId: 'headerLicenseCount', bodyId: 'bodyLicenseNames', title: 'الترخيص' },
+            'انتظار اصلاح الحافلة': { countId: 'headerRepairCount', bodyId: 'bodyRepairNames', title: 'انتظار اصلاح الحافلة' },
+            'المرض': { countId: 'headerSickCount', bodyId: 'bodySickNames', title: 'المرض' }
         };
 
         for (var cat in categories) {
             var matchedDrivers = [];
-            driversList.forEach(function(d) {
-                if (!activeDriversSet.has(d)) {
-                    var currentStatus = driversCustomStatus[d] || "الراحة";
-                    if (currentStatus === cat) {
-                        matchedDrivers.push(d);
-                    }
-                }
+            driversList.forEach(function(driver) {
+                var currentStatus = String(driversCustomStatus[driver] || 'الراحة').trim();
+
+                // جميع الحالات العادية تستبعد السائق العامل.
+                // الاستثناء: انتظار اصلاح الحافلة يظهر حتى لو كان السائق مربوطاً بحافلة.
+                if (cat !== 'انتظار اصلاح الحافلة' && activeDriversSet.has(driver)) return;
+
+                if (currentStatus === cat) matchedDrivers.push(driver);
             });
 
-            var countStr = matchedDrivers.length < 10 ? "0" + matchedDrivers.length : matchedDrivers.length;
-            document.getElementById(categories[cat].countId).innerText = categories[cat].title + " " + countStr;
-            
-            var namesText = matchedDrivers.length > 0 ? matchedDrivers.join(' ، ') : "***";
-            document.getElementById(categories[cat].bodyId).innerText = namesText;
+            var countStr = matchedDrivers.length < 10 ? '0' + matchedDrivers.length : matchedDrivers.length;
+            document.getElementById(categories[cat].countId).innerText = categories[cat].title + ' ' + countStr;
+            document.getElementById(categories[cat].bodyId).innerText = matchedDrivers.length ? matchedDrivers.join(' ، ') : '***';
         }
+    }
+
+    function getMonitorProgramForDate(dateValue, createIfMissing) {
+        if (!dateValue) return null;
+        if (!monitorPrograms[dateValue] && createIfMissing) monitorPrograms[dateValue] = cloneData(defaultMonitorProgram);
+        return monitorPrograms[dateValue] || null;
+    }
+
+    function openMonitorsModal() {
+        renderMonitorManager();
+        document.getElementById('monitorsModal').style.display = 'flex';
+    }
+
+    function closeMonitorsModal() {
+        document.getElementById('monitorsModal').style.display = 'none';
+    }
+
+    function renderMonitorManager() {
+        var date = getProgramDateValue();
+        var data = getMonitorProgramForDate(date, true);
+        var html = '';
+        html += monitorManagerSection('مراقبي المحطات','stations',['المراقب','المحطة / المهمة'], data.stations, false);
+        html += monitorManagerSection('مراقبي الخطوط','lines',['المراقب','التوقيت','الخط'], data.lines, true);
+        html += monitorManagerSection('الحالات الإدارية','statuses',['المراقب','الحالة / المهمة'], data.statuses, false);
+        document.getElementById('monitorManagerContent').innerHTML = html;
+    }
+
+    function monitorManagerSection(title,key,headers,rows,withTime) {
+        var h = '<div class="monitor-section-card"><div class="monitor-section-head"><h4>'+title+'</h4><button class="btn btn-success" type="button" onclick="addMonitorRow(\''+key+'\')">+ إضافة</button></div>';
+        h += '<table class="monitor-manager-table"><thead><tr>';
+        headers.forEach(function(x){ h += '<th>'+x+'</th>'; });
+        h += '<th style="width:70px">حذف</th></tr></thead><tbody>';
+        rows.forEach(function(r,i){
+            h += '<tr><td><input data-monitor-key="'+key+'" data-index="'+i+'" data-field="name" value="'+escapeHtmlAttr(r.name||'')+'"></td>';
+            if(withTime) h += '<td><input data-monitor-key="'+key+'" data-index="'+i+'" data-field="time" value="'+escapeHtmlAttr(r.time||'')+'"></td>';
+            h += '<td><input data-monitor-key="'+key+'" data-index="'+i+'" data-field="assignment" value="'+escapeHtmlAttr(r.assignment||'')+'"></td>';
+            h += '<td><button type="button" class="btn btn-danger" style="padding:6px 9px" onclick="removeMonitorRow(\''+key+'\','+i+')">×</button></td></tr>';
+        });
+        h += '</tbody></table></div>'; return h;
+    }
+
+    function escapeHtmlAttr(v) { return String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+    function syncMonitorManagerInputs() {
+        var date=getProgramDateValue(), data=getMonitorProgramForDate(date,true);
+        document.querySelectorAll('#monitorManagerContent [data-monitor-key]').forEach(function(el){
+            var key=el.dataset.monitorKey, i=Number(el.dataset.index), field=el.dataset.field;
+            if(data[key] && data[key][i]) data[key][i][field]=el.value;
+        });
+    }
+
+    function addMonitorRow(key) {
+        syncMonitorManagerInputs();
+        var data=getMonitorProgramForDate(getProgramDateValue(),true);
+        if(key==='lines') data.lines.push({name:'****',time:'',assignment:''});
+        else data[key].push({name:'****',assignment:''});
+        renderMonitorManager();
+    }
+
+    function removeMonitorRow(key,index) {
+        syncMonitorManagerInputs();
+        var data=getMonitorProgramForDate(getProgramDateValue(),true);
+        if(!data[key]) return;
+        data[key].splice(index,1); renderMonitorManager();
+    }
+
+    function saveMonitorProgram() {
+        syncMonitorManagerInputs();
+        var date=getProgramDateValue();
+        if(!date) return alert('حدد تاريخ البرنامج أولاً.');
+        saveDataToStorage();
+        updateMonitorExportSheet();
+        closeMonitorsModal();
+        alert('تم حفظ برنامج المراقبين ليوم '+formatArabicDate(date)+'.');
+    }
+
+    function formatArabicDate(dateValue) {
+        var d=new Date(dateValue+'T12:00:00');
+        var days=['الأحد','الاثنين','الثلاثاء','الأربعاء','الخميس','الجمعة','السبت'];
+        var dd=String(d.getDate()).padStart(2,'0'), mm=String(d.getMonth()+1).padStart(2,'0'), yy=d.getFullYear();
+        return days[d.getDay()]+' '+dd+'-'+mm+'-'+yy;
+    }
+
+    function updateMonitorExportSheet() {
+        var date=getProgramDateValue(), data=getMonitorProgramForDate(date,false);
+        if(!data) return;
+        document.getElementById('monitorExportTitle').innerText='برنامج المراقبين ليوم '+formatArabicDate(date);
+        var sb=document.getElementById('monitorStationsExportBody'); sb.innerHTML='';
+        data.stations.forEach(function(r){
+            sb.innerHTML += '<tr><td>'+escapeHtml(r.assignment||'')+'</td><td>'+escapeHtml(r.name||'')+'</td></tr>';
+        });
+        var lb=document.getElementById('monitorLinesExportBody'); lb.innerHTML='';
+        data.lines.forEach(function(r){
+            lb.innerHTML += '<tr><td>'+escapeHtml(r.assignment||'')+'</td><td class="time-cell">'+escapeHtml(r.time ? '(من '+r.time+')' : '')+'</td><td>'+escapeHtml(r.name||'')+'</td></tr>';
+        });
+        var stb=document.getElementById('monitorStatusesExportBody'); stb.innerHTML='';
+        (data.statuses||[]).forEach(function(r){
+            stb.innerHTML += '<tr><td>'+escapeHtml(r.assignment||'')+'</td><td>'+escapeHtml(r.name||'')+'</td></tr>';
+        });
+    }
+
+    function escapeHtml(v) { return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+
+    function exportMonitorAsImage() {
+        updateMonitorExportSheet();
+        var sheet=document.getElementById('monitorExportSheet');
+        sheet.style.display='block';
+        html2canvas(sheet,{scale:2,useCORS:true,backgroundColor:'#f8fafc',logging:false}).then(function(canvas){
+            sheet.style.display='none';
+            var link=document.createElement('a');
+            link.download='برنامج_المراقبين_'+getProgramDateValue()+'.png';
+            link.href=canvas.toDataURL('image/png'); link.click();
+        }).catch(function(){ sheet.style.display='none'; alert('حدث خطأ أثناء استخراج صورة برنامج المراقبين.'); });
     }
 
     function updateStats() {
@@ -1467,146 +2365,182 @@
         }
     }
 
-    async function createHighQualityCanvas(source, fixedWidth) {
-        var clone = source.cloneNode(true);
-        clone.style.width = fixedWidth + 'px';
-        clone.style.maxWidth = fixedWidth + 'px';
-        clone.style.minWidth = fixedWidth + 'px';
-        clone.style.position = 'fixed';
-        clone.style.left = '-30000px';
-        clone.style.top = '0';
-        clone.style.margin = '0';
-        clone.style.background = '#ffffff';
-        clone.style.display = 'block';
-
-        clone.querySelectorAll('.action-column, .btn-inline-add, button, input, select, .no-print')
-            .forEach(function(el) { el.remove(); });
-
-        document.body.appendChild(clone);
-        if (document.fonts && document.fonts.ready) await document.fonts.ready;
-
-        var canvas = await html2canvas(clone, {
-            scale: 3,
-            width: fixedWidth,
-            windowWidth: fixedWidth,
-            backgroundColor: '#ffffff',
-            useCORS: true,
-            allowTaint: false,
-            logging: false,
-            imageTimeout: 20000,
-            scrollX: 0,
-            scrollY: 0
-        });
-
-        clone.remove();
-        return canvas;
-    }
-
-    function downloadCanvasPNG(canvas, filename) {
-        canvas.toBlob(function(blob) {
-            if (!blob) return alert("تعذر إنشاء الصورة.");
-            var url = URL.createObjectURL(blob);
+    function exportAsImage() {
+        var sheet = document.getElementById('exportSheet');
+        sheet.classList.add('exporting');
+        
+        html2canvas(sheet, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, width: 1400, windowWidth: 1400 }).then(function(canvas) {
+            sheet.classList.remove('exporting');
             var link = document.createElement('a');
-            link.download = filename;
-            link.href = url;
-            document.body.appendChild(link);
+            link.download = 'برنامج_حافلات_تارودانت.png';
+            link.href = canvas.toDataURL('image/png');
             link.click();
-            link.remove();
-            setTimeout(function() { URL.revokeObjectURL(url); }, 3000);
-        }, 'image/png', 1.0);
-    }
-
-    async function shareCanvasToWhatsApp(canvas, filename) {
-        var blob = await new Promise(function(resolve) {
-            canvas.toBlob(resolve, 'image/png', 1.0);
+        }).catch(function(err) {
+            sheet.classList.remove('exporting');
+            alert("حدث خطأ أثناء تصدير الصورة.");
         });
-        if (!blob) return alert("تعذر إنشاء الصورة.");
-
-        var file = new File([blob], filename, {
-            type: 'image/png',
-            lastModified: Date.now()
-        });
-
-        if (navigator.share && navigator.canShare &&
-            navigator.canShare({files: [file]})) {
-            try {
-                await navigator.share({
-                    title: 'برنامج حافلات تارودانت',
-                    text: 'برنامج حافلات تارودانت',
-                    files: [file]
-                });
-                return;
-            } catch (e) {
-                if (e && e.name === 'AbortError') return;
-            }
-        }
-
-        downloadCanvasPNG(canvas, filename);
     }
 
-    async function exportAsImage() {
-        var button = document.getElementById('exportBtn');
-        var oldText = button ? button.innerText : '';
+    function exportRestAsImage() {
+        var restSheet = document.getElementById('exportRestSheet');
+        restSheet.style.display = 'block';
 
-        try {
-            if (button) {
-                button.disabled = true;
-                button.innerText = '⏳ جارٍ تجهيز الصورة HD...';
-            }
-
-            var sheet = document.getElementById('exportSheet');
-            var canvas = await createHighQualityCanvas(sheet, 1400);
-
-            if (navigator.share && navigator.canShare) {
-                await shareCanvasToWhatsApp(canvas, 'برنامج_حافلات_تارودانت.png');
-            } else {
-                downloadCanvasPNG(canvas, 'برنامج_حافلات_تارودانت.png');
-            }
-        } catch (err) {
-            console.error(err);
-            alert("حدث خطأ أثناء استخراج الصورة عالية الدقة.");
-        } finally {
-            if (button) {
-                button.disabled = false;
-                button.innerText = oldText;
-            }
-        }
-    }
-
-    async function exportRestAsImage() {
-        var button = document.getElementById('exportRestBtn');
-        var oldText = button ? button.innerText : '';
-
-        try {
-            if (button) {
-                button.disabled = true;
-                button.innerText = '⏳ جارٍ تجهيز الصورة HD...';
-            }
-
-            var restSheet = document.getElementById('exportRestSheet');
-            restSheet.style.display = 'block';
-
-            var canvas = await createHighQualityCanvas(restSheet, 800);
-
-            if (navigator.share && navigator.canShare) {
-                await shareCanvasToWhatsApp(canvas, 'برنامج_راحة_السائقين.png');
-            } else {
-                downloadCanvasPNG(canvas, 'برنامج_راحة_السائقين.png');
-            }
-
+        html2canvas(restSheet, { scale: 2, useCORS: true }).then(function(canvas) {
             restSheet.style.display = 'none';
-        } catch (err) {
-            console.error(err);
-            document.getElementById('exportRestSheet').style.display = 'none';
-            alert("حدث خطأ أثناء استخراج صورة الراحة عالية الدقة.");
-        } finally {
-            if (button) {
-                button.disabled = false;
-                button.innerText = oldText;
-            }
-        }
+            var link = document.createElement('a');
+            link.download = 'برنامج_راحة_السائقين.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }).catch(function(err) {
+            restSheet.style.display = 'none';
+            alert("حدث خطأ أثناء تصدير صورة الراحة.");
+        });
     }
 </script>
 
+
+<script>
+(function(){
+  // Supabase configuration: publishable/anon key only. Never put service_role here.
+  const SUPABASE_URL = "https://hycokhbjhnkyyobzgtqg.supabase.co";
+  const SUPABASE_KEY = "sb_publishable_zs0CMICbuA90TyOSXe1Kew_gajsj1_D";
+  const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+  window.__supabaseReady = false;
+  window.__supabaseLoading = false;
+  let saveTimer = null;
+
+  function statePayload(){
+    return {
+      driversList: driversList,
+      busesList: busesList,
+      lineDefaults: lineDefaults,
+      busData: busData,
+      driversCustomStatus: driversCustomStatus,
+      busesCustomStatus: busesCustomStatus,
+      programHistory: programHistory,
+      monitorPrograms: monitorPrograms,
+      programDate: document.getElementById('programDate')?.value || ''
+    };
+  }
+
+  async function saveRemoteNow(){
+    if(!window.__supabaseReady) return;
+    const row = { id: 1, state: statePayload(), updated_at: new Date().toISOString() };
+    const {error} = await sb.from('taroudant_app_state').upsert(row, {onConflict:'id'});
+    if(error) console.error('Supabase save:', error);
+  }
+
+  window.__queueSupabaseSave = function(force){
+    clearTimeout(saveTimer);
+    if(force) return saveRemoteNow();
+    saveTimer = setTimeout(saveRemoteNow, 500);
+  };
+
+  async function loadRemote(){
+    window.__supabaseLoading = true;
+    const {data, error} = await sb.from('taroudant_app_state').select('state').eq('id',1).maybeSingle();
+    if(error){ window.__supabaseLoading=false; throw error; }
+
+    if(data && data.state){
+      const st=data.state;
+      if(Array.isArray(st.driversList) && st.driversList.length) driversList=st.driversList;
+      if(Array.isArray(st.busesList) && st.busesList.length) busesList=st.busesList;
+      if(st.lineDefaults && Object.keys(st.lineDefaults).length) lineDefaults=st.lineDefaults;
+      if(Array.isArray(st.busData) && st.busData.length) busData=st.busData;
+      if(st.driversCustomStatus) driversCustomStatus=st.driversCustomStatus;
+      if(st.busesCustomStatus) busesCustomStatus=st.busesCustomStatus;
+      if(st.programHistory && typeof st.programHistory === 'object') programHistory=st.programHistory;
+      if(st.monitorPrograms && typeof st.monitorPrograms === 'object') monitorPrograms=st.monitorPrograms;
+      if(st.programDate) document.getElementById('programDate').value=st.programDate;
+      saveDataToStorage();
+    } else {
+      // First login: keep the exact original embedded defaults and upload them.
+      await saveRemoteNow();
+    }
+    window.__supabaseLoading=false;
+    updateHeaderTitle();
+    initDropdowns();
+    renderTable();
+    renderStatusTables();
+    updateStats();
+  }
+
+  function unlock(user){
+    document.body.classList.remove('auth-locked');
+    const overlay=document.getElementById('supabaseLoginOverlay');
+    overlay.style.display='none';
+    window.__supabaseReady=true;
+    const chip=document.createElement('span');
+    chip.className='supabase-user-chip no-print';
+    chip.textContent='متصل: '+(user.email||'المستخدم');
+    const actions=document.querySelector('header .header-actions');
+    if(actions && !document.getElementById('supabaseUserChip')){ chip.id='supabaseUserChip'; actions.prepend(chip); }
+  }
+
+  function lock(msg){
+    window.__supabaseReady=false;
+    document.body.classList.add('auth-locked');
+    document.getElementById('supabaseLoginOverlay').style.display='flex';
+    if(msg) document.getElementById('supabaseLoginError').textContent=msg;
+  }
+
+  document.getElementById('supabaseLoginForm').addEventListener('submit', async function(e){
+    e.preventDefault();
+    const btn=document.getElementById('supabaseLoginBtn');
+    const err=document.getElementById('supabaseLoginError');
+    err.textContent=''; btn.disabled=true; btn.textContent='جارٍ تسجيل الدخول...';
+    try{
+      const email=document.getElementById('supabaseEmail').value.trim();
+      const password=document.getElementById('supabasePassword').value;
+      const {data,error}=await sb.auth.signInWithPassword({email,password});
+      if(error) throw error;
+      unlock(data.user);
+      await loadRemote();
+      document.getElementById('supabaseLoginStatus').textContent='تم الاتصال بقاعدة البيانات بنجاح.';
+    }catch(e){
+      err.textContent='فشل تسجيل الدخول: '+(e.message||'تحقق من البريد وكلمة المرور.');
+    }finally{ btn.disabled=false; btn.textContent='تسجيل الدخول'; }
+  });
+
+  document.getElementById('supabaseLogoutBtn').addEventListener('click', async function(){
+    await saveRemoteNow();
+    await sb.auth.signOut();
+    location.reload();
+  });
+
+  document.getElementById('programDate').addEventListener('change', async function(){
+    if(__switchingProgramDate) return;
+    var newDate = this.value;
+    if(!newDate) return;
+    var oldDate = window.__lastProgramDate || newDate;
+    saveCurrentProgramToHistory(oldDate);
+    __switchingProgramDate = true;
+    if(programHistory[newDate]) {
+      restoreProgramFromHistory(newDate);
+    } else {
+      // A new day starts from the currently displayed program until the user rotates it.
+      programHistory[newDate] = snapshotCurrentProgram();
+    }
+    __switchingProgramDate = false;
+    window.__lastProgramDate = newDate;
+    updateHeaderTitle();
+    initDropdowns();
+    renderTable();
+    renderStatusTables();
+    updateStats();
+    saveDataToStorage();
+    if(window.__supabaseReady) window.__queueSupabaseSave();
+  });
+
+  sb.auth.getSession().then(async function(res){
+    if(res.data && res.data.session){
+      unlock(res.data.session.user);
+      try{ await loadRemote(); }catch(e){ lock('تعذر تحميل البيانات من Supabase: '+e.message); }
+    }else{
+      lock();
+    }
+  });
+})();
+</script>
 </body>
 </html>
