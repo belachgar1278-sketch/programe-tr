@@ -775,6 +775,27 @@
   .rest-section-body{font-size:.7rem;padding:7px}
 
   #monitorExportSheet{width:100%!important;padding:10px!important}
+
+  /* استخراج الهاتف بنفس أبعاد الحاسوب: لا نغير تصميم واجهة الهاتف،
+     فقط نثبت لوحة الصورة أثناء الالتقاط. */
+  #exportRestSheet.exporting-mobile,
+  #monitorExportSheet.exporting-mobile{
+    width:1500px!important;
+    min-width:1500px!important;
+    max-width:1500px!important;
+    padding:24px!important;
+    margin:0!important;
+    overflow:visible!important;
+    box-sizing:border-box!important;
+  }
+  #exportRestSheet.exporting-mobile{width:800px!important;min-width:800px!important;max-width:800px!important}
+  #exportRestSheet.exporting-mobile .rest-main-title{font-size:28px!important;padding:16px!important}
+  #exportRestSheet.exporting-mobile .rest-section-header{font-size:23px!important;padding:12px 16px!important}
+  #exportRestSheet.exporting-mobile .rest-section-body{font-size:22px!important;padding:14px 16px!important;line-height:1.7!important}
+  #monitorExportSheet.exporting-mobile .monitor-export-title{font-size:38px!important}
+  #monitorExportSheet.exporting-mobile .monitor-export-section-title{font-size:27px!important}
+  #monitorExportSheet.exporting-mobile .monitor-export-table th{font-size:23px!important}
+  #monitorExportSheet.exporting-mobile .monitor-export-table td{font-size:22px!important}
   .monitor-export-title{font-size:1.15rem;padding:10px;margin-bottom:10px}
   .monitor-export-section-title{font-size:.9rem;padding:8px 10px}
   .monitor-export-table th,.monitor-export-table td{font-size:.72rem!important;padding:7px 6px}
@@ -935,6 +956,44 @@
   }
 }
 
+
+    .btn-save-program{background:#15803d!important;color:#fff!important;border:none!important;}
+    .btn-save-program:hover{background:#166534!important;}
+
+
+    .monthly-rest-table{width:100%;border-collapse:collapse;background:#fff;min-width:1000px;font-size:12px}
+    .monthly-rest-table th,.monthly-rest-table td{border:1px solid #cbd5e1;padding:6px;text-align:center;white-space:nowrap}
+    .monthly-rest-table thead th{background:#e2e8f0;font-weight:900;position:sticky;top:0;z-index:2}
+    .monthly-rest-driver{font-weight:900;background:#f8fafc;position:sticky;right:0;z-index:1}
+    .rest-worked{font-weight:900}
+    .rest-status{font-weight:800}
+    .rest-missing{color:#94a3b8}
+
+
+/* ===== مركز الإدارة والتحقق والسجل ===== */
+.admin-center-modal .modal-content{max-width:1200px;max-height:92vh;overflow:auto}
+.admin-center-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:14px 0}
+.admin-center-card{background:#fff;border:1px solid #dbe3ec;border-radius:14px;padding:15px;box-shadow:0 2px 8px rgba(15,23,42,.05)}
+.admin-center-card h4{margin:0 0 7px;font-size:13px;color:#475569}
+.admin-center-card strong{font-size:26px;color:#0f172a}
+.admin-alert{border-radius:10px;padding:10px 12px;margin:7px 0;font-weight:700}
+.admin-alert.warn{background:#fff7ed;color:#9a3412;border:1px solid #fed7aa}
+.admin-alert.ok{background:#f0fdf4;color:#166534;border:1px solid #bbf7d0}
+.admin-audit-table{width:100%;border-collapse:collapse;background:#fff;font-size:12px}
+.admin-audit-table th,.admin-audit-table td{border:1px solid #cbd5e1;padding:7px;text-align:center}
+.admin-audit-table th{background:#e2e8f0;font-weight:900}
+.validation-ok{color:#166534;font-weight:900}
+.validation-bad{color:#b91c1c;font-weight:900}
+.history-search{padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;min-width:250px}
+@media(max-width:900px){.admin-center-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:560px){.admin-center-grid{grid-template-columns:1fr}}
+
+
+    .admin-monthly-table{width:100%;border-collapse:collapse;background:#fff;font-size:12px}
+    .admin-monthly-table th,.admin-monthly-table td{border:1px solid #cbd5e1;padding:8px;text-align:center}
+    .admin-monthly-table th{background:#e2e8f0;font-weight:900}
+    .admin-monthly-highlight{font-weight:900}
+
 </style>
 </head>
 <body class="auth-locked">
@@ -952,6 +1011,75 @@
             <div id="programHistoryList"></div>
         </div>
     </div>
+</div>
+
+
+<div class="modal admin-center-modal" id="adminCenterModal">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>⚙️ مركز الإدارة</h3>
+      <button class="close-modal" type="button" onclick="closeAdminCenter()">×</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+      <button class="btn btn-primary" type="button" onclick="refreshAdminCenter()">تحديث</button>
+      <button class="btn btn-warning" type="button" onclick="runProgramValidation(true)">فحص البرنامج قبل الحفظ</button>
+      <button class="btn btn-info" type="button" onclick="openAuditLog()">سجل التغييرات</button>
+    </div>
+    <div class="admin-center-grid">
+      <div class="admin-center-card"><h4>الحافلات في البرنامج</h4><strong id="acBuses">0</strong></div>
+      <div class="admin-center-card"><h4>السائقون</h4><strong id="acDrivers">0</strong></div>
+      <div class="admin-center-card"><h4>الخطوط</h4><strong id="acLines">0</strong></div>
+      <div class="admin-center-card"><h4>الحافلات غير المدرجة</h4><strong id="acInactive">0</strong></div>
+    </div>
+    <div class="admin-center-card">
+      <h4>فحص البرنامج الحالي</h4>
+      <div id="programValidationResults"></div>
+    </div>
+    <div class="admin-center-card">
+      <h4>📊 إحصائيات السائق</h4>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <input id="adminDriverSearch" class="history-search" placeholder="اكتب اسم السائق..." oninput="searchDriverHistory()">
+        <button class="btn btn-secondary" type="button" onclick="clearAdminSearch()">مسح</button>
+      </div>
+      <div id="driverHistoryResults" style="margin-top:10px;"></div>
+    </div>
+    <div class="admin-center-card">
+      <h4>📅 سجل السائق الشهري</h4>
+      <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;">
+        <label style="font-weight:800;">
+          شهر السجل
+          <input id="adminMonthlyRestMonth" type="month"
+                 onchange="renderAdminMonthlyDriverStats()"
+                 style="display:block;margin-top:6px;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;">
+        </label>
+        <div id="adminMonthlyRestPeriod"
+             style="padding:10px 14px;background:#f8fafc;border:1px solid #dbe3ec;border-radius:8px;font-weight:800;">
+          الفترة: —
+        </div>
+      </div>
+      <div style="margin-top:10px;">
+        <input id="adminMonthlyDriverSearch" class="history-search"
+               placeholder="البحث عن سائق في هذا الشهر..."
+               oninput="renderAdminMonthlyDriverStats()">
+      </div>
+      <div id="adminMonthlyDriverStats" style="margin-top:12px;"></div>
+    </div>
+
+  </div>
+</div>
+
+<div class="modal" id="auditLogModal">
+  <div class="modal-content" style="max-width:1100px;max-height:90vh;overflow:auto;">
+    <div class="modal-header">
+      <h3>🧾 سجل التغييرات</h3>
+      <button class="close-modal" type="button" onclick="closeAuditLog()">×</button>
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:10px;">
+      <button class="btn btn-danger" type="button" onclick="clearAuditLog()">مسح السجل المحلي</button>
+      <button class="btn btn-primary" type="button" onclick="renderAuditLog()">تحديث</button>
+    </div>
+    <div id="auditLogTableWrap"></div>
+  </div>
 </div>
 
 <div id="supabaseLoginOverlay">
@@ -986,6 +1114,7 @@
             <button class="btn btn-purple" onclick="openBusesModal()"> الحافلات</button>
             <button class="btn btn-warning" onclick="openNewLineModal()">+ إضافة خط</button>
             <button class="btn btn-primary" onclick="openModal()">+ إضافة حافلة</button>
+            <button class="btn btn-primary no-print" type="button" onclick="openAdminCenter()">⚙️ مركز الإدارة</button>
             <button class="btn btn-danger supabase-logout-btn no-print" id="supabaseLogoutBtn" type="button">خروج</button>
         </div>
     </header>
@@ -995,6 +1124,8 @@
         <input type="date" id="programDate" onchange="updateHeaderTitle()">
         <div class="program-actions no-print">
             <button class="btn btn-rotate" type="button" onclick="rotateToNextProgram()">↻ تدوير لليوم الموالي</button>
+            <button class="btn btn-rotate" type="button" onclick="rotateToPreviousProgram()">↺ التدوير للخلف</button>
+            <button class="btn btn-success" type="button" onclick="saveCurrentProgramToHistory()"> حفظ البرنامج</button>
             <button class="btn btn-history" type="button" onclick="openProgramHistory()"> سجل البرامج</button>
         </div>
        
@@ -1140,7 +1271,7 @@
 
     <div class="status-section" style="margin-top: 20px;">
         <h3>🚍 حالات الحافلات (بدون العاملة في الخطوط)</h3>
-        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">تم إخفاء الحافلات التي في العمل وعرض الحافلات الاحتياطية أو المتوقفة أو في الإصلاح فقط.</p>
+        <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">تم إخفاء الحافلات التي في العمل وعرض الحافلات الحالة الحاليةية أو المتوقفة أو في الإصلاح فقط.</p>
         <table>
             <thead>
                 <tr>
@@ -1152,6 +1283,41 @@
             <tbody id="busesStatusTableBody">
             </tbody>
         </table>
+    </div>
+</div>
+    <div class="modal-content" style="max-width:1400px;max-height:92vh;overflow:auto;">
+        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
+            <h3>📅 سجل الراحة الشهري للسائقين</h3>
+            <button class="close-modal" type="button" onclick="closeMonthlyRestLog()">×</button>
+        </div>
+
+        <div style="background:#f8fafc;border:1px solid #dbe3ec;border-radius:12px;padding:14px;margin-bottom:14px;">
+            <div style="display:flex;gap:12px;align-items:end;flex-wrap:wrap;">
+                <label style="font-weight:800;min-width:190px;">
+                    شهر بداية السجل
+                    <input id="restLogMonth" type="month"
+                        style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:9px;border:1px solid #cbd5e1;border-radius:8px;">
+                </label>
+                <div id="restLogPeriodLabel" style="font-weight:800;padding:10px 14px;background:#fff;border:1px solid #dbe3ec;border-radius:8px;">
+                    الفترة: —
+                </div>
+                <button class="btn btn-primary" type="button" onclick="renderMonthlyRestLog()">عرض السجل</button>
+            </div>
+            <div style="font-size:12px;color:#64748b;margin-top:9px;">
+                كل سجل شهري يبدأ يوم 26 وينتهي يوم 25 من الشهر الموالي. تظهر الحافلة التي اشتغل بها السائق، وإذا لم يعمل تظهر حالته لذلك اليوم.
+            </div>
+        </div>
+
+        <div style="margin-bottom:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
+            <label style="font-weight:800;">
+                البحث عن سائق
+                    oninput="filterMonthlyDriverLog()"
+                    style="margin-right:6px;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;min-width:260px;">
+            </label>
+            <button class="btn btn-secondary" type="button" onclick="clearMonthlyDriverSearch()">مسح البحث</button>
+        </div>
+    </div>
+</div><div id="monthlyRestExportBody"></div>
     </div>
 </div>
 
@@ -1480,6 +1646,14 @@
         ]
     };
     var monitorPrograms = JSON.parse(localStorage.getItem('taroudant_monitorPrograms')) || {'2026-09-14': defaultMonitorProgram};
+    // قاعدة بيانات المراقبين: يتم تهيئتها تلقائياً من الأسماء الموجودة في البرامج الافتراضية.
+    var defaultMonitorsList = Array.from(new Set(
+        defaultMonitorProgram.stations.concat(defaultMonitorProgram.lines || [], defaultMonitorProgram.statuses || [])
+        .map(function(r){ return String(r.name || '').trim(); })
+        .filter(function(n){ return n && n !== '****' && n !== '*****' && n !== '******'; })
+    ));
+    var monitorsList = JSON.parse(localStorage.getItem('taroudant_monitorsList')) || defaultMonitorsList;
+    if(!Array.isArray(monitorsList)) monitorsList = defaultMonitorsList.slice();
     var __switchingProgramDate = false;
 
     function cloneData(value) {
@@ -1495,6 +1669,7 @@
         localStorage.setItem('taroudant_busesCustomStatus', JSON.stringify(busesCustomStatus));
         localStorage.setItem('taroudant_programHistory', JSON.stringify(programHistory));
         localStorage.setItem('taroudant_monitorPrograms', JSON.stringify(monitorPrograms));
+        localStorage.setItem('taroudant_monitorsList', JSON.stringify(monitorsList));
         if (window.__supabaseReady && !window.__supabaseLoading && !__switchingProgramDate) window.__queueSupabaseSave();
     }
 
@@ -1577,45 +1752,142 @@
         return result;
     }
 
-    async function rotateToNextProgram() {
-        var sourceDate = getProgramDateValue();
-        if (!sourceDate) return alert('حدد تاريخ البرنامج أولاً.');
-        var target = new Date(sourceDate + 'T12:00:00');
-        target.setDate(target.getDate() + 1);
-        var targetDate = target.toISOString().slice(0,10);
-        var exists = !!programHistory[targetDate];
-        var msg = exists
-            ? 'يوجد برنامج محفوظ لليوم الموالي. هل تريد استبداله بالتناوب الجديد؟'
-            : 'سيتم إنشاء برنامج ' + targetDate + ' بالتناوب بين حافلات كل خط. هل تريد المتابعة؟';
-        if (!confirm(msg)) return;
 
-        saveCurrentProgramToHistory(sourceDate);
-        var sourceSnapshot = programHistory[sourceDate];
-        var rotated = rotateBusSchedulesForNextDay(sourceSnapshot.busData);
-        programHistory[targetDate] = {
-            busData: rotated,
-            lineDefaults: cloneData(sourceSnapshot.lineDefaults),
-            driversCustomStatus: cloneData(sourceSnapshot.driversCustomStatus),
-            busesCustomStatus: cloneData(sourceSnapshot.busesCustomStatus),
-            sourceDate: sourceDate,
-            rotation: true,
-            savedAt: new Date().toISOString()
-        };
+    async function rotateToPreviousProgram() {
+        // التدوير لا يغير التاريخ: التاريخ الذي اختاره المشرف يبقى كما هو.
+        var selectedDate = getProgramDateValue();
+        if (!selectedDate) return alert('حدد تاريخ البرنامج أولاً.');
 
-        __switchingProgramDate = true;
-        document.getElementById('programDate').value = targetDate;
-        window.__lastProgramDate = targetDate;
-        restoreProgramFromHistory(targetDate);
-        updateHeaderTitle();
-        initDropdowns();
-        renderTable();
-        renderStatusTables();
-        updateStats();
-        __switchingProgramDate = false;
+        if (!confirm('سيتم تدوير ترتيب الحافلات والسائقين فقط، مع إبقاء التوقيت والتاريخ كما هما. هل تريد المتابعة؟')) return;
+
+        var sourceData = cloneData(typeof busData !== 'undefined' ? busData : []);
+        if (!sourceData.length) return alert('لا توجد بيانات حافلات للتدوير.');
+
+        var rotated = rotateBusSchedulesBackwardOnly(sourceData);
+
+        if (typeof busData !== 'undefined') {
+            busData = rotated;
+        }
+
+        // يبقى التاريخ الذي اختاره المشرف دون أي تغيير.
+        var dateEl = document.getElementById('programDate');
+        if (dateEl) dateEl.value = selectedDate;
+
         saveDataToStorage();
-        if(window.__supabaseReady) await window.__queueSupabaseSave(true);
-        alert('تم إنشاء برنامج اليوم الموالي بالتناوب وحفظه في السجل.');
+
+        try {
+            if (window.__supabaseReady && typeof window.__queueSupabaseSave === 'function') {
+                await window.__queueSupabaseSave(true);
+            }
+        } catch (e) {
+            console.warn('Supabase save after backward rotation failed:', e);
+        }
+
+        if (typeof initDropdowns === 'function') initDropdowns();
+        if (typeof renderTable === 'function') renderTable();
+        if (typeof renderStatusTables === 'function') renderStatusTables();
+        if (typeof updateStats === 'function') updateStats();
+
+        alert('تم التدوير للخلف. بقي التاريخ والتوقيت كما حددهما المشرف.');
     }
+
+    function rotateBusSchedulesBackwardOnly(sourceData) {
+        sourceData = cloneData(sourceData || []);
+        var result = cloneData(sourceData);
+        var groups = {};
+
+        sourceData.forEach(function(row, index) {
+            var line = row.line || '';
+            if (!groups[line]) groups[line] = [];
+            groups[line].push(index);
+        });
+
+        Object.keys(groups).forEach(function(line) {
+            var indexes = groups[line];
+            if (indexes.length < 2) return;
+
+            indexes.forEach(function(index, pos) {
+                var nextIndex = indexes[(pos + 1) % indexes.length];
+                var current = sourceData[index];
+                var next = sourceData[nextIndex];
+
+                // نقل الحافلة والسائق فقط.
+                // كل ما يتعلق بالتوقيت يبقى من الصف الحالي.
+                result[index].bus = next.bus;
+                result[index].driver = next.driver;
+            });
+        });
+
+        return result;
+    }
+
+    async function rotateToNextProgram() {
+        // التدوير لا يغير التاريخ: التاريخ الذي اختاره المشرف يبقى كما هو.
+        var selectedDate = getProgramDateValue();
+        if (!selectedDate) return alert('حدد تاريخ البرنامج أولاً.');
+
+        if (!confirm('سيتم تدوير ترتيب الحافلات والسائقين فقط، مع إبقاء التوقيت والتاريخ كما هما. هل تريد المتابعة؟')) return;
+
+        var sourceData = cloneData(typeof busData !== 'undefined' ? busData : []);
+        if (!sourceData.length) return alert('لا توجد بيانات حافلات للتدوير.');
+
+        var rotated = rotateBusSchedulesForwardOnly(sourceData);
+
+        if (typeof busData !== 'undefined') {
+            busData = rotated;
+        }
+
+        var dateEl = document.getElementById('programDate');
+        if (dateEl) dateEl.value = selectedDate;
+
+        saveDataToStorage();
+
+        try {
+            if (window.__supabaseReady && typeof window.__queueSupabaseSave === 'function') {
+                await window.__queueSupabaseSave(true);
+            }
+        } catch (e) {
+            console.warn('Supabase save after forward rotation failed:', e);
+        }
+
+        if (typeof initDropdowns === 'function') initDropdowns();
+        if (typeof renderTable === 'function') renderTable();
+        if (typeof renderStatusTables === 'function') renderStatusTables();
+        if (typeof updateStats === 'function') updateStats();
+
+        alert('تم التدوير للأمام. بقي التاريخ والتوقيت كما حددهما المشرف.');
+    }
+
+    function rotateBusSchedulesForwardOnly(sourceData) {
+        sourceData = cloneData(sourceData || []);
+        var result = cloneData(sourceData);
+        var groups = {};
+
+        sourceData.forEach(function(row, index) {
+            var line = row.line || '';
+            if (!groups[line]) groups[line] = [];
+            groups[line].push(index);
+        });
+
+        Object.keys(groups).forEach(function(line) {
+            var indexes = groups[line];
+            if (indexes.length < 2) return;
+
+            indexes.forEach(function(index, pos) {
+                var previousIndex = indexes[(pos - 1 + indexes.length) % indexes.length];
+                var current = sourceData[index];
+                var previous = sourceData[previousIndex];
+
+                // نقل الحافلة والسائق فقط.
+                // كل ما يتعلق بالتوقيت يبقى من الصف الحالي.
+                result[index].bus = previous.bus;
+                result[index].driver = previous.driver;
+            });
+        });
+
+        return result;
+    }
+
 
     function openProgramHistory() {
         renderProgramHistory();
@@ -1940,18 +2212,18 @@
 
         var bBody = document.getElementById('busesStatusTableBody');
         bBody.innerHTML = '';
-        var busStatuses = ['الاحتياط', 'الإصلاح', 'الصيانة', 'متوقفة'];
+        var busStatuses = ['غير مدرجة في البرنامج', 'الإصلاح', 'الصيانة', 'متوقفة'];
 
         var filteredBusesList = busesList.filter(function(bus) {
             if (activeBusesSet.has(bus)) return false;
-            if (busesCustomStatus[bus] === undefined) busesCustomStatus[bus] = 'الاحتياط';
+            if (busesCustomStatus[bus] === undefined) busesCustomStatus[bus] = 'غير مدرجة في البرنامج';
             return true;
         });
 
         filteredBusesList.forEach(function(bus) {
-            var currentStatus = busesCustomStatus[bus] || 'الاحتياط';
+            var currentStatus = busesCustomStatus[bus] || 'غير مدرجة في البرنامج';
             var badgeClass = 'status-admin';
-            if (currentStatus === 'الاحتياط') badgeClass = 'status-spare';
+            if (currentStatus === 'غير مدرجة في البرنامج') badgeClass = 'status-spare';
             else if (currentStatus === 'الإصلاح' || currentStatus === 'الصيانة') badgeClass = 'status-repair';
             else if (currentStatus === 'متوقفة') badgeClass = 'status-absence';
 
@@ -2045,11 +2317,38 @@
     function renderMonitorManager() {
         var date = getProgramDateValue();
         var data = getMonitorProgramForDate(date, true);
+        (data.lines||[]).forEach(function(r){ r.period=r.period||''; r.time=r.time||''; r.timeNote=r.timeNote||''; });
+
+        // أضف تلقائياً أي اسم قديم موجود في برنامج محفوظ إلى قاعدة المراقبين حتى لا تختفي البيانات القديمة.
+        (data.stations||[]).concat(data.lines||[], data.statuses||[]).forEach(function(r){
+            var n=String(r.name||'').trim();
+            if(n && n!=='****' && n!=='*****' && n!=='******' && !monitorsList.includes(n)) monitorsList.push(n);
+        });
+
         var html = '';
+        html += '<div class="monitor-section-card" style="background:#eef7ff;border-color:#b8d2e8">';
+        html += '<div class="monitor-section-head"><h4>👥 قاعدة بيانات المراقبين</h4></div>';
+        html += '<div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px">';
+        html += '<input id="newMonitorName" placeholder="اسم المراقب الجديد" style="flex:1;min-width:220px;padding:9px;border:1px solid #cbd5e1;border-radius:8px">';
+        html += '<button class="btn btn-success" type="button" onclick="addMonitorToDatabase()">+ إضافة مراقب</button>';
+        html += '</div>';
+        html += '<div style="font-size:12px;color:#64748b">يتم اختيار المراقب من هذه القاعدة في مراقبي المحطات والخطوط والحالات الإدارية.</div>';
+        html += '</div>';
+
         html += monitorManagerSection('مراقبي المحطات','stations',['المراقب','المحطة / المهمة'], data.stations, false);
-        html += monitorManagerSection('مراقبي الخطوط','lines',['المراقب','التوقيت','الخط'], data.lines, true);
+        html += monitorManagerSection('مراقبي الخطوط','lines',['المراقب','الفترة','التوقيت','ملاحظة التوقيت','الخط'], data.lines, true);
         html += monitorManagerSection('الحالات الإدارية','statuses',['المراقب','الحالة / المهمة'], data.statuses, false);
         document.getElementById('monitorManagerContent').innerHTML = html;
+    }
+
+    function monitorSelectHtml(key,index,value){
+        var current=String(value||'');
+        var h='<select data-monitor-key="'+key+'" data-index="'+index+'" data-field="name" style="width:100%;padding:7px;border:1px solid #cbd5e1;border-radius:7px;background:#fff">';
+        h+='<option value="" '+(!current?'selected':'')+'>اختر المراقب</option>';
+        if(current && !monitorsList.includes(current)) h+='<option value="'+escapeHtmlAttr(current)+'" selected>'+escapeHtml(current)+'</option>';
+        monitorsList.forEach(function(n){ h+='<option value="'+escapeHtmlAttr(n)+'" '+(current===n?'selected':'')+'>'+escapeHtml(n)+'</option>'; });
+        h+='</select>';
+        return h;
     }
 
     function monitorManagerSection(title,key,headers,rows,withTime) {
@@ -2058,12 +2357,23 @@
         headers.forEach(function(x){ h += '<th>'+x+'</th>'; });
         h += '<th style="width:70px">حذف</th></tr></thead><tbody>';
         rows.forEach(function(r,i){
-            h += '<tr><td><input data-monitor-key="'+key+'" data-index="'+i+'" data-field="name" value="'+escapeHtmlAttr(r.name||'')+'"></td>';
-            if(withTime) h += '<td><input data-monitor-key="'+key+'" data-index="'+i+'" data-field="time" value="'+escapeHtmlAttr(r.time||'')+'"></td>';
+            h += '<tr><td>'+monitorSelectHtml(key,i,r.name)+'</td>';
+            if(withTime) h += '<td><select data-monitor-key="'+key+'" data-index="'+i+'" data-field="period" style="width:100%;padding:7px;border:1px solid #cbd5e1;border-radius:7px"><option value="" '+(r.period?'':'selected')+'>اختر</option><option value="morning" '+(r.period==='morning'?'selected':'')+'>الفترة الصباحية</option><option value="evening" '+(r.period==='evening'?'selected':'')+'>الفترة المسائية</option></select></td><td><input data-monitor-key="'+key+'" data-index="'+i+'" data-field="time" placeholder="06:00 - 14:00" value="'+escapeHtmlAttr(r.time||'')+'"></td><td><input data-monitor-key="'+key+'" data-index="'+i+'" data-field="timeNote" placeholder="ملاحظة اختيارية" value="'+escapeHtmlAttr(r.timeNote||'')+'"></td>';
             h += '<td><input data-monitor-key="'+key+'" data-index="'+i+'" data-field="assignment" value="'+escapeHtmlAttr(r.assignment||'')+'"></td>';
             h += '<td><button type="button" class="btn btn-danger" style="padding:6px 9px" onclick="removeMonitorRow(\''+key+'\','+i+')">×</button></td></tr>';
         });
         h += '</tbody></table></div>'; return h;
+    }
+
+    function addMonitorToDatabase(){
+        var el=document.getElementById('newMonitorName');
+        var name=el ? el.value.trim() : '';
+        if(!name) return alert('اكتب اسم المراقب أولاً.');
+        if(monitorsList.includes(name)) return alert('هذا المراقب موجود مسبقاً في قاعدة البيانات.');
+        monitorsList.push(name);
+        saveDataToStorage();
+        renderMonitorManager();
+        alert('تمت إضافة المراقب إلى قاعدة البيانات.');
     }
 
     function escapeHtmlAttr(v) { return String(v).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
@@ -2079,7 +2389,7 @@
     function addMonitorRow(key) {
         syncMonitorManagerInputs();
         var data=getMonitorProgramForDate(getProgramDateValue(),true);
-        if(key==='lines') data.lines.push({name:'****',time:'',assignment:''});
+        if(key==='lines') data.lines.push({name:'****',period:'',time:'',timeNote:'',assignment:''});
         else data[key].push({name:'****',assignment:''});
         renderMonitorManager();
     }
@@ -2118,7 +2428,10 @@
         });
         var lb=document.getElementById('monitorLinesExportBody'); lb.innerHTML='';
         data.lines.forEach(function(r){
-            lb.innerHTML += '<tr><td>'+escapeHtml(r.assignment||'')+'</td><td class="time-cell">'+escapeHtml(r.time ? '(من '+r.time+')' : '')+'</td><td>'+escapeHtml(r.name||'')+'</td></tr>';
+            var periodLabel=r.period==='morning'?'الفترة الصباحية':(r.period==='evening'?'الفترة المسائية':'');
+            var timeText=[periodLabel,r.time||''].filter(Boolean).join(' • ');
+            if(r.timeNote) timeText += (timeText?' — ':'') + r.timeNote;
+            lb.innerHTML += '<tr><td>'+escapeHtml(r.assignment||'')+'</td><td class="time-cell">'+escapeHtml(timeText ? '('+timeText+')' : '')+'</td><td>'+escapeHtml(r.name||'')+'</td></tr>';
         });
         var stb=document.getElementById('monitorStatusesExportBody'); stb.innerHTML='';
         (data.statuses||[]).forEach(function(r){
@@ -2129,15 +2442,27 @@
     function escapeHtml(v) { return String(v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
 
     function exportMonitorAsImage() {
+        // تحديث الصورة من البيانات الحالية فقط، دون تغيير أو حذف أي بيانات محفوظة.
+        syncMonitorManagerInputs();
         updateMonitorExportSheet();
         var sheet=document.getElementById('monitorExportSheet');
         sheet.style.display='block';
-        html2canvas(sheet,{scale:2,useCORS:true,backgroundColor:'#f8fafc',logging:false}).then(function(canvas){
+        sheet.style.width='1500px';
+        sheet.style.maxWidth='1500px';
+        sheet.style.margin='0';
+        html2canvas(sheet,{scale:3,useCORS:true,backgroundColor:'#f8fafc',logging:false,width:1500,windowWidth:1500}).then(function(canvas){
             sheet.style.display='none';
+            sheet.style.width='';
+            sheet.style.maxWidth='';
+            sheet.style.margin='';
             var link=document.createElement('a');
             link.download='برنامج_المراقبين_'+getProgramDateValue()+'.png';
             link.href=canvas.toDataURL('image/png'); link.click();
-        }).catch(function(){ sheet.style.display='none'; alert('حدث خطأ أثناء استخراج صورة برنامج المراقبين.'); });
+        }).catch(function(){
+            sheet.style.display='none';
+            sheet.style.width=''; sheet.style.maxWidth=''; sheet.style.margin='';
+            alert('حدث خطأ أثناء استخراج صورة برنامج المراقبين.');
+        });
     }
 
     function updateStats() {
@@ -2382,17 +2707,31 @@
     }
 
     function exportRestAsImage() {
+        // مهم: إعادة بناء برنامج الراحة لحظة الاستخراج حتى تظهر فوراً
+        // حالة «انتظار اصلاح الحافلة» حتى لو كان السائق مرتبطاً بحافلة.
+        updateRestExportSheet();
         var restSheet = document.getElementById('exportRestSheet');
+        var title = document.getElementById('restSheetTitle');
+        if (title) title.innerText = 'برنامج الراحة للسائقين ليوم ' + formatArabicDate(getProgramDateValue());
         restSheet.style.display = 'block';
+        restSheet.style.width = '800px';
+        restSheet.style.maxWidth = '800px';
+        restSheet.style.margin = '0';
 
-        html2canvas(restSheet, { scale: 2, useCORS: true }).then(function(canvas) {
+        html2canvas(restSheet, { scale: 3, useCORS: true, backgroundColor: '#ffffff', logging: false, width: 800, windowWidth: 800 }).then(function(canvas) {
             restSheet.style.display = 'none';
+            restSheet.style.width = '';
+            restSheet.style.maxWidth = '';
+            restSheet.style.margin = '';
             var link = document.createElement('a');
-            link.download = 'برنامج_راحة_السائقين.png';
+            link.download = 'برنامج_راحة_السائقين_' + getProgramDateValue() + '.png';
             link.href = canvas.toDataURL('image/png');
             link.click();
         }).catch(function(err) {
             restSheet.style.display = 'none';
+            restSheet.style.width = '';
+            restSheet.style.maxWidth = '';
+            restSheet.style.margin = '';
             alert("حدث خطأ أثناء تصدير صورة الراحة.");
         });
     }
@@ -2419,6 +2758,7 @@
       busesCustomStatus: busesCustomStatus,
       programHistory: programHistory,
       monitorPrograms: monitorPrograms,
+      monitorsList: monitorsList,
       programDate: document.getElementById('programDate')?.value || ''
     };
   }
@@ -2451,6 +2791,7 @@
       if(st.busesCustomStatus) busesCustomStatus=st.busesCustomStatus;
       if(st.programHistory && typeof st.programHistory === 'object') programHistory=st.programHistory;
       if(st.monitorPrograms && typeof st.monitorPrograms === 'object') monitorPrograms=st.monitorPrograms;
+      if(Array.isArray(st.monitorsList)) monitorsList=st.monitorsList;
       if(st.programDate) document.getElementById('programDate').value=st.programDate;
       saveDataToStorage();
     } else {
@@ -2542,5 +2883,351 @@
   });
 })();
 </script>
+
+
+<script>
+/* ===== تحسينات احترافية: مركز الإدارة + التحقق + سجل التغييرات ===== */
+(function(){
+    function nowText(){
+        var d=new Date();
+        return d.toLocaleString('ar-MA',{dateStyle:'short',timeStyle:'medium'});
+    }
+    function currentUser(){
+        try{
+            var u=window.__supabaseUser || null;
+            return u && (u.email || u.user_metadata?.full_name) ? (u.email || u.user_metadata.full_name) : 'المستخدم الحالي';
+        }catch(e){ return 'المستخدم الحالي'; }
+    }
+    function getAudit(){
+        try{return JSON.parse(localStorage.getItem('taroudant_auditLog')||'[]')}catch(e){return []}
+    }
+    function setAudit(a){
+        localStorage.setItem('taroudant_auditLog',JSON.stringify(a.slice(-500)));
+    }
+    window.addAuditEntry=function(action,details){
+        var a=getAudit();
+        a.push({at:new Date().toISOString(),displayAt:nowText(),user:currentUser(),action:action,details:details||''});
+        setAudit(a);
+    };
+
+    window.validateCurrentProgram=function(){
+        var errors=[], warnings=[];
+        var seenBuses={}, seenDrivers={}, seenLines={};
+        (typeof busData!=='undefined'?busData:[]).forEach(function(row,i){
+            var bus=String(row.bus||'').trim(), line=String(row.line||'').trim(), driver=String(row.driver||'').trim();
+            if(!bus) errors.push('الصف '+(i+1)+': الحافلة غير محددة.');
+            if(bus){
+                if(seenBuses[bus]) warnings.push('الحافلة '+bus+' مكررة في البرنامج.');
+                seenBuses[bus]=true;
+            }
+            if(line) seenLines[line]=true;
+            if(!driver) warnings.push('الحافلة '+(bus||('في الصف '+(i+1)))+' بدون سائق.');
+            driver.split('/').map(function(x){return x.trim()}).filter(Boolean).forEach(function(d){
+                if(seenDrivers[d]) warnings.push('السائق '+d+' يظهر أكثر من مرة في البرنامج.');
+                seenDrivers[d]=true;
+            });
+            if(row.status && /غير مدرجة|صيانة|إصلاح|انتظار/.test(String(row.status)) && driver){
+                warnings.push('الحافلة '+bus+' حالتها '+row.status+' لكنها مرتبطة بسائق.');
+            }
+        });
+        return {errors:errors,warnings:warnings,ok:errors.length===0};
+    };
+
+    window.runProgramValidation=function(showAlert){
+        var r=validateCurrentProgram();
+        var box=document.getElementById('programValidationResults');
+        if(box){
+            var h='';
+            if(r.ok) h+='<div class="admin-alert ok">✓ لا توجد أخطاء أساسية في البرنامج.</div>';
+            r.errors.forEach(function(x){h+='<div class="admin-alert warn">✕ '+escapeAdmin(x)+'</div>'});
+            r.warnings.forEach(function(x){h+='<div class="admin-alert warn">⚠ '+escapeAdmin(x)+'</div>'});
+            if(!r.errors.length && !r.warnings.length) h+='<div class="admin-alert ok">✓ البرنامج جاهز للحفظ.</div>';
+            box.innerHTML=h;
+        }
+        if(showAlert){
+            if(r.errors.length) alert('لا يمكن اعتماد البرنامج قبل معالجة '+r.errors.length+' خطأ.');
+            else if(r.warnings.length) alert('تم الفحص: توجد '+r.warnings.length+' ملاحظة، راجعها قبل الحفظ.');
+            else alert('✓ البرنامج سليم وجاهز للحفظ.');
+        }
+        return r;
+    };
+
+    function escapeAdmin(v){
+        return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    window.openAdminCenter=function(){
+        var m=document.getElementById('adminCenterModal');
+        if(m)m.style.display='flex';
+        refreshAdminCenter();
+    };
+    window.closeAdminCenter=function(){
+        var m=document.getElementById('adminCenterModal');
+        if(m)m.style.display='none';
+    };
+    window.refreshAdminCenter=function(){
+        var data=typeof busData!=='undefined'?busData:[];
+        var lines={};
+        var buses={};
+        data.forEach(function(x){if(x.line)lines[x.line]=1;if(x.bus)buses[x.bus]=1});
+        var els={
+            acBuses:Object.keys(buses).length,
+            acDrivers:typeof driversList!=='undefined'?driversList.length:0,
+            acLines:Object.keys(lines).length,
+            acInactive:typeof busesList!=='undefined'?Math.max(0,busesList.length-Object.keys(buses).length):0
+        };
+        Object.keys(els).forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=els[id]});
+        runProgramValidation(false);
+        searchDriverHistory();
+    };
+
+    function getProgramDates(){
+        return Object.keys(typeof programHistory!=='undefined'?programHistory:{}).sort().reverse();
+    }
+
+    function driverWorkedOnDate(driver,date){
+        var snap=(typeof programHistory!=='undefined'?programHistory[date]:null);
+        if(!snap)return false;
+        return (snap.busData||[]).some(function(row){
+            return String(row.driver||'').split('/').map(function(x){return x.trim()}).includes(driver);
+        });
+    }
+    function driverStatusOnDate(driver,date){
+        var snap=(typeof programHistory!=='undefined'?programHistory[date]:null);
+        if(!snap)return null;
+        if(driverWorkedOnDate(driver,date))return 'عمل';
+        return String((snap.driversCustomStatus||{})[driver]||'الراحة').trim()||'الراحة';
+    }
+    window.searchDriverHistory=function(){
+        var q=(document.getElementById('adminDriverSearch')?.value||'').trim().toLowerCase();
+        var box=document.getElementById('driverHistoryResults'); if(!box)return;
+        var drivers=typeof driversList!=='undefined'?driversList:[];
+        var matches=drivers.filter(function(d){return !q||String(d).toLowerCase().includes(q)}).slice(0,30);
+        if(!matches.length){box.innerHTML='<div class="admin-alert warn">لا يوجد سائق مطابق.</div>';return;}
+        var dates=getProgramDates().sort();
+        var h='<table class="admin-audit-table"><thead><tr><th>السائق</th><th>مجموع أيام الاشتغال</th><th>مجموع أيام الراحة الفعلية</th><th>آخر يوم راحة</th><th>الأيام التي اشتغلها منذ آخر يوم راحة</th></tr></thead><tbody>';
+        matches.forEach(function(driver){
+            var work=0,non=0,lastRest=null,since=0;
+            dates.forEach(function(date){
+                var st=driverStatusOnDate(driver,date);
+                if(st==='عمل') work++;
+                else if(st!==null){non++;lastRest=date;}
+            });
+            if(lastRest){
+                var idx=dates.indexOf(lastRest);
+                for(var i=idx+1;i<dates.length;i++){
+                    if(driverWorkedOnDate(driver,dates[i]))since++; else break;
+                }
+            }else{
+                for(var j=dates.length-1;j>=0;j--){
+                    if(driverWorkedOnDate(driver,dates[j]))since++; else break;
+                }
+            }
+            h+='<tr><td style="font-weight:900">'+escapeAdmin(driver)+'</td><td>'+work+'</td><td>'+non+'</td><td>'+escapeAdmin(lastRest||'—')+'</td><td>'+since+'</td></tr>';
+        });
+        box.innerHTML=h+'</tbody></table>';
+    };
+
+    window.clearAdminSearch=function(){
+        var e=document.getElementById('adminDriverSearch');if(e)e.value='';
+        searchDriverHistory();
+    };
+
+    window.openAuditLog=function(){
+        var m=document.getElementById('auditLogModal');if(m)m.style.display='flex';
+        renderAuditLog();
+    };
+    window.closeAuditLog=function(){
+        var m=document.getElementById('auditLogModal');if(m)m.style.display='none';
+    };
+    window.renderAuditLog=function(){
+        var box=document.getElementById('auditLogTableWrap');if(!box)return;
+        var a=getAudit().slice().reverse();
+        if(!a.length){box.innerHTML='<div class="admin-alert ok">لا توجد تغييرات مسجلة بعد.</div>';return;}
+        var h='<table class="admin-audit-table"><thead><tr><th>التاريخ والوقت</th><th>المستخدم</th><th>العملية</th><th>التفاصيل</th></tr></thead><tbody>';
+        a.forEach(function(x){
+            h+='<tr><td>'+escapeAdmin(x.displayAt||x.at)+'</td><td>'+escapeAdmin(x.user)+'</td><td>'+escapeAdmin(x.action)+'</td><td>'+escapeAdmin(x.details)+'</td></tr>';
+        });
+        box.innerHTML=h+'</tbody></table>';
+    };
+    window.clearAuditLog=function(){
+        if(!confirm('هل تريد مسح سجل التغييرات المحلي؟'))return;
+        localStorage.removeItem('taroudant_auditLog');
+        renderAuditLog();
+    };
+
+    // تسجيل عمليات الحفظ والتدوير دون تغيير منطق الوظائف الأصلية.
+    var originalSave=window.saveCurrentProgramToHistory;
+    if(typeof originalSave==='function'){
+        window.saveCurrentProgramToHistory=function(){
+            var date=(typeof getProgramDateValue==='function'?getProgramDateValue():'');
+            var result=originalSave.apply(this,arguments);
+            addAuditEntry('حفظ البرنامج','تم حفظ برنامج '+(date||'بدون تاريخ'));
+            return result;
+        };
+    }
+
+    // نراقب تغييرات التاريخ لتسجيلها، مع إبقاء التاريخ بيد المشرف.
+    document.addEventListener('change',function(e){
+        if(e.target && e.target.id==='programDate'){
+            addAuditEntry('تغيير تاريخ البرنامج','التاريخ الجديد: '+e.target.value);
+        }
+    });
+
+    // تحذير قبل مغادرة الصفحة إذا كانت هناك تعديلات غير محفوظة.
+    window.__programDirty=false;
+    document.addEventListener('input',function(e){
+        if(e.target && !e.target.closest('#supabaseLoginOverlay')) window.__programDirty=true;
+    });
+    window.addEventListener('beforeunload',function(e){
+        if(window.__programDirty){
+            e.preventDefault();
+            e.returnValue='';
+        }
+    });
+
+})();
+</script>
+
+
+<script>
+/* ===== سجل السائق الشهري داخل مركز الإدارة: 26 إلى 25 ===== */
+(function(){
+    function pad2(n){return String(n).padStart(2,'0');}
+    function periodForMonth(v){
+        if(!v)return null;
+        var p=v.split('-');
+        if(p.length!==2)return null;
+        var y=+p[0], m=+p[1]-1;
+        if(!Number.isFinite(y)||!Number.isFinite(m))return null;
+        var start=new Date(y,m,26,12);
+        var end=new Date(y,m+1,25,12);
+        var dates=[];
+        for(var d=new Date(start);d<=end;d.setDate(d.getDate()+1)) dates.push(new Date(d));
+        return {start:start,end:end,dates:dates};
+    }
+    function iso(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
+    function worked(driver,date){
+        var snap=(typeof programHistory!=='undefined'?programHistory[date]:null);
+        if(!snap)return false;
+        return (snap.busData||[]).some(function(row){
+            return String(row.driver||'').split('/').map(function(x){return x.trim()}).includes(driver);
+        });
+    }
+    function status(driver,date){
+        var snap=(typeof programHistory!=='undefined'?programHistory[date]:null);
+        if(!snap)return null;
+        if(worked(driver,date))return 'عمل';
+        return String((snap.driversCustomStatus||{})[driver]||'الراحة').trim()||'الراحة';
+    }
+    function esc(v){
+        return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    window.renderAdminMonthlyDriverStats=function(){
+        var input=document.getElementById('adminMonthlyRestMonth');
+        var box=document.getElementById('adminMonthlyDriverStats');
+        var label=document.getElementById('adminMonthlyRestPeriod');
+        if(!input||!box)return;
+
+        if(!input.value){
+            var now=new Date();
+            // الدورة التي تحتوي على تاريخ اليوم.
+            var base=now.getDate()>=26?now:new Date(now.getFullYear(),now.getMonth()-1,1);
+            input.value=base.getFullYear()+'-'+pad2(base.getMonth()+1);
+        }
+
+        var period=periodForMonth(input.value);
+        if(!period)return;
+
+        if(label) label.textContent='الفترة: '+iso(period.start)+' إلى '+iso(period.end);
+
+        var q=(document.getElementById('adminMonthlyDriverSearch')?.value||'').trim().toLowerCase();
+        var drivers=typeof driversList!=='undefined'?driversList:[];
+        drivers=drivers.filter(function(d){return !q||String(d).toLowerCase().includes(q)});
+
+        var h='<table class="admin-monthly-table"><thead><tr>'+
+              '<th>السائق</th>'+
+              '<th>مجموع أيام الاشتغال</th>'+
+              '<th>مجموع أيام عدم الاشتغال / الراحة</th>'+
+              '<th>آخر يوم راحة</th>'+
+              '<th>الأيام التي اشتغلها منذ آخر يوم راحة</th>'+
+              '</tr></thead><tbody>';
+
+        drivers.forEach(function(driver){
+            var work=0, non=0, lastRest=null;
+            period.dates.forEach(function(d){
+                var st=status(driver,iso(d));
+                if(st==='عمل') {
+                    work++;
+                } else if(st!==null) {
+                    // لا تُحتسب الحالات الإدارية الأخرى كراحة.
+                    // يوم الراحة يُحتسب فقط عندما تكون الحالة الإدارية = "الراحة".
+                    if(String(st).trim()==='الراحة'){
+                        non++;
+                        lastRest=iso(d);
+                    }
+                }
+            });
+
+            var since=0;
+            if(lastRest){
+                var found=false;
+                for(var i=0;i<period.dates.length;i++){
+                    if(iso(period.dates[i])===lastRest){found=true;continue;}
+                    if(found){
+                        var dayStatus=status(driver,iso(period.dates[i]));
+                        if(dayStatus==='عمل'){
+                            since++;
+                        } else if(dayStatus==='الراحة'){
+                            break;
+                        } else {
+                            // المرض، الغياب، الإدارة، الترخيص، العطلة... لا تعتبر راحة،
+                            // ولا نعتبرها نقطة بداية جديدة لسلسلة العمل.
+                            continue;
+                        }
+                    }
+                }
+            }else{
+                for(var j=period.dates.length-1;j>=0;j--){
+                    var tailStatus=status(driver,iso(period.dates[j]));
+                    if(tailStatus==='عمل'){
+                        since++;
+                    } else if(tailStatus==='الراحة'){
+                        break;
+                    } else {
+                        continue;
+                    }
+                }
+            }
+
+            h+='<tr>'+
+               '<td class="admin-monthly-highlight">'+esc(driver)+'</td>'+
+               '<td>'+work+'</td>'+
+               '<td>'+non+'</td>'+
+               '<td>'+esc(lastRest||'—')+'</td>'+
+               '<td>'+since+'</td>'+
+               '</tr>';
+        });
+
+        if(!drivers.length){
+            h+='<tr><td colspan="5">لا يوجد سائق مطابق.</td></tr>';
+        }
+        h+='</tbody></table>';
+        box.innerHTML=h;
+    };
+
+    // شغل السجل الشهري عند فتح مركز الإدارة، مع الحفاظ على بقية خصائص المركز.
+    var oldOpen=window.openAdminCenter;
+    if(typeof oldOpen==='function'){
+        window.openAdminCenter=function(){
+            var r=oldOpen.apply(this,arguments);
+            setTimeout(window.renderAdminMonthlyDriverStats,0);
+            return r;
+        };
+    }
+})();
+</script>
+
 </body>
 </html>
