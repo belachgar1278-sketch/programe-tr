@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>برنامج حافلات تارودانت </title>
+    <title>برنامج حافلات تارودانت - نسخة الهاتف</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1513,7 +1513,7 @@ body.observer-mode #programHistoryModal {
         </div>
         <div class="monitor-export-section monitor-export-card">
             <table class="monitor-export-table">
-                <thead><tr><th style="width:58%">الحالة</th><th style="width:42%">المراقب</th></tr></thead>
+                <thead><tr><th style="width:40%">الحالة</th><th style="width:60%">المراقبون</th></tr></thead>
                 <tbody id="monitorStatusesExportBody"></tbody>
             </table>
         </div>
@@ -2694,6 +2694,11 @@ body.observer-mode #programHistoryModal {
         var data = getMonitorProgramForDate(date, true);
         (data.lines||[]).forEach(function(r){ r.period=r.period||''; r.time=r.time||''; r.timeNote=r.timeNote||''; });
 
+        // السماح بعدة مراقبين في حالة الراحة مثل السائقين.
+        (data.statuses||[]).forEach(function(r){
+            if(String(r.assignment||'').trim() === 'الراحة 00') r.assignment = 'الراحة';
+        });
+
         // أضف تلقائياً أي اسم قديم موجود في برنامج محفوظ إلى قاعدة المراقبين حتى لا تختفي البيانات القديمة.
         (data.stations||[]).concat(data.lines||[], data.statuses||[]).forEach(function(r){
             var n=String(r.name||'').trim();
@@ -2727,7 +2732,11 @@ body.observer-mode #programHistoryModal {
     }
 
     function monitorManagerSection(title,key,headers,rows,withTime) {
-        var h = '<div class="monitor-section-card"><div class="monitor-section-head"><h4>'+title+'</h4><button class="btn btn-success" type="button" onclick="addMonitorRow(\''+key+'\')">+ إضافة</button></div>';
+        var addLabel = key === 'statuses' ? '+ إضافة حالة / مراقب' : '+ إضافة';
+        var restButton = key === 'statuses'
+            ? '<button class="btn btn-success" type="button" onclick="addMonitorRestRow()">+ إضافة مراقب راحة</button>'
+            : '';
+        var h = '<div class="monitor-section-card"><div class="monitor-section-head"><h4>'+title+'</h4><div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">'+restButton+'<button class="btn btn-success" type="button" onclick="addMonitorRow(\''+key+'\')">'+addLabel+'</button></div></div>';
         h += '<table class="monitor-manager-table"><thead><tr>';
         headers.forEach(function(x){ h += '<th>'+x+'</th>'; });
         h += '<th style="width:70px">حذف</th></tr></thead><tbody>';
@@ -2759,6 +2768,26 @@ body.observer-mode #programHistoryModal {
             var key=el.dataset.monitorKey, i=Number(el.dataset.index), field=el.dataset.field;
             if(data[key] && data[key][i]) data[key][i][field]=el.value;
         });
+    }
+
+    function addMonitorRestRow() {
+        syncMonitorManagerInputs();
+        var data = getMonitorProgramForDate(getProgramDateValue(), true);
+        if (!Array.isArray(data.statuses)) data.statuses = [];
+
+        // كل ضغطة تضيف مراقب راحة جديدًا، ولا تستبدل المراقب السابق.
+        data.statuses.push({
+            name: '****',
+            assignment: 'الراحة'
+        });
+
+        renderMonitorManager();
+
+        // انتقل تلقائياً إلى آخر سطر لتسهيل اختيار المراقب.
+        setTimeout(function(){
+            var rows=document.querySelectorAll('#monitorManagerContent [data-monitor-key="statuses"]');
+            if(rows.length) rows[rows.length-1].focus();
+        },20);
     }
 
     function addMonitorRow(key) {
@@ -2808,9 +2837,44 @@ body.observer-mode #programHistoryModal {
             if(r.timeNote) timeText += (timeText?' — ':'') + r.timeNote;
             lb.innerHTML += '<tr><td>'+escapeHtml(r.assignment||'')+'</td><td class="time-cell">'+escapeHtml(timeText ? '('+timeText+')' : '')+'</td><td>'+escapeHtml(r.name||'')+'</td></tr>';
         });
-        var stb=document.getElementById('monitorStatusesExportBody'); stb.innerHTML='';
+        var stb=document.getElementById('monitorStatusesExportBody'); 
+        stb.innerHTML='';
+
+        /*
+         * حالات المراقبين مثل حالات السائقين:
+         * لا نكرر اسم الحالة في عدة أسطر.
+         * كل حالة تظهر مرة واحدة، وجميع المراقبين الموجودين
+         * في تلك الحالة يظهرون داخل الخانة نفسها.
+         *
+         * مثال:
+         * الراحة | أحمد، محمد، خالد
+         * المرض | يوسف، علي
+         * الإدارة | حسن، عمر
+         */
+        var groupedStatuses = {};
         (data.statuses||[]).forEach(function(r){
-            stb.innerHTML += '<tr><td>'+escapeHtml(r.assignment||'')+'</td><td>'+escapeHtml(r.name||'')+'</td></tr>';
+            var status = String(r.assignment||'').trim() || 'غير محددة';
+            var name = String(r.name||'').trim();
+
+            if(!groupedStatuses[status]) groupedStatuses[status] = [];
+
+            if(name && name !== '****' && name !== '*****' && name !== '******'){
+                if(groupedStatuses[status].indexOf(name) === -1){
+                    groupedStatuses[status].push(name);
+                }
+            }
+        });
+
+        Object.keys(groupedStatuses).forEach(function(status){
+            var names = groupedStatuses[status].length
+                ? groupedStatuses[status].join(' + ')
+                : '—';
+
+            stb.innerHTML +=
+                '<tr>' +
+                    '<td style="font-weight:800;">'+escapeHtml(status)+'</td>' +
+                    '<td>'+escapeHtml(names)+'</td>' +
+                '</tr>';
         });
     }
 
