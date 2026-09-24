@@ -961,14 +961,6 @@
     .btn-save-program:hover{background:#166534!important;}
 
 
-    .monthly-rest-table{width:100%;border-collapse:collapse;background:#fff;min-width:1000px;font-size:12px}
-    .monthly-rest-table th,.monthly-rest-table td{border:1px solid #cbd5e1;padding:6px;text-align:center;white-space:nowrap}
-    .monthly-rest-table thead th{background:#e2e8f0;font-weight:900;position:sticky;top:0;z-index:2}
-    .monthly-rest-driver{font-weight:900;background:#f8fafc;position:sticky;right:0;z-index:1}
-    .rest-worked{font-weight:900}
-    .rest-status{font-weight:800}
-    .rest-missing{color:#94a3b8}
-
 
 /* ===== مركز الإدارة والتحقق والسجل ===== */
 .admin-center-modal .modal-content{max-width:1200px;max-height:92vh;overflow:auto}
@@ -987,12 +979,6 @@
 .history-search{padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;min-width:250px}
 @media(max-width:900px){.admin-center-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.admin-center-grid{grid-template-columns:1fr}}
-
-
-    .admin-monthly-table{width:100%;border-collapse:collapse;background:#fff;font-size:12px}
-    .admin-monthly-table th,.admin-monthly-table td{border:1px solid #cbd5e1;padding:8px;text-align:center}
-    .admin-monthly-table th{background:#e2e8f0;font-weight:900}
-    .admin-monthly-highlight{font-weight:900}
 
 </style>
 </head>
@@ -1043,27 +1029,15 @@
       </div>
       <div id="driverHistoryResults" style="margin-top:10px;"></div>
     </div>
+    
     <div class="admin-center-card">
-      <h4>📅 سجل السائق الشهري</h4>
-      <div style="display:flex;gap:10px;align-items:end;flex-wrap:wrap;">
-        <label style="font-weight:800;">
-          شهر السجل
-          <input id="adminMonthlyRestMonth" type="month"
-                 onchange="renderAdminMonthlyDriverStats()"
-                 style="display:block;margin-top:6px;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;">
-        </label>
-        <div id="adminMonthlyRestPeriod"
-             style="padding:10px 14px;background:#f8fafc;border:1px solid #dbe3ec;border-radius:8px;font-weight:800;">
-          الفترة: —
-        </div>
+      <h4>👥 حالات السائقين (بدون العاملين)</h4>
+      <div style="font-size:12px;color:#64748b;margin-bottom:10px;">
+        تظهر هنا فقط الحالات الإدارية للسائقين غير العاملين، وتأتي «الراحة» أولاً.
       </div>
-      <div style="margin-top:10px;">
-        <input id="adminMonthlyDriverSearch" class="history-search"
-               placeholder="البحث عن سائق في هذا الشهر..."
-               oninput="renderAdminMonthlyDriverStats()">
-      </div>
-      <div id="adminMonthlyDriverStats" style="margin-top:12px;"></div>
+      <div id="adminDriverStatuses"></div>
     </div>
+
 
   </div>
 </div>
@@ -1259,9 +1233,10 @@
         <table>
             <thead>
                 <tr>
-                    <th style="width: 35%;">اسم السائق</th>
-                    <th style="width: 30%;">الحالة الحالية</th>
-                    <th style="width: 35%;">تغيير الحالة</th>
+                    <th style="width: 30%;">اسم السائق</th>
+                    <th style="width: 23%;">الحالة الحالية</th>
+                    <th style="width: 22%;">مجموع عدد أيام الحالة</th>
+                    <th style="width: 25%;">تغيير الحالة</th>
                 </tr>
             </thead>
             <tbody id="driversStatusTableBody">
@@ -1285,42 +1260,6 @@
         </table>
     </div>
 </div>
-    <div class="modal-content" style="max-width:1400px;max-height:92vh;overflow:auto;">
-        <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
-            <h3>📅 سجل الراحة الشهري للسائقين</h3>
-            <button class="close-modal" type="button" onclick="closeMonthlyRestLog()">×</button>
-        </div>
-
-        <div style="background:#f8fafc;border:1px solid #dbe3ec;border-radius:12px;padding:14px;margin-bottom:14px;">
-            <div style="display:flex;gap:12px;align-items:end;flex-wrap:wrap;">
-                <label style="font-weight:800;min-width:190px;">
-                    شهر بداية السجل
-                    <input id="restLogMonth" type="month"
-                        style="display:block;width:100%;box-sizing:border-box;margin-top:6px;padding:9px;border:1px solid #cbd5e1;border-radius:8px;">
-                </label>
-                <div id="restLogPeriodLabel" style="font-weight:800;padding:10px 14px;background:#fff;border:1px solid #dbe3ec;border-radius:8px;">
-                    الفترة: —
-                </div>
-                <button class="btn btn-primary" type="button" onclick="renderMonthlyRestLog()">عرض السجل</button>
-            </div>
-            <div style="font-size:12px;color:#64748b;margin-top:9px;">
-                كل سجل شهري يبدأ يوم 26 وينتهي يوم 25 من الشهر الموالي. تظهر الحافلة التي اشتغل بها السائق، وإذا لم يعمل تظهر حالته لذلك اليوم.
-            </div>
-        </div>
-
-        <div style="margin-bottom:10px;display:flex;gap:10px;align-items:center;flex-wrap:wrap;">
-            <label style="font-weight:800;">
-                البحث عن سائق
-                    oninput="filterMonthlyDriverLog()"
-                    style="margin-right:6px;padding:9px 12px;border:1px solid #cbd5e1;border-radius:8px;min-width:260px;">
-            </label>
-            <button class="btn btn-secondary" type="button" onclick="clearMonthlyDriverSearch()">مسح البحث</button>
-        </div>
-    </div>
-</div><div id="monthlyRestExportBody"></div>
-    </div>
-</div>
-
 <div class="modal" id="monitorsModal">
     <div class="modal-content" style="max-width:1100px; max-height:90vh; overflow-y:auto;">
         <div class="modal-header" style="display:flex;justify-content:space-between;align-items:center;gap:10px;">
@@ -2147,6 +2086,35 @@
         updateStats();
     }
 
+    function getDriverCurrentStatusDays(driver, currentStatus) {
+        var dates = Object.keys(typeof programHistory !== 'undefined' ? programHistory : {}).sort();
+        if (!dates.length) return 1;
+
+        var days = 0;
+
+        // نحسب الأيام المتتالية التي كانت فيها الحالة نفسها.
+        for (var i = dates.length - 1; i >= 0; i--) {
+            var snap = programHistory[dates[i]];
+            if (!snap) continue;
+
+            var worked = (snap.busData || []).some(function(item) {
+                return String(item.driver || '').split('/').map(function(x) {
+                    return x.trim();
+                }).includes(driver);
+            });
+
+            var status = worked ? 'عمل' : String((snap.driversCustomStatus || {})[driver] || 'الراحة').trim();
+
+            if (status === currentStatus) {
+                days++;
+            } else {
+                break;
+            }
+        }
+
+        return days || 1;
+    }
+
     function renderStatusTables() {
         var activeDriversSet = new Set();
         busData.forEach(function(item) {
@@ -2202,9 +2170,12 @@
             });
             selectHtml += '</select>';
 
+            var statusDays = getDriverCurrentStatusDays(driver, currentStatus);
+
             tr.innerHTML = `
                 <td style="font-weight:700;">${driver}</td>
                 <td><span class="status-badge ${badgeClass}">${currentStatus}</span></td>
+                <td style="font-weight:800;">${statusDays}</td>
                 <td>${selectHtml}</td>
             `;
             dBody.appendChild(tr);
@@ -3088,145 +3059,146 @@
 
 })();
 </script>
-
-
 <script>
-/* ===== سجل السائق الشهري داخل مركز الإدارة: 26 إلى 25 ===== */
+/* ===== حالات السائقين غير العاملين ===== */
 (function(){
-    function pad2(n){return String(n).padStart(2,'0');}
-    function periodForMonth(v){
-        if(!v)return null;
-        var p=v.split('-');
-        if(p.length!==2)return null;
-        var y=+p[0], m=+p[1]-1;
-        if(!Number.isFinite(y)||!Number.isFinite(m))return null;
-        var start=new Date(y,m,26,12);
-        var end=new Date(y,m+1,25,12);
-        var dates=[];
-        for(var d=new Date(start);d<=end;d.setDate(d.getDate()+1)) dates.push(new Date(d));
-        return {start:start,end:end,dates:dates};
+    function isoDateLocal(d){
+        return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
     }
-    function iso(d){return d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());}
-    function worked(driver,date){
-        var snap=(typeof programHistory!=='undefined'?programHistory[date]:null);
-        if(!snap)return false;
-        return (snap.busData||[]).some(function(row){
-            return String(row.driver||'').split('/').map(function(x){return x.trim()}).includes(driver);
-        });
-    }
-    function status(driver,date){
-        var snap=(typeof programHistory!=='undefined'?programHistory[date]:null);
-        if(!snap)return null;
-        if(worked(driver,date))return 'عمل';
-        return String((snap.driversCustomStatus||{})[driver]||'الراحة').trim()||'الراحة';
-    }
-    function esc(v){
+    function parseLocalDate(s){ return new Date(s+'T12:00:00'); }
+    function dayDiff(a,b){ return Math.floor((parseLocalDate(b)-parseLocalDate(a))/86400000)+1; }
+    function escStatus(v){
         return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
     }
 
-    window.renderAdminMonthlyDriverStats=function(){
-        var input=document.getElementById('adminMonthlyRestMonth');
-        var box=document.getElementById('adminMonthlyDriverStats');
-        var label=document.getElementById('adminMonthlyRestPeriod');
-        if(!input||!box)return;
+    function getStatusForDriver(driver,date){
+        var snap=(typeof programHistory!=='undefined'?programHistory[date]:null);
+        if(!snap) return null;
+        var worked=(snap.busData||[]).some(function(row){
+            return String(row.driver||'').split('/').map(function(x){return x.trim()}).includes(driver);
+        });
+        if(worked) return 'عمل';
+        return String((snap.driversCustomStatus||{})[driver]||'الراحة').trim() || 'الراحة';
+    }
 
-        if(!input.value){
-            var now=new Date();
-            // الدورة التي تحتوي على تاريخ اليوم.
-            var base=now.getDate()>=26?now:new Date(now.getFullYear(),now.getMonth()-1,1);
-            input.value=base.getFullYear()+'-'+pad2(base.getMonth()+1);
+    function escStatus(v){
+        return String(v==null?'':v).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    window.changeDriverStatus=function(driver,newStatus){
+        if(!driver || !newStatus) return;
+        try{
+            if(typeof driversCustomStatus==='undefined' || !driversCustomStatus) window.driversCustomStatus={};
+            window.driversCustomStatus[driver]=newStatus;
+        }catch(e){}
+        // حفظ الحالة في البرنامج الحالي إن كان متاحاً.
+        try{
+            if(typeof saveCurrentProgram==='function') saveCurrentProgram();
+        }catch(e){}
+        if(typeof addAuditEntry==='function'){
+            addAuditEntry('تغيير حالة سائق','السائق: '+driver+' — الحالة الجديدة: '+newStatus);
+        }
+        if(typeof refreshAdminCenter==='function') refreshAdminCenter();
+    };
+
+    function buildDriverStatuses(){
+        var box=document.getElementById('adminDriverStatuses');
+        if(!box) return;
+
+        var drivers=(typeof driversList!=='undefined'?driversList:[]);
+        var dates=(typeof getProgramDates==='function'?getProgramDates():[]).slice().sort();
+        var latest=dates.length ? dates[dates.length-1] : '';
+
+        if(!latest){
+            box.innerHTML='<div class="admin-alert ok">لا توجد برامج محفوظة لاستخراج الحالات.</div>';
+            return;
         }
 
-        var period=periodForMonth(input.value);
-        if(!period)return;
-
-        if(label) label.textContent='الفترة: '+iso(period.start)+' إلى '+iso(period.end);
-
-        var q=(document.getElementById('adminMonthlyDriverSearch')?.value||'').trim().toLowerCase();
-        var drivers=typeof driversList!=='undefined'?driversList:[];
-        drivers=drivers.filter(function(d){return !q||String(d).toLowerCase().includes(q)});
-
-        var h='<table class="admin-monthly-table"><thead><tr>'+
-              '<th>السائق</th>'+
-              '<th>مجموع أيام الاشتغال</th>'+
-              '<th>مجموع أيام عدم الاشتغال / الراحة</th>'+
-              '<th>آخر يوم راحة</th>'+
-              '<th>الأيام التي اشتغلها منذ آخر يوم راحة</th>'+
-              '</tr></thead><tbody>';
-
+        var rows=[];
         drivers.forEach(function(driver){
-            var work=0, non=0, lastRest=null;
-            period.dates.forEach(function(d){
-                var st=status(driver,iso(d));
-                if(st==='عمل') {
-                    work++;
-                } else if(st!==null) {
-                    // لا تُحتسب الحالات الإدارية الأخرى كراحة.
-                    // يوم الراحة يُحتسب فقط عندما تكون الحالة الإدارية = "الراحة".
-                    if(String(st).trim()==='الراحة'){
-                        non++;
-                        lastRest=iso(d);
-                    }
-                }
-            });
+            var currentStatus=null, count=0;
 
-            var since=0;
-            if(lastRest){
-                var found=false;
-                for(var i=0;i<period.dates.length;i++){
-                    if(iso(period.dates[i])===lastRest){found=true;continue;}
-                    if(found){
-                        var dayStatus=status(driver,iso(period.dates[i]));
-                        if(dayStatus==='عمل'){
-                            since++;
-                        } else if(dayStatus==='الراحة'){
-                            break;
-                        } else {
-                            // المرض، الغياب، الإدارة، الترخيص، العطلة... لا تعتبر راحة،
-                            // ولا نعتبرها نقطة بداية جديدة لسلسلة العمل.
-                            continue;
-                        }
-                    }
+            // الحالة الحالية = آخر حالة مسجلة. العاملون لا يظهرون.
+            for(var i=dates.length-1;i>=0;i--){
+                var st=getStatusForDriver(driver,dates[i]);
+                if(st===null) continue;
+
+                if(st==='عمل'){
+                    currentStatus=null;
+                    count=0;
+                    break;
                 }
-            }else{
-                for(var j=period.dates.length-1;j>=0;j--){
-                    var tailStatus=status(driver,iso(period.dates[j]));
-                    if(tailStatus==='عمل'){
-                        since++;
-                    } else if(tailStatus==='الراحة'){
-                        break;
-                    } else {
-                        continue;
-                    }
-                }
+
+                if(currentStatus===null) currentStatus=st;
+
+                // نحسب فقط الأيام المتتالية التي تحمل نفس الحالة الحالية.
+                if(st===currentStatus) count++;
+                else break;
             }
 
+            if(currentStatus && currentStatus!=='عمل'){
+                rows.push({driver:driver,status:currentStatus,days:getDriverCurrentStatusDays(driver,currentStatus)});
+            }
+        });
+
+        // الراحة أولاً، ثم باقي الحالات، ثم اسم السائق.
+        rows.sort(function(a,b){
+            if(a.status==='الراحة' && b.status!=='الراحة') return -1;
+            if(a.status!=='الراحة' && b.status==='الراحة') return 1;
+            if(a.status!==b.status) return a.status.localeCompare(b.status,'ar');
+            return a.driver.localeCompare(b.driver,'ar');
+        });
+
+        var statuses=['الراحة','الغياب','المرض','الترخيص','العطلة السنوية','انتظار اصلاح الحافلة','الإدارة'];
+
+        var h='<table class="admin-driver-status-table"><thead><tr>'+
+              '<th>اسم السائق</th>'+
+              '<th>الحالة الحالية</th>'+
+              '<th>مجموع عدد أيام الحالة</th>'+
+              '<th>تغيير الحالة</th>'+
+              '</tr></thead><tbody>';
+
+        rows.forEach(function(r){
+            var select='<select onchange="changeDriverStatus('+JSON.stringify(r.driver)+',this.value)" style="width:100%;padding:7px;border:1px solid #cbd5e1;border-radius:7px;">';
+            statuses.forEach(function(s){
+                select+='<option value="'+escStatus(s)+'" '+(r.status===s?'selected':'')+'>'+escStatus(s)+'</option>';
+            });
+            select+='</select>';
+
             h+='<tr>'+
-               '<td class="admin-monthly-highlight">'+esc(driver)+'</td>'+
-               '<td>'+work+'</td>'+
-               '<td>'+non+'</td>'+
-               '<td>'+esc(lastRest||'—')+'</td>'+
-               '<td>'+since+'</td>'+
+               '<td style="font-weight:900">'+escStatus(r.driver)+'</td>'+
+               '<td class="'+(r.status==='الراحة'?'admin-status-rest':'')+'">'+escStatus(r.status)+'</td>'+
+               '<td class="admin-status-days">'+r.days+'</td>'+
+               '<td>'+select+'</td>'+
                '</tr>';
         });
 
-        if(!drivers.length){
-            h+='<tr><td colspan="5">لا يوجد سائق مطابق.</td></tr>';
+        if(!rows.length){
+            h+='<tr><td colspan="4">لا يوجد حاليًا سائقون في حالات إدارية غير العمل.</td></tr>';
         }
         h+='</tbody></table>';
         box.innerHTML=h;
-    };
+    }
 
-    // شغل السجل الشهري عند فتح مركز الإدارة، مع الحفاظ على بقية خصائص المركز.
+    window.renderAdminDriverStatuses=buildDriverStatuses;
+
+    var oldRefresh=window.refreshAdminCenter;
+    if(typeof oldRefresh==='function'){
+        window.refreshAdminCenter=function(){
+            var r=oldRefresh.apply(this,arguments);
+            setTimeout(buildDriverStatuses,0);
+            return r;
+        };
+    }
+
     var oldOpen=window.openAdminCenter;
     if(typeof oldOpen==='function'){
         window.openAdminCenter=function(){
             var r=oldOpen.apply(this,arguments);
-            setTimeout(window.renderAdminMonthlyDriverStats,0);
+            setTimeout(buildDriverStatuses,0);
             return r;
         };
-    }
-})();
+    };
 </script>
 
 </body>
