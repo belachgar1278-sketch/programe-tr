@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>برنامج حافلات تارودانت - نسخة الهاتف</title>
+    <title>برنامج حافلات تارودانت </title>
 
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -989,6 +989,290 @@
 }
 </style>
 </style>
+
+<style id="observerModeStyle">
+body.observer-mode .header-actions > button:not(#observerViewProgramsBtn):not(#supabaseLogoutBtn),
+body.observer-mode .program-actions,
+body.observer-mode .admin-date-box button,
+body.observer-mode .admin-date-box input,
+body.observer-mode .admin-date-box select,
+body.observer-mode .bus-table button,
+body.observer-mode .bus-table select,
+body.observer-mode .status-actions,
+body.observer-mode .no-print:not(#supabaseLogoutBtn):not(#observerViewProgramsBtn) {
+    display:none !important;
+}
+body.observer-mode #observerViewProgramsBtn { display:inline-flex !important; }
+#observerViewProgramsBtn { display:none; }
+.observer-banner {
+    display:none;
+    margin:10px auto;
+    max-width:1200px;
+    padding:10px 14px;
+    border-radius:10px;
+    background:#e0f2fe;
+    color:#075985;
+    font-weight:800;
+    text-align:center;
+}
+body.observer-mode .observer-banner { display:block; }
+body.observer-mode #programHistorySaveRow { display:none !important; }
+body.observer-mode #programHistoryModal .history-open-btn { display:inline-flex !important; }
+body.observer-mode #programHistoryModal .history-delete-btn { display:none !important; }
+
+</style>
+
+
+<style id="observerHistoryOnlyStyle">
+/* الملاحظ: لا يرى إلا سجل البرامج المحفوظة + تسجيل الخروج */
+body.observer-mode .container > *:not(header) {
+    display:none !important;
+}
+body.observer-mode .header-title {
+    display:none !important;
+}
+body.observer-mode .header-actions > * {
+    display:none !important;
+}
+body.observer-mode #supabaseLogoutBtn {
+    display:inline-flex !important;
+}
+body.observer-mode #observerViewProgramsBtn {
+    display:none !important;
+}
+body.observer-mode .observer-banner {
+    display:none !important;
+}
+
+/* سجل البرامج هو الشاشة الوحيدة للملاحظ */
+body.observer-mode #programHistoryModal {
+    display:flex !important;
+    position:fixed !important;
+    inset:0 !important;
+    z-index:99999 !important;
+    background:rgba(248,250,252,.98) !important;
+    align-items:flex-start !important;
+    justify-content:center !important;
+    padding:24px !important;
+}
+body.observer-mode #programHistoryModal .program-history-modal {
+    width:min(1200px,100%) !important;
+    max-width:1200px !important;
+    max-height:calc(100vh - 48px) !important;
+    margin:0 auto !important;
+}
+body.observer-mode #programHistoryModal .close-modal {
+    display:none !important;
+}
+body.observer-mode #programHistoryModal #programHistorySaveRow {
+    display:none !important;
+}
+body.observer-mode #programHistoryModal .history-delete-btn {
+    display:none !important;
+}
+body.observer-mode #programHistoryModal .history-open-btn {
+    display:inline-flex !important;
+}
+</style>
+
+
+<style id="observerSavedProgramViewerStyle">
+#observerSavedProgramViewer {
+    display:none;
+    position:fixed;
+    inset:0;
+    z-index:100000;
+    background:#f8fafc;
+    overflow:auto;
+    padding:18px;
+}
+#observerSavedProgramViewer .observer-viewer-inner {
+    width:min(1400px,100%);
+    margin:0 auto;
+    background:#fff;
+    border-radius:14px;
+    box-shadow:0 8px 35px rgba(15,23,42,.18);
+    overflow:hidden;
+}
+#observerSavedProgramViewer .observer-viewer-head {
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+    padding:14px 18px;
+    border-bottom:1px solid #cbd5e1;
+    background:#fff;
+    position:sticky;
+    top:0;
+    z-index:2;
+}
+#observerSavedProgramViewer .observer-viewer-content {
+    padding:12px;
+    overflow:auto;
+}
+#observerSavedProgramViewer .observer-close-btn {
+    border:0;
+    border-radius:8px;
+    padding:9px 18px;
+    cursor:pointer;
+    background:#dc2626;
+    color:#fff;
+    font-weight:800;
+}
+body.observer-mode #observerSavedProgramViewer {
+    display:none;
+}
+</style>
+
+
+<style id="observerProfessionalMode">
+/* وضع الملاحظ الاحترافي: يرى الواجهة الرئيسية للبرنامج الحالي، للعرض فقط */
+body.observer-mode .container > * {
+    display: revert !important;
+}
+body.observer-mode .header-title {
+    display:block !important;
+}
+body.observer-mode .observer-banner {
+    display:block !important;
+}
+
+/* إخفاء كل أدوات الإدارة والتعديل */
+body.observer-mode .header-actions > button:not(#supabaseLogoutBtn) {
+    display:none !important;
+}
+body.observer-mode .program-actions > button {
+    display:none !important;
+}
+body.observer-mode .program-actions > #observerDailyHistoryBtn {
+    display:inline-flex !important;
+}
+body.observer-mode .admin-date-box input,
+body.observer-mode .admin-date-box select {
+    pointer-events:none !important;
+    opacity:.75;
+}
+
+/* البرنامج للعرض فقط */
+body.observer-mode .bus-table button,
+body.observer-mode .bus-table select,
+body.observer-mode .bus-table input,
+body.observer-mode .status-actions button,
+body.observer-mode .btn-inline-add,
+body.observer-mode button[onclick*="edit"],
+body.observer-mode button[onclick*="save"],
+body.observer-mode button[onclick*="delete"],
+body.observer-mode button[onclick*="rotate"],
+body.observer-mode button[onclick*="add"] {
+    display:none !important;
+}
+
+/* لا تسمح بأي تعديل من الحقول */
+body.observer-mode input,
+body.observer-mode select,
+body.observer-mode textarea {
+    pointer-events:none !important;
+}
+
+/* زر سجل البرامج اليومية */
+#observerDailyHistoryBtn {
+    display:none;
+    align-items:center;
+    justify-content:center;
+}
+
+/* سجل البرامج للملاحظ */
+body.observer-mode #programHistoryModal {
+    display:none;
+    position:fixed !important;
+    inset:0 !important;
+    z-index:99999 !important;
+    background:rgba(248,250,252,.98) !important;
+}
+body.observer-mode #programHistoryModal .history-delete-btn,
+body.observer-mode #programHistoryModal #programHistorySaveRow,
+body.observer-mode #programHistoryModal .close-modal {
+    display:none !important;
+}
+</style>
+
+
+<style id="observerFinalFix">
+/* ===== الملاحظ: الواجهة الرئيسية للعرض فقط ===== */
+body.observer-mode #programHistoryModal,
+body.observer-mode #observerSavedProgramViewer,
+body.observer-mode #adminCenterModal,
+body.observer-mode #driversModal,
+body.observer-mode #busesModal,
+body.observer-mode #linesManagementModal,
+body.observer-mode #monitorsModal,
+body.observer-mode #addBusModal {
+    display:none !important;
+}
+
+/* لا يوجد أي overlay يغطي الواجهة */
+body.observer-mode .container {
+    display:block !important;
+    visibility:visible !important;
+    opacity:1 !important;
+}
+body.observer-mode .container > * {
+    display:block !important;
+    visibility:visible !important;
+}
+
+/* العنوان والتاريخ والبرنامج الحالي */
+body.observer-mode header,
+body.observer-mode .header-title,
+body.observer-mode .header-actions,
+body.observer-mode .admin-date-box,
+body.observer-mode .controls-card,
+body.observer-mode #exportSheet {
+    visibility:visible !important;
+    opacity:1 !important;
+}
+
+/* إخفاء كل أزرار الإدارة */
+body.observer-mode .header-actions > button {
+    display:none !important;
+}
+body.observer-mode .header-actions > #supabaseLogoutBtn {
+    display:inline-flex !important;
+}
+
+/* داخل شريط البرنامج: زر سجل البرامج فقط */
+body.observer-mode .program-actions > button {
+    display:none !important;
+}
+body.observer-mode .program-actions > #observerDailyHistoryBtn {
+    display:inline-flex !important;
+}
+
+/* لا تعديل على البيانات */
+body.observer-mode input,
+body.observer-mode select,
+body.observer-mode textarea {
+    pointer-events:none !important;
+}
+body.observer-mode .bus-table button,
+body.observer-mode .bus-table select,
+body.observer-mode .bus-table input,
+body.observer-mode .action-column,
+body.observer-mode .status-actions,
+body.observer-mode button[onclick*="edit"],
+body.observer-mode button[onclick*="save"],
+body.observer-mode button[onclick*="delete"],
+body.observer-mode button[onclick*="rotate"],
+body.observer-mode button[onclick*="add"] {
+    display:none !important;
+}
+
+/* لا نسمح بفتح سجل البرامج كنافذة فارغة تلقائياً */
+body.observer-mode #programHistoryModal {
+    display:none !important;
+}
+</style>
+
 </head>
 <body class="auth-locked">
 <div class="modal" id="programHistoryModal">
@@ -998,7 +1282,7 @@
             <button class="close-modal" type="button" onclick="closeProgramHistory()">×</button>
         </div>
         <div class="modal-body">
-            <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+            <div id="programHistorySaveRow" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                 <span>كل برنامج يومي يظهر هنا، ويمكن تحميله للعمل عليه.</span>
                 <button class="btn btn-success" type="button" onclick="saveCurrentProgramToHistory()"> حفظ البرنامج الحالي</button>
             </div>
@@ -1108,7 +1392,7 @@
             <button class="btn btn-rotate" type="button" onclick="rotateToNextProgram()">↻ تدوير لليوم الموالي</button>
             <button class="btn btn-rotate" type="button" onclick="rotateToPreviousProgram()">↺ التدوير للخلف</button>
             <button class="btn btn-success" type="button" onclick="saveCurrentProgramToHistory()"> حفظ البرنامج</button>
-            <button class="btn btn-history" type="button" onclick="openProgramHistory()"> سجل البرامج</button>
+            <button class="btn btn-history" id="observerDailyHistoryBtn" type="button" onclick="openObserverDailyHistory()">📅 الاطلاع على سجل البرامج</button>
         </div>
        
     </div>
@@ -1662,7 +1946,8 @@
         };
     }
 
-    function saveCurrentProgramToHistory(dateValue) {
+    function saveCurrentProgramToHistory(dateValue){
+        if(window.__isObserver){ alert('حساب الملاحظ للعرض فقط ولا يملك صلاحية التعديل.'); return; }
         var date = dateValue || getProgramDateValue();
         if (!date) return;
         programHistory[date] = snapshotCurrentProgram();
@@ -1851,6 +2136,22 @@
     }
 
 
+    function openObserverDailyHistory() {
+        if (!window.__isObserver) return;
+
+        var currentDate = getProgramDateValue();
+        var saved = programHistory && programHistory[currentDate];
+
+        if (saved) {
+            observerViewSavedProgram(currentDate);
+            return;
+        }
+
+        // لا نعرض شاشة فارغة: نخبر الملاحظ مباشرة أن برنامج هذا اليوم غير محفوظ.
+        alert('البرنامج غير موجود في السجل لهذا اليوم: ' + (currentDate || 'بدون تاريخ'));
+    }
+
+
     function openProgramHistory() {
         renderProgramHistory();
         document.getElementById('programHistoryModal').style.display = 'flex';
@@ -1863,22 +2164,96 @@
     function renderProgramHistory() {
         var box = document.getElementById('programHistoryList');
         if (!box) return;
-        var dates = Object.keys(programHistory).sort().reverse();
+
+        var dates = Object.keys(programHistory || {}).sort().reverse();
+
         if (!dates.length) {
             box.innerHTML = '<div class="history-empty">لا توجد برامج محفوظة بعد.</div>';
             return;
         }
+
+        if(window.__isObserver){
+            var htmlObserver = '<table class="history-table"><thead><tr><th>تاريخ البرنامج المحفوظ</th><th>الإجراء</th></tr></thead><tbody>';
+
+            dates.forEach(function(date) {
+                htmlObserver += '<tr>' +
+                    '<td style="font-weight:800;">' + date + '</td>' +
+                    '<td><button class="btn btn-primary history-open-btn" type="button" onclick="observerViewSavedProgram(' + JSON.stringify(date) + ')">👁️ عرض البرنامج</button></td>' +
+                    '</tr>';
+            });
+
+            htmlObserver += '</tbody></table>';
+            box.innerHTML = htmlObserver;
+            return;
+        }
+
         var html = '<table class="history-table"><thead><tr><th>التاريخ</th><th>النوع</th><th>الحافلات</th><th>الإجراء</th></tr></thead><tbody>';
+
         dates.forEach(function(date) {
             var s = programHistory[date] || {};
             var count = Array.isArray(s.busData) ? s.busData.length : 0;
             var type = s.rotation ? 'تدوير من اليوم السابق' : 'برنامج محفوظ';
-            html += '<tr><td>' + date + '</td><td>' + type + '</td><td>' + count + '</td><td>' +
-                '<button class="btn btn-primary" type="button" onclick="loadProgramHistoryDate(\'' + date + '\')">فتح</button> ' +
-                '<button class="btn btn-danger" type="button" onclick="deleteProgramHistoryDate(\'' + date + '\')">حذف السجل</button></td></tr>';
+
+            html += '<tr>' +
+                '<td>' + date + '</td>' +
+                '<td>' + type + '</td>' +
+                '<td>' + count + '</td>' +
+                '<td>' +
+                    '<button class="btn btn-primary history-open-btn" type="button" onclick="loadProgramHistoryDate(' + JSON.stringify(date) + ')">👁️ فتح</button> ' +
+                    '<button class="btn btn-danger history-delete-btn" type="button" onclick="deleteProgramHistoryDate(' + JSON.stringify(date) + ')">حذف السجل</button>' +
+                '</td>' +
+            '</tr>';
         });
+
         html += '</tbody></table>';
         box.innerHTML = html;
+    }
+    function observerViewSavedProgram(dateValue) {
+        if (!window.__isObserver) return;
+
+        var snap = programHistory && programHistory[dateValue];
+        if (!snap) {
+            alert('البرنامج غير موجود في السجل لهذا اليوم: ' + dateValue);
+            return;
+        }
+
+        try {
+            busData = cloneData(snap.busData || []);
+            if (snap.lineDefaults) lineDefaults = cloneData(snap.lineDefaults);
+            if (snap.driversCustomStatus) driversCustomStatus = cloneData(snap.driversCustomStatus);
+            if (snap.busesCustomStatus) busesCustomStatus = cloneData(snap.busesCustomStatus);
+
+            var dateInput = document.getElementById('programDate');
+            if (dateInput) dateInput.value = dateValue;
+
+            window.__lastProgramDate = dateValue;
+
+            // أغلق أي نافذة قديمة قبل إظهار البرنامج.
+            ['programHistoryModal','observerSavedProgramViewer','adminCenterModal',
+             'driversModal','busesModal','linesManagementModal','monitorsModal','addBusModal']
+             .forEach(function(id){
+                 var el=document.getElementById(id);
+                 if(el) el.style.display='none';
+             });
+
+            initDropdowns();
+            renderTable();
+            renderStatusTables();
+            updateStats();
+            updateHeaderTitle();
+
+            document.body.classList.add('observer-mode');
+            window.scrollTo({top:0, behavior:'smooth'});
+
+        } catch (e) {
+            console.error(e);
+            alert('تعذر عرض البرنامج المحفوظ.');
+        }
+    }
+    function closeObserverSavedProgram() {
+        if (!window.__isObserver) return;
+        document.getElementById('observerSavedProgramViewer').style.display = 'none';
+        document.getElementById('programHistoryModal').style.display = 'flex';
     }
 
     function loadProgramHistoryDate(dateValue) {
@@ -1899,6 +2274,10 @@
     }
 
     function deleteProgramHistoryDate(dateValue) {
+        if(window.__isObserver){
+            alert('حساب الملاحظ للعرض فقط ولا يمكنه حذف البرامج.');
+            return;
+        }
         if (!confirm('حذف برنامج يوم ' + dateValue + ' من السجل؟')) return;
         delete programHistory[dateValue];
         saveDataToStorage();
@@ -2239,7 +2618,8 @@
         updateRestExportSheet();
     }
 
-    function changeDriverStatus(driver, status) {
+    function changeDriverStatus(driver, status){
+        if(window.__isObserver){ alert('حساب الملاحظ للعرض فقط ولا يملك صلاحية التعديل.'); return; }
         status = String(status || '').trim();
         driversCustomStatus[driver] = status;
         saveDataToStorage();
@@ -2249,7 +2629,8 @@
         if (window.__supabaseReady && typeof window.__queueSupabaseSave === 'function') window.__queueSupabaseSave();
     }
 
-    function changeBusStatus(bus, status) {
+    function changeBusStatus(bus, status){
+        if(window.__isObserver){ alert('حساب الملاحظ للعرض فقط ولا يملك صلاحية التعديل.'); return; }
         busesCustomStatus[bus] = status;
         saveDataToStorage();
         renderStatusTables();
@@ -2734,7 +3115,8 @@
         renderStatusTables();
     }
 
-    function handleSaveBus(e) {
+    function handleSaveBus(e){
+        if(window.__isObserver){ alert('حساب الملاحظ للعرض فقط ولا يملك صلاحية التعديل.'); return; }
         e.preventDefault();
         var index = parseInt(document.getElementById('editIndex').value);
         var line = document.getElementById('inputLineSelect').value;
@@ -2818,7 +3200,8 @@
         }
     }
 
-    function handleSaveLine(e) {
+    function handleSaveLine(e){
+        if(window.__isObserver){ alert('حساب الملاحظ للعرض فقط ولا يملك صلاحية التعديل.'); return; }
         e.preventDefault();
 
         var originalName = document.getElementById('editingLineOriginalName').value.trim();
@@ -2956,6 +3339,7 @@
   }
 
   async function saveRemoteNow(){
+    if(window.__isObserver) return;
     if(!window.__supabaseReady) return;
     const row = { id: 1, state: statePayload(), updated_at: new Date().toISOString() };
     const {error} = await sb.from('taroudant_app_state').upsert(row, {onConflict:'id'});
@@ -2963,6 +3347,7 @@
   }
 
   window.__queueSupabaseSave = function(force){
+    if(window.__isObserver) return;
     clearTimeout(saveTimer);
     if(force) return saveRemoteNow();
     saveTimer = setTimeout(saveRemoteNow, 500);
@@ -2996,6 +3381,28 @@
     renderTable();
     renderStatusTables();
     updateStats();
+
+    // بعد تحميل قاعدة البيانات بالكامل، أظهر البرنامج الحالي للملاحظ.
+    if(window.__isObserver){
+      setTimeout(function(){
+        try{
+          var currentDate = getProgramDateValue();
+          // البرنامج الحالي محفوظ في state؛ نعرضه مباشرة في الواجهة الرئيسية.
+          document.getElementById('programHistoryModal').style.display='none';
+          var viewer=document.getElementById('observerSavedProgramViewer');
+          if(viewer) viewer.style.display='none';
+          document.body.classList.add('observer-mode');
+          initDropdowns();
+          renderTable();
+          renderStatusTables();
+          updateStats();
+          updateHeaderTitle();
+          window.scrollTo({top:0, behavior:'auto'});
+        }catch(e){
+          console.error('تعذر إظهار البرنامج الحالي للملاحظ بعد تحميل قاعدة البيانات:',e);
+        }
+      }, 50);
+    }
   }
 
   function unlock(user){
@@ -3003,12 +3410,33 @@
     const overlay=document.getElementById('supabaseLoginOverlay');
     overlay.style.display='none';
     window.__supabaseReady=true;
+    window.__supabaseUser = user;
+    const meta = user && user.user_metadata ? user.user_metadata : {};
+    const appMeta = user && user.app_metadata ? user.app_metadata : {};
+    const role = String(meta.role || appMeta.role || '').toLowerCase().trim();
+    window.__isObserver = (role === 'observer' || role === 'ملاحظ');
+    document.body.classList.toggle('observer-mode', window.__isObserver);
+
     const chip=document.createElement('span');
     chip.className='supabase-user-chip no-print';
     chip.textContent='متصل: '+(user.email||'المستخدم');
     const actions=document.querySelector('header .header-actions');
     if(actions && !document.getElementById('supabaseUserChip')){ chip.id='supabaseUserChip'; actions.prepend(chip); }
   }
+
+  window.observerViewPrograms = function(){
+    if(!window.__isObserver) return;
+    renderProgramHistory();
+    document.getElementById('programHistoryModal').style.display='flex';
+  };
+
+  window.__observerGuard = function(){
+    if(window.__isObserver){
+      alert('حساب الملاحظ للعرض فقط ولا يملك صلاحية التعديل.');
+      return true;
+    }
+    return false;
+  };
 
   function lock(msg){
     window.__supabaseReady=false;
