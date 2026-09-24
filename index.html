@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>برنامج حافلات تارودانت </title>
+    <title>برنامج حافلات تارودانت - نسخة الهاتف</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -980,6 +980,14 @@
 @media(max-width:900px){.admin-center-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.admin-center-grid{grid-template-columns:1fr}}
 
+
+<style id="lineManagementResponsiveStyle">
+@media (max-width: 700px) {
+    #linesManagementList > div {
+        grid-template-columns: 1fr !important;
+    }
+}
+</style>
 </style>
 </head>
 <body class="auth-locked">
@@ -1086,7 +1094,7 @@
             <button class="btn btn-success" id="exportMonitorBtn" onclick="exportMonitorAsImage()"> استخراج برنامج المراقبين</button>
             <button class="btn btn-info" onclick="openDriversModal()"> السائقون</button>
             <button class="btn btn-purple" onclick="openBusesModal()"> الحافلات</button>
-            <button class="btn btn-warning" onclick="openNewLineModal()">+ إضافة خط</button>
+            <button class="btn btn-warning" onclick="openLinesManagementModal()">🚩 إدارة الخطوط</button>
             <button class="btn btn-primary" onclick="openModal()">+ إضافة حافلة</button>
             <button class="btn btn-primary no-print" type="button" onclick="openAdminCenter()">⚙️ مركز الإدارة</button>
             <button class="btn btn-danger supabase-logout-btn no-print" id="supabaseLogoutBtn" type="button">خروج</button>
@@ -1358,27 +1366,42 @@
     </div>
 </div>
 
+
 <div class="modal" id="lineModal">
-    <div class="modal-content">
-        <h3>إضافة خط جديد</h3>
-        <form id="lineForm" onsubmit="handleSaveLine(event)">
-            <div class="form-group">
-                <label>اسم الخط الجديد</label>
-                <input type="text" id="newLineName" style="width: 100%; flex:unset;" required placeholder="مثال: 08 سيدي موسى">
-            </div>
-            <div class="form-group">
-                <label>التردد</label>
-                <input type="text" id="newLineInterval" style="width: 100%; flex:unset;" required placeholder="مثال: 20 دقيقة">
-            </div>
-            <div class="form-group">
-                <label>المدة الزمنية</label>
-                <input type="text" id="newLineDuration" style="width: 100%; flex:unset;" required placeholder="مثال: 50 دقيقة">
-            </div>
-            <div style="display: flex; gap: 10px; justify-content: flex-end; margin-top: 14px;">
-                <button type="button" class="btn" style="background:#cbd5e1; color:#334155;" onclick="closeLineModal()">إلغاء</button>
-                <button type="submit" class="btn btn-warning">إضافة الخط</button>
-            </div>
-        </form>
+    <div class="modal-content" style="max-width:850px;max-height:90vh;overflow:auto;">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:15px;">
+            <h3 style="margin:0;">🚩 إدارة الخطوط</h3>
+            <button type="button" class="btn" style="background:#cbd5e1;color:#334155;" onclick="closeLineModal()">إغلاق</button>
+        </div>
+
+        <div style="display:flex;gap:10px;justify-content:flex-start;margin-bottom:15px;">
+            <button type="button" class="btn btn-warning" onclick="startAddLine()">+ إضافة خط جديد</button>
+        </div>
+
+        <div id="linesManagementList" style="display:flex;flex-direction:column;gap:8px;"></div>
+
+        <div id="lineEditPanel" style="display:none;margin-top:18px;padding:15px;border:1px solid #cbd5e1;border-radius:10px;background:#f8fafc;">
+            <h4 id="lineEditTitle" style="margin-top:0;">إضافة خط جديد</h4>
+            <form id="lineForm" onsubmit="handleSaveLine(event)">
+                <input type="hidden" id="editingLineOriginalName" value="">
+                <div class="form-group">
+                    <label>اسم الخط</label>
+                    <input type="text" id="newLineName" style="width:100%;flex:unset;" required placeholder="مثال: الخط 08 سيدي موسى">
+                </div>
+                <div class="form-group">
+                    <label>التردد</label>
+                    <input type="text" id="newLineInterval" style="width:100%;flex:unset;" required placeholder="مثال: 20 دقيقة">
+                </div>
+                <div class="form-group">
+                    <label>المدة الزمنية</label>
+                    <input type="text" id="newLineDuration" style="width:100%;flex:unset;" required placeholder="مثال: 50 دقيقة">
+                </div>
+                <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:14px;">
+                    <button type="button" class="btn" style="background:#cbd5e1;color:#334155;" onclick="cancelLineEdit()">إلغاء</button>
+                    <button type="submit" class="btn btn-primary">حفظ التعديلات</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
@@ -2462,13 +2485,163 @@
         document.getElementById('busModal').style.display = 'none';
     }
 
-    function openNewLineModal() {
-        document.getElementById('lineForm').reset();
+    function openLinesManagementModal() {
+        renderLinesManagementList();
+        cancelLineEdit();
         document.getElementById('lineModal').style.display = 'flex';
+    }
+
+    function openNewLineModal() {
+        openLinesManagementModal();
+        startAddLine();
     }
 
     function closeLineModal() {
         document.getElementById('lineModal').style.display = 'none';
+        cancelLineEdit();
+    }
+
+    function startAddLine() {
+        document.getElementById('lineForm').reset();
+        document.getElementById('editingLineOriginalName').value = '';
+        document.getElementById('lineEditTitle').innerText = 'إضافة خط جديد';
+        document.querySelector('#lineForm button[type="submit"]').innerText = 'إضافة الخط';
+        document.getElementById('lineEditPanel').style.display = 'block';
+        document.getElementById('newLineName').focus();
+    }
+
+    function editLine(lineName) {
+        if (!lineDefaults || !Object.prototype.hasOwnProperty.call(lineDefaults, lineName)) {
+            alert('تعذر العثور على بيانات هذا الخط.');
+            return;
+        }
+
+        var data = lineDefaults[lineName] || {};
+        document.getElementById('editingLineOriginalName').value = lineName;
+        document.getElementById('newLineName').value = lineName;
+        document.getElementById('newLineInterval').value = data.interval || '';
+        document.getElementById('newLineDuration').value = data.duration || '';
+        document.getElementById('lineEditTitle').innerText = 'تعديل الخط: ' + lineName;
+        document.querySelector('#lineForm button[type="submit"]').innerText = 'حفظ التعديلات';
+        document.getElementById('lineEditPanel').style.display = 'block';
+    }
+
+    function cancelLineEdit() {
+        var panel = document.getElementById('lineEditPanel');
+        if (panel) panel.style.display = 'none';
+        var form = document.getElementById('lineForm');
+        if (form) form.reset();
+        var original = document.getElementById('editingLineOriginalName');
+        if (original) original.value = '';
+    }
+
+    function renderLinesManagementList() {
+        var box = document.getElementById('linesManagementList');
+        if (!box) return;
+        box.innerHTML = '';
+
+        var names = Object.keys(lineDefaults);
+        if (!names.length) {
+            box.innerHTML = '<div style="padding:20px;text-align:center;color:#64748b;">لا توجد خطوط مضافة.</div>';
+            return;
+        }
+
+        names.forEach(function(name) {
+            var data = lineDefaults[name] || {};
+            var row = document.createElement('div');
+            row.style.cssText = 'display:grid;grid-template-columns:minmax(180px,1.5fr) minmax(110px,1fr) minmax(110px,1fr) minmax(120px,auto) auto;gap:10px;align-items:center;background:#fff;padding:10px;border:1px solid #cbd5e1;border-radius:9px;';
+            row.innerHTML =
+                '<div style="font-weight:800;">' + escapeHtml(name) + '</div>' +
+                '<div><span style="color:#64748b;">التردد:</span> ' + escapeHtml(data.interval || '') + '</div>' +
+                '<div><span style="color:#64748b;">المدة:</span> ' + escapeHtml(data.duration || '') + '</div>' +
+                '<div style="display:flex;gap:5px;align-items:center;justify-content:center;">' +
+                    '<button type="button" class="btn line-up-btn" title="رفع الخط">⬆️</button>' +
+                    '<span style="font-weight:900;min-width:24px;text-align:center;">' + (names.indexOf(name)+1) + '</span>' +
+                    '<button type="button" class="btn line-down-btn" title="خفض الخط">⬇️</button>' +
+                '</div>' +
+                '<button type="button" class="btn btn-primary line-edit-btn">✏️ تعديل</button>';
+
+            var editBtn = row.querySelector('.line-edit-btn');
+            editBtn.addEventListener('click', function(ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                editLine(name);
+            });
+
+            var upBtn = row.querySelector('.line-up-btn');
+            var downBtn = row.querySelector('.line-down-btn');
+
+            upBtn.addEventListener('click', function(ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                moveLine(name, -1);
+            });
+
+            downBtn.addEventListener('click', function(ev) {
+                ev.preventDefault();
+                ev.stopPropagation();
+                moveLine(name, 1);
+            });
+
+            // تعطيل الأسهم عند أول/آخر خط.
+            upBtn.disabled = (names.indexOf(name) === 0);
+            downBtn.disabled = (names.indexOf(name) === names.length - 1);
+
+            box.appendChild(row);
+        });
+    }
+
+    function moveLine(lineName, direction) {
+        var names = Object.keys(lineDefaults);
+        var index = names.indexOf(lineName);
+        var newIndex = index + direction;
+
+        if (index < 0 || newIndex < 0 || newIndex >= names.length) return;
+
+        // إعادة بناء object بنفس الترتيب الجديد.
+        var reordered = {};
+        names.forEach(function(name, i) {
+            if (i === newIndex) reordered[lineName] = lineDefaults[lineName];
+            if (i === index) {
+                if (direction > 0) return;
+                // عند الرفع، نترك مكان العنصر المنقول ليضاف قبله.
+            }
+            if (i !== index && i !== newIndex) reordered[name] = lineDefaults[name];
+            if (direction > 0 && i === newIndex) {
+                // المكان سيضاف فيه العنصر المنقول، ثم نضيف العنصر المزاح بعده.
+            }
+        });
+
+        // طريقة آمنة للحفاظ على ترتيب المفاتيح.
+        var orderedNames = names.slice();
+        var temp = orderedNames[index];
+        orderedNames.splice(index, 1);
+        orderedNames.splice(newIndex, 0, temp);
+
+        var finalObj = {};
+        orderedNames.forEach(function(name) {
+            finalObj[name] = lineDefaults[name];
+        });
+
+        lineDefaults = finalObj;
+        saveDataToStorage();
+        initDropdowns();
+        renderTable();
+        updateStats();
+        renderLinesManagementList();
+
+        if (window.__supabaseReady && typeof window.__queueSupabaseSave === 'function') {
+            try { window.__queueSupabaseSave(true); } catch (err) { console.warn(err); }
+        }
+    }
+
+    function escapeHtml(value) {
+        return String(value == null ? '' : value)
+            .replace(/&/g,'&amp;')
+            .replace(/</g,'&lt;')
+            .replace(/>/g,'&gt;')
+            .replace(/"/g,'&quot;')
+            .replace(/'/g,'&#039;');
     }
 
     function openDriversModal() {
@@ -2647,18 +2820,66 @@
 
     function handleSaveLine(e) {
         e.preventDefault();
+
+        var originalName = document.getElementById('editingLineOriginalName').value.trim();
         var name = document.getElementById('newLineName').value.trim();
         var interval = document.getElementById('newLineInterval').value.trim();
         var duration = document.getElementById('newLineDuration').value.trim();
 
-        if (name && !lineDefaults[name]) {
+        if (!name) return;
+
+        // إضافة خط جديد.
+        if (!originalName) {
+            if (lineDefaults[name]) {
+                alert('هذا الخط موجود مسبقاً. اختر اسماً آخر أو قم بتعديل الخط الموجود.');
+                return;
+            }
+
             lineDefaults[name] = { interval: interval, duration: duration };
-            saveDataToStorage();
-            initDropdowns();
-            closeLineModal();
-            renderTable();
-            updateStats();
+        } else {
+            // تعديل خط موجود.
+            if (name !== originalName && lineDefaults[name]) {
+                alert('اسم الخط الجديد موجود مسبقاً.');
+                return;
+            }
+
+            var oldData = lineDefaults[originalName] || {};
+            delete lineDefaults[originalName];
+            lineDefaults[name] = { interval: interval, duration: duration };
+
+            // إذا تم تغيير اسم الخط، حدّث كل الحافلات المرتبطة به.
+            busData.forEach(function(item) {
+                if (item.line === originalName) item.line = name;
+            });
+
+            // وتحديث الاسم داخل البرامج المحفوظة حتى لا تنقطع البيانات السابقة.
+            Object.keys(programHistory || {}).forEach(function(date) {
+                var snap = programHistory[date];
+                if (!snap) return;
+
+                if (snap.lineDefaults && snap.lineDefaults[originalName]) {
+                    delete snap.lineDefaults[originalName];
+                    snap.lineDefaults[name] = { interval: interval, duration: duration };
+                }
+
+                (snap.busData || []).forEach(function(item) {
+                    if (item.line === originalName) item.line = name;
+                });
+            });
         }
+
+        saveDataToStorage();
+        initDropdowns();
+        renderTable();
+        updateStats();
+        renderLinesManagementList();
+        cancelLineEdit();
+
+        if (window.__supabaseReady && typeof window.__queueSupabaseSave === 'function') {
+            try { window.__queueSupabaseSave(true); } catch (err) { console.warn(err); }
+        }
+
+        alert(originalName ? 'تم تعديل الخط وحفظ التعديلات.' : 'تمت إضافة الخط وحفظه.');
     }
 
     function exportAsImage() {
