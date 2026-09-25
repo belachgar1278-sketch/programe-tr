@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>برنامج حافلات تارودانت </title>
+    <title>برنامج حافلات تارودانت - نسخة الهاتف</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1312,6 +1312,7 @@ body.observer-mode #programHistoryModal {
 }
 </style>
 
+
 </head>
 <body class="auth-locked">
 <div class="modal" id="programHistoryModal">
@@ -1323,7 +1324,7 @@ body.observer-mode #programHistoryModal {
         <div class="modal-body">
             <div id="programHistorySaveRow" style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
                 <span>كل برنامج يومي يظهر هنا، ويمكن تحميله للعمل عليه.</span>
-                <button class="btn btn-success" type="button" onclick="saveCurrentProgramToHistory()"> حفظ البرنامج الحالي</button>
+                <button class="btn btn-success" type="button" onclick="window.saveCurrentProgramToHistory()"> حفظ البرنامج الحالي</button>
             </div>
             <div id="programHistoryList"></div>
         </div>
@@ -1411,7 +1412,7 @@ body.observer-mode #programHistoryModal {
             <p> إدارة وتوليد جدول الرحلات </p>
         </div>
         <div class="header-actions">
-            <button class="btn btn-success" id="exportBtn" onclick="exportAsImage()"> استخراج برنامج الحافلات</button>
+<button class="btn btn-success" id="exportBtn" onclick="exportAsImage()"> استخراج برنامج الحافلات</button>
             <button class="btn btn-warning" id="exportRestBtn" onclick="exportRestAsImage()"> استخراج برنامج الراحة</button>
             <button class="btn btn-info" id="monitorBtn" onclick="openMonitorsModal()"> إدارة المراقبين</button>
             <button class="btn btn-success" id="exportMonitorBtn" onclick="exportMonitorAsImage()"> استخراج برنامج المراقبين</button>
@@ -1430,7 +1431,8 @@ body.observer-mode #programHistoryModal {
         <div class="program-actions no-print">
             <button class="btn btn-rotate" type="button" onclick="rotateToNextProgram()">↻ تدوير لليوم الموالي</button>
             <button class="btn btn-rotate" type="button" onclick="rotateToPreviousProgram()">↺ التدوير للخلف</button>
-            <button class="btn btn-success" type="button" onclick="saveCurrentProgramToHistory()"> حفظ البرنامج</button>
+            <button id="saveProgramBtn" class="btn btn-success" type="button" onclick="window.saveCurrentProgramToHistory()">💾 حفظ البرنامج</button>
+            <button id="savedProgramsBtn" class="btn btn-history" type="button" onclick="window.openProgramHistory()">📚 سجل البرامج المحفوظة</button>
             <button class="btn btn-history" id="observerDailyHistoryBtn" type="button" onclick="openObserverDailyHistory()">📅 الاطلاع على سجل البرامج</button>
         </div>
        
@@ -1985,13 +1987,60 @@ body.observer-mode #programHistoryModal {
         };
     }
 
-    function saveCurrentProgramToHistory(dateValue){
+    async function saveCurrentProgramToHistory(dateValue){
         if(window.__isObserver){ alert('حساب الملاحظ للعرض فقط ولا يملك صلاحية التعديل.'); return; }
+
         var date = dateValue || getProgramDateValue();
-        if (!date) return;
-        programHistory[date] = snapshotCurrentProgram();
-        saveDataToStorage();
-        renderProgramHistory();
+        if (!date) {
+            showProgramSaveMessage('⚠️ يرجى تحديد تاريخ البرنامج أولاً.', 'error');
+            return false;
+        }
+
+        try {
+            // حفظ نسخة مستقلة في سجل البرامج.
+            programHistory[date] = snapshotCurrentProgram();
+            programHistory[date].savedAt = new Date().toISOString();
+
+            // حفظ محلياً فوراً.
+            saveDataToStorage();
+
+            // حفظ في Supabase إذا كان الاتصال مفعلاً.
+            if (window.__supabaseReady && typeof window.__queueSupabaseSave === 'function') {
+                await window.__queueSupabaseSave(true);
+            }
+
+            renderProgramHistory();
+            showProgramSaveMessage('✓ تم حفظ البرنامج بنجاح في سجل البرامج', 'success');
+            return true;
+        } catch (error) {
+            console.error('saveCurrentProgramToHistory:', error);
+            showProgramSaveMessage('⚠️ تعذر حفظ البرنامج. تحقق من الاتصال بقاعدة البيانات.', 'error');
+            return false;
+        }
+    }
+
+    function showProgramSaveMessage(message, type){
+        var old = document.getElementById('programSaveToast');
+        if(old) old.remove();
+
+        var toast = document.createElement('div');
+        toast.id = 'programSaveToast';
+        toast.textContent = message;
+        toast.style.cssText =
+            'position:fixed;top:22px;right:22px;z-index:999999;' +
+            'padding:13px 20px;border-radius:10px;font-weight:800;' +
+            'box-shadow:0 8px 25px rgba(0,0,0,.16);font-size:14px;' +
+            'direction:rtl;transition:opacity .25s;' +
+            (type === 'success'
+                ? 'background:#059669;color:#fff;'
+                : 'background:#dc2626;color:#fff;');
+
+        document.body.appendChild(toast);
+
+        setTimeout(function(){
+            toast.style.opacity='0';
+            setTimeout(function(){ if(toast.parentNode) toast.remove(); }, 300);
+        }, 3000);
     }
 
     function restoreProgramFromHistory(dateValue) {
@@ -2212,11 +2261,12 @@ body.observer-mode #programHistoryModal {
         }
 
         if(window.__isObserver){
-            var htmlObserver = '<table class="history-table"><thead><tr><th>تاريخ البرنامج المحفوظ</th><th>الإجراء</th></tr></thead><tbody>';
+            var htmlObserver = '<table class="history-table"><thead><tr><th>تاريخ البرنامج</th><th>تاريخ الحفظ</th><th>الإجراء</th></tr></thead><tbody>';
 
             dates.forEach(function(date) {
                 htmlObserver += '<tr>' +
                     '<td style="font-weight:800;">' + date + '</td>' +
+                    '<td>' + (programHistory[date] && programHistory[date].savedAt ? new Date(programHistory[date].savedAt).toLocaleString('ar-MA') : '—') + '</td>' +
                     '<td><button class="btn btn-primary history-open-btn" type="button" onclick="observerViewSavedProgram(' + JSON.stringify(date) + ')">👁️ عرض البرنامج</button></td>' +
                     '</tr>';
             });
@@ -2226,7 +2276,7 @@ body.observer-mode #programHistoryModal {
             return;
         }
 
-        var html = '<table class="history-table"><thead><tr><th>التاريخ</th><th>النوع</th><th>الحافلات</th><th>الإجراء</th></tr></thead><tbody>';
+        var html = '<table class="history-table"><thead><tr><th>تاريخ البرنامج</th><th>تاريخ الحفظ</th><th>النوع</th><th>الحافلات</th><th>الإجراء</th></tr></thead><tbody>';
 
         dates.forEach(function(date) {
             var s = programHistory[date] || {};
@@ -2235,17 +2285,33 @@ body.observer-mode #programHistoryModal {
 
             html += '<tr>' +
                 '<td>' + date + '</td>' +
+                '<td>' + (s.savedAt ? new Date(s.savedAt).toLocaleString('ar-MA') : '—') + '</td>' +
                 '<td>' + type + '</td>' +
                 '<td>' + count + '</td>' +
                 '<td>' +
-                    '<button class="btn btn-primary history-open-btn" type="button" onclick="loadProgramHistoryDate(' + JSON.stringify(date) + ')">👁️ فتح</button> ' +
-                    '<button class="btn btn-danger history-delete-btn" type="button" onclick="deleteProgramHistoryDate(' + JSON.stringify(date) + ')">حذف السجل</button>' +
+                    '<button class="btn btn-primary history-open-btn" type="button" data-history-date="' + String(date).replace(/"/g,'&quot;') + '">👁️ فتح</button> ' +
+                    '<button class="btn btn-danger history-delete-btn" type="button" data-history-date="' + String(date).replace(/"/g,'&quot;') + '">حذف السجل</button>' +
                 '</td>' +
             '</tr>';
         });
 
         html += '</tbody></table>';
         box.innerHTML = html;
+
+        // ربط أزرار السجل مباشرة بعناصر DOM بعد إنشائها.
+        box.querySelectorAll('.history-open-btn').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                var d = this.getAttribute('data-history-date');
+                if (d) window.loadProgramHistoryDate(d);
+            });
+        });
+
+        box.querySelectorAll('.history-delete-btn').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                var d = this.getAttribute('data-history-date');
+                if (d) window.deleteProgramHistoryDate(d);
+            });
+        });
     }
     function observerViewSavedProgram(dateValue) {
         if (!window.__isObserver) return;
@@ -2295,9 +2361,11 @@ body.observer-mode #programHistoryModal {
         document.getElementById('programHistoryModal').style.display = 'flex';
     }
 
-    function loadProgramHistoryDate(dateValue) {
-        if (!programHistory[dateValue]) return;
-        saveCurrentProgramToHistory(getProgramDateValue());
+    window.loadProgramHistoryDate = function(dateValue) {
+        if (!programHistory || !programHistory[dateValue]) {
+            alert('البرنامج غير موجود في السجل لهذا اليوم.');
+            return;
+        }
         __switchingProgramDate = true;
         document.getElementById('programDate').value = dateValue;
         window.__lastProgramDate = dateValue;
@@ -2309,18 +2377,36 @@ body.observer-mode #programHistoryModal {
         updateStats();
         __switchingProgramDate = false;
         saveDataToStorage();
+        renderProgramHistory();
         closeProgramHistory();
+        showProgramSaveMessage('✓ تم فتح البرنامج المحفوظ ليوم ' + dateValue, 'success');
     }
 
-    function deleteProgramHistoryDate(dateValue) {
+    window.deleteProgramHistoryDate = async function(dateValue) {
         if(window.__isObserver){
             alert('حساب الملاحظ للعرض فقط ولا يمكنه حذف البرامج.');
             return;
         }
-        if (!confirm('حذف برنامج يوم ' + dateValue + ' من السجل؟')) return;
-        delete programHistory[dateValue];
-        saveDataToStorage();
-        renderProgramHistory();
+        if (!programHistory || !programHistory[dateValue]) {
+            alert('البرنامج غير موجود في السجل.');
+            return;
+        }
+        if (!confirm('هل تريد حذف برنامج يوم ' + dateValue + ' من سجل البرامج؟')) return;
+
+        try {
+            delete programHistory[dateValue];
+            saveDataToStorage();
+
+            if (window.__supabaseReady && typeof window.__queueSupabaseSave === 'function') {
+                await window.__queueSupabaseSave(true);
+            }
+
+            renderProgramHistory();
+            showProgramSaveMessage('✓ تم حذف البرنامج من السجل بنجاح', 'success');
+        } catch (error) {
+            console.error('deleteProgramHistoryDate:', error);
+            showProgramSaveMessage('⚠️ تعذر حذف البرنامج من قاعدة البيانات', 'error');
+        }
     }
 
     function updateHeaderTitle() {
@@ -2703,8 +2789,36 @@ body.observer-mode #programHistoryModal {
             return true;
         });
 
+        // ترتيب حالة الحافلات: "غير مدرجة في البرنامج" أولاً دائماً،
+        // ثم باقي الحالات، وداخل كل حالة حسب رقم الحافلة.
+        var busStatusOrder = {
+            'غير مدرجة في البرنامج': 0,
+            'الإصلاح': 1,
+            'الصيانة': 2,
+            'متوقفة': 3
+        };
+
+        function normalizeBusStatus(status){
+            var s=String(status||'').replace(/[\u200B-\u200D\uFEFF]/g,'').trim();
+            if(s==='غير مدرجة بالبرنامج' || s==='غير مدرج في البرنامج') return 'غير مدرجة في البرنامج';
+            return s;
+        }
+
+        filteredBusesList.sort(function(a,b){
+            var statusA=normalizeBusStatus(busesCustomStatus[a] || 'غير مدرجة في البرنامج');
+            var statusB=normalizeBusStatus(busesCustomStatus[b] || 'غير مدرجة في البرنامج');
+
+            var orderA=Object.prototype.hasOwnProperty.call(busStatusOrder,statusA)
+                ? busStatusOrder[statusA] : 99;
+            var orderB=Object.prototype.hasOwnProperty.call(busStatusOrder,statusB)
+                ? busStatusOrder[statusB] : 99;
+
+            if(orderA !== orderB) return orderA-orderB;
+            return String(a).localeCompare(String(b),'ar',{numeric:true});
+        });
+
         filteredBusesList.forEach(function(bus) {
-            var currentStatus = busesCustomStatus[bus] || 'غير مدرجة في البرنامج';
+            var currentStatus = normalizeBusStatus(busesCustomStatus[bus] || 'غير مدرجة في البرنامج');
             var badgeClass = 'status-admin';
             if (currentStatus === 'غير مدرجة في البرنامج') badgeClass = 'status-spare';
             else if (currentStatus === 'الإصلاح' || currentStatus === 'الصيانة') badgeClass = 'status-repair';
@@ -4250,6 +4364,7 @@ body.observer-mode #programHistoryModal {
         };
     };
 </script>
+
 
 </body>
 </html>
