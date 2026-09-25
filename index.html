@@ -1882,13 +1882,13 @@ body.observer-mode #programHistoryModal {
             {name:'****', time:'', assignment:'الخط مابين ( ارزان + ايت إعزة)'}
         ],
         statuses: [
-            {name:'****', assignment:'الراحة 00'},
-            {name:'****', assignment:'الادارة 00'},
-            {name:'******', assignment:'العطلة السنوية 00'},
-            {name:'أيت خلفت عبد الكريم + المال احمد', assignment:'الترخيص 01'},
+            {name:'****', assignment:'الراحة'},
+            {name:'****', assignment:'الإدارة'},
+            {name:'******', assignment:'العطلة السنوية'},
+            {name:'أيت خلفت عبد الكريم + المال احمد', assignment:'الترخيص'},
             {name:'هشام ايت علي', assignment:'مصلحة البطائق'},
-            {name:'*****', assignment:'المرض 00'},
-            {name:'****', assignment:'الغياب 00'}
+            {name:'*****', assignment:'المرض'},
+            {name:'****', assignment:'الغياب'}
         ]
     };
     var monitorPrograms = JSON.parse(localStorage.getItem('taroudant_monitorPrograms')) || {'2026-09-14': defaultMonitorProgram};
@@ -2689,9 +2689,88 @@ body.observer-mode #programHistoryModal {
         document.getElementById('monitorsModal').style.display = 'none';
     }
 
+    // الحالات الإدارية المسموح بها للمراقبين.
+    var MONITOR_ADMIN_STATUSES = [
+        'الراحة',
+        'الإدارة',
+        'الترخيص',
+        'العطلة السنوية',
+        'مصلحة البطائق',
+        'الغياب',
+        'المرض'
+    ];
+
+    function normalizeMonitorStatus(status) {
+        var s = String(status || '').trim();
+        s = s.replace(/\s*0+\s*$/,'').trim();
+
+        if (s === 'الادارة') s = 'الإدارة';
+        if (s === 'راحة') s = 'الراحة';
+
+        return MONITOR_ADMIN_STATUSES.includes(s) ? s : 'الراحة';
+    }
+
+    /*
+     * أي مراقب موجود في قاعدة البيانات ولم يتم تعيينه:
+     * - في مراقبي المحطات
+     * - أو مراقبي الخطوط
+     * - أو في حالة إدارية أخرى
+     * يدخل تلقائياً في "الراحة".
+     *
+     * لا نكرر المراقب إذا كان موجوداً مسبقاً في الحالات.
+     */
+    function reconcileUnassignedMonitorsToRest(data) {
+        if (!data) return;
+
+        if (!Array.isArray(data.stations)) data.stations = [];
+        if (!Array.isArray(data.lines)) data.lines = [];
+        if (!Array.isArray(data.statuses)) data.statuses = [];
+
+        // تنظيف الحالات القديمة وتوحيد أسمائها.
+        data.statuses.forEach(function(r){
+            r.assignment = normalizeMonitorStatus(r.assignment);
+        });
+
+        var assigned = new Set();
+
+        data.stations.concat(data.lines).forEach(function(r){
+            var n = String(r && r.name || '').trim();
+            if (n && !['****','*****','******'].includes(n)) assigned.add(n);
+        });
+
+        data.statuses.forEach(function(r){
+            var n = String(r && r.name || '').trim();
+            if (n && !['****','*****','******'].includes(n)) assigned.add(n);
+        });
+
+        // كل مراقب من قاعدة البيانات غير موجود في أي مهمة/حالة => راحة.
+        monitorsList.forEach(function(name){
+            var n = String(name || '').trim();
+            if (!n || ['****','*****','******'].includes(n)) return;
+
+            if (!assigned.has(n)) {
+                data.statuses.push({
+                    name: n,
+                    assignment: 'الراحة'
+                });
+                assigned.add(n);
+            }
+        });
+
+        // إزالة السطور الوهمية الفارغة من الحالات الإدارية.
+        data.statuses = data.statuses.filter(function(r){
+            var n = String(r && r.name || '').trim();
+            return n && !['****','*****','******'].includes(n);
+        });
+    }
+
     function renderMonitorManager() {
         var date = getProgramDateValue();
         var data = getMonitorProgramForDate(date, true);
+
+        // أي مراقب غير معين تلقائياً يصبح في حالة الراحة.
+        reconcileUnassignedMonitorsToRest(data);
+
         (data.lines||[]).forEach(function(r){ r.period=r.period||''; r.time=r.time||''; r.timeNote=r.timeNote||''; });
 
         // السماح بعدة مراقبين في حالة الراحة مثل السائقين.
@@ -2712,13 +2791,38 @@ body.observer-mode #programHistoryModal {
         html += '<input id="newMonitorName" placeholder="اسم المراقب الجديد" style="flex:1;min-width:220px;padding:9px;border:1px solid #cbd5e1;border-radius:8px">';
         html += '<button class="btn btn-success" type="button" onclick="addMonitorToDatabase()">+ إضافة مراقب</button>';
         html += '</div>';
-        html += '<div style="font-size:12px;color:#64748b">يتم اختيار المراقب من هذه القاعدة في مراقبي المحطات والخطوط والحالات الإدارية.</div>';
+        html += '<div style="font-size:12px;color:#64748b;margin-bottom:10px">يتم اختيار المراقب من هذه القاعدة في مراقبي المحطات والخطوط والحالات الإدارية. أي مراقب لا يتم تعيينه في مهمة أو حالة أخرى يُدرج تلقائياً في الراحة.</div>';
+
+        html += '<div style="border-top:1px solid #dbeafe;padding-top:10px">';
+        html += '<div style="font-weight:800;margin-bottom:7px">المراقبون المسجلون</div>';
+        if(monitorsList.length){
+            html += '<div style="display:flex;flex-direction:column;gap:6px">';
+            monitorsList.forEach(function(name){
+                html += '<div style="display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 10px;background:#fff;border:1px solid #dbeafe;border-radius:8px">';
+                html += '<span style="font-weight:700">'+escapeHtml(name)+'</span>';
+                html += '<button class="btn btn-danger monitor-delete-db-btn" type="button" style="padding:5px 10px" data-monitor-delete="'+escapeHtmlAttr(name)+'">حذف</button>';
+                html += '</div>';
+            });
+            html += '</div>';
+        } else {
+            html += '<div style="color:#64748b">لا يوجد مراقبون مسجلون في قاعدة البيانات.</div>';
+        }
+        html += '</div>';
         html += '</div>';
 
         html += monitorManagerSection('مراقبي المحطات','stations',['المراقب','المحطة / المهمة'], data.stations, false);
         html += monitorManagerSection('مراقبي الخطوط','lines',['المراقب','الفترة','التوقيت','ملاحظة التوقيت','الخط'], data.lines, true);
         html += monitorManagerSection('الحالات الإدارية','statuses',['المراقب','الحالة / المهمة'], data.statuses, false);
         document.getElementById('monitorManagerContent').innerHTML = html;
+
+        // ربط أزرار الحذف بعد إنشاء العناصر فعلياً، لتفادي مشاكل أسماء المراقبين
+        // التي تحتوي على مسافات أو رموز أو علامات اقتباس.
+        document.querySelectorAll('.monitor-delete-db-btn').forEach(function(btn){
+            btn.addEventListener('click', function(){
+                var name = this.getAttribute('data-monitor-delete') || '';
+                deleteMonitorFromDatabase(name);
+            });
+        });
     }
 
     function monitorSelectHtml(key,index,value){
@@ -2743,11 +2847,68 @@ body.observer-mode #programHistoryModal {
         rows.forEach(function(r,i){
             h += '<tr><td>'+monitorSelectHtml(key,i,r.name)+'</td>';
             if(withTime) h += '<td><select data-monitor-key="'+key+'" data-index="'+i+'" data-field="period" style="width:100%;padding:7px;border:1px solid #cbd5e1;border-radius:7px"><option value="" '+(r.period?'':'selected')+'>اختر</option><option value="morning" '+(r.period==='morning'?'selected':'')+'>الفترة الصباحية</option><option value="evening" '+(r.period==='evening'?'selected':'')+'>الفترة المسائية</option></select></td><td><input data-monitor-key="'+key+'" data-index="'+i+'" data-field="time" placeholder="06:00 - 14:00" value="'+escapeHtmlAttr(r.time||'')+'"></td><td><input data-monitor-key="'+key+'" data-index="'+i+'" data-field="timeNote" placeholder="ملاحظة اختيارية" value="'+escapeHtmlAttr(r.timeNote||'')+'"></td>';
-            h += '<td><input data-monitor-key="'+key+'" data-index="'+i+'" data-field="assignment" value="'+escapeHtmlAttr(r.assignment||'')+'"></td>';
+            if(key==='statuses'){
+                var currentStatus = normalizeMonitorStatus(r.assignment);
+                h += '<td><select data-monitor-key="'+key+'" data-index="'+i+'" data-field="assignment" style="width:100%;padding:7px;border:1px solid #cbd5e1;border-radius:7px">';
+                MONITOR_ADMIN_STATUSES.forEach(function(st){
+                    h += '<option value="'+escapeHtmlAttr(st)+'" '+(currentStatus===st?'selected':'')+'>'+escapeHtmlAttr(st)+'</option>';
+                });
+                h += '</select></td>';
+            } else {
+                h += '<td><input data-monitor-key="'+key+'" data-index="'+i+'" data-field="assignment" value="'+escapeHtmlAttr(r.assignment||'')+'"></td>';
+            }
             h += '<td><button type="button" class="btn btn-danger" style="padding:6px 9px" onclick="removeMonitorRow(\''+key+'\','+i+')">×</button></td></tr>';
         });
         h += '</tbody></table></div>'; return h;
     }
+
+    async function deleteMonitorFromDatabase(name){
+        name = String(name || '').trim();
+        if(!name) return;
+
+        var idx = monitorsList.indexOf(name);
+        if(idx === -1){
+            alert('المراقب غير موجود في قاعدة البيانات.');
+            return;
+        }
+
+        if(!confirm('هل تريد حذف المراقب «'+name+'» من قاعدة البيانات؟\n\nسيتم حذفه من القائمة الحالية ومن برنامج المراقبين الحالي، ولن يتم حذف السجلات التاريخية السابقة.')){
+            return;
+        }
+
+        try {
+            // حذف من قاعدة بيانات المراقبين في الذاكرة.
+            monitorsList.splice(idx,1);
+
+            // إزالة المراقب من برنامج اليوم فقط.
+            var date = getProgramDateValue();
+            var data = getMonitorProgramForDate(date,true);
+
+            ['stations','lines','statuses'].forEach(function(key){
+                if(!Array.isArray(data[key])) return;
+                data[key] = data[key].filter(function(row){
+                    return String(row && row.name || '').trim() !== name;
+                });
+            });
+
+            // حفظ محلياً أولاً.
+            saveDataToStorage();
+
+            // حفظ التعديل في Supabase فوراً إن كان متصلاً.
+            if(window.__supabaseReady && typeof window.__queueSupabaseSave === 'function'){
+                await window.__queueSupabaseSave(true);
+            }
+
+            renderMonitorManager();
+            updateMonitorExportSheet();
+
+            alert('تم حذف المراقب «'+name+'» بنجاح.');
+        } catch(e) {
+            console.error('deleteMonitorFromDatabase:', e);
+            alert('تعذر حذف المراقب. تحقق من الاتصال بقاعدة البيانات ثم حاول مرة أخرى.');
+        }
+    }
+
 
     function addMonitorToDatabase(){
         var el=document.getElementById('newMonitorName');
@@ -2755,6 +2916,13 @@ body.observer-mode #programHistoryModal {
         if(!name) return alert('اكتب اسم المراقب أولاً.');
         if(monitorsList.includes(name)) return alert('هذا المراقب موجود مسبقاً في قاعدة البيانات.');
         monitorsList.push(name);
+
+        // المراقب الجديد لا توجد له مهمة بعد، لذلك يبدأ تلقائياً في الراحة.
+        var currentDate = getProgramDateValue();
+        var currentProgram = getMonitorProgramForDate(currentDate, true);
+        if (!Array.isArray(currentProgram.statuses)) currentProgram.statuses = [];
+        currentProgram.statuses.push({name:name, assignment:'الراحة'});
+
         saveDataToStorage();
         renderMonitorManager();
         alert('تمت إضافة المراقب إلى قاعدة البيانات.');
@@ -2794,6 +2962,7 @@ body.observer-mode #programHistoryModal {
         syncMonitorManagerInputs();
         var data=getMonitorProgramForDate(getProgramDateValue(),true);
         if(key==='lines') data.lines.push({name:'****',period:'',time:'',timeNote:'',assignment:''});
+        else if(key==='statuses') data.statuses.push({name:'****',assignment:'الراحة'});
         else data[key].push({name:'****',assignment:''});
         renderMonitorManager();
     }
@@ -2823,19 +2992,32 @@ body.observer-mode #programHistoryModal {
     }
 
     function updateMonitorExportSheet() {
-        var date=getProgramDateValue(), data=getMonitorProgramForDate(date,false);
+        var date=getProgramDateValue(), data=getMonitorProgramForDate(date,true);
         if(!data) return;
+
+        // أي مراقب غير معين في محطة أو خط أو حالة إدارية يُدرج تلقائياً في الراحة.
+        if(typeof reconcileUnassignedMonitorsToRest === 'function'){
+            reconcileUnassignedMonitorsToRest(data);
+        }
         document.getElementById('monitorExportTitle').innerText='برنامج المراقبين ليوم '+formatArabicDate(date);
         var sb=document.getElementById('monitorStationsExportBody'); sb.innerHTML='';
         data.stations.forEach(function(r){
-            sb.innerHTML += '<tr><td>'+escapeHtml(r.assignment||'')+'</td><td>'+escapeHtml(r.name||'')+'</td></tr>';
+            var stationAssignment = String(r.assignment||'').trim() || '****';
+            var stationName = String(r.name||'').trim() || '****';
+            sb.innerHTML += '<tr><td>'+escapeHtml(stationAssignment)+'</td><td>'+escapeHtml(stationName)+'</td></tr>';
         });
         var lb=document.getElementById('monitorLinesExportBody'); lb.innerHTML='';
         data.lines.forEach(function(r){
             var periodLabel=r.period==='morning'?'الفترة الصباحية':(r.period==='evening'?'الفترة المسائية':'');
             var timeText=[periodLabel,r.time||''].filter(Boolean).join(' • ');
             if(r.timeNote) timeText += (timeText?' — ':'') + r.timeNote;
-            lb.innerHTML += '<tr><td>'+escapeHtml(r.assignment||'')+'</td><td class="time-cell">'+escapeHtml(timeText ? '('+timeText+')' : '')+'</td><td>'+escapeHtml(r.name||'')+'</td></tr>';
+
+            // الخانات الفارغة في البرنامج المستخرج تظهر ****.
+            var assignmentText = String(r.assignment||'').trim() || '****';
+            var displayTime = timeText ? '('+timeText+')' : '****';
+            var monitorName = String(r.name||'').trim() || '****';
+
+            lb.innerHTML += '<tr><td>'+escapeHtml(assignmentText)+'</td><td class="time-cell">'+escapeHtml(displayTime)+'</td><td>'+escapeHtml(monitorName)+'</td></tr>';
         });
         var stb=document.getElementById('monitorStatusesExportBody'); 
         stb.innerHTML='';
