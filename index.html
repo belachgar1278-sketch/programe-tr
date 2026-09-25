@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>برنامج حافلات تارودانت </title>
+    <title>برنامج حافلات تارودانت - نسخة الهاتف</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -1197,6 +1197,45 @@ body.observer-mode #programHistoryModal .close-modal {
 </style>
 
 
+<style id="supervisorPermissionsStyle">
+/* =========================================================
+   المشرف:
+   - يستطيع تعديل البرنامج وحفظه والتدوير.
+   - يستطيع تعديل الخط الموجود في قاعدة البيانات.
+   - لا يرى أزرار إضافة/حذف السائقين أو المراقبين أو الخطوط.
+   ========================================================= */
+
+/* إدارة السائقين: إخفاء إضافة/حذف */
+body.supervisor-mode #driversModal #newDriverName,
+body.supervisor-mode #driversModal button[onclick*="addNewDriver"],
+body.supervisor-mode #driversModal .btn-delete {
+    display:none !important;
+}
+
+/* إدارة المراقبين: إخفاء إضافة/حذف قاعدة البيانات */
+body.supervisor-mode #monitorsModal #newMonitorName,
+body.supervisor-mode #monitorsModal button[onclick*="addMonitorToDatabase"],
+body.supervisor-mode #monitorsModal .monitor-delete-db-btn {
+    display:none !important;
+}
+
+/* إدارة الخطوط: إخفاء إضافة خط جديد فقط، مع إبقاء تعديل الخط الموجود */
+body.supervisor-mode #linesManagementModal button[onclick*="startAddLine"] {
+    display:none !important;
+}
+
+/* لا يظهر نموذج إضافة خط جديد للمشرف */
+body.supervisor-mode #lineEditPanel[data-supervisor-add="true"] {
+    display:none !important;
+}
+
+/* لا تظهر أي أزرار حذف داخل إدارة الخطوط إن أضيفت مستقبلاً */
+body.supervisor-mode #linesManagementModal .line-delete-btn,
+body.supervisor-mode #linesManagementModal button[onclick*="deleteLine"],
+body.supervisor-mode #linesManagementModal button[onclick*="removeLine"] {
+    display:none !important;
+}
+</style>
 <style id="observerFinalFix">
 /* ===== الملاحظ: الواجهة الرئيسية للعرض فقط ===== */
 body.observer-mode #programHistoryModal,
@@ -2489,12 +2528,51 @@ body.observer-mode #programHistoryModal {
     }
 
     function getDriverCurrentStatusDays(driver, currentStatus) {
-        var dates = Object.keys(typeof programHistory !== 'undefined' ? programHistory : {}).sort();
-        if (!dates.length) return 1;
+        currentStatus = String(currentStatus || '').trim() || 'الراحة';
+
+        /*
+         * الحساب يبدأ من البرنامج الحالي، وليس من آخر برنامج محفوظ فقط.
+         * لذلك إذا كان السائق في الراحة أمس واليوم أيضًا في الراحة:
+         * أمس = 1 + اليوم = 2.
+         *
+         * لا نكرر تاريخ اليوم إذا كان محفوظًا بالفعل داخل programHistory.
+         */
+        var currentDate = '';
+        try {
+            currentDate = typeof getProgramDateValue === 'function'
+                ? getProgramDateValue()
+                : String(document.getElementById('programDate')?.value || '');
+        } catch(e) {}
 
         var days = 0;
 
-        // نحسب الأيام المتتالية التي كانت فيها الحالة نفسها.
+        // الحالة في البرنامج الحالي.
+        if (currentDate) {
+            var currentWorked = (busData || []).some(function(item) {
+                return String(item.driver || '').split('/').map(function(x) {
+                    return x.trim();
+                }).includes(driver);
+            });
+
+            var currentStatusValue = currentWorked
+                ? 'عمل'
+                : String((driversCustomStatus || {})[driver] || 'الراحة').trim();
+
+            if (currentStatusValue === currentStatus) {
+                days = 1;
+            } else {
+                return 1;
+            }
+        }
+
+        // نكمل إلى الوراء في البرامج المحفوظة، مع استبعاد تاريخ البرنامج الحالي
+        // لأنه حُسب أعلاه بالفعل.
+        var dates = Object.keys(typeof programHistory !== 'undefined' ? programHistory : {})
+            .filter(function(d) {
+                return !currentDate || d < currentDate;
+            })
+            .sort();
+
         for (var i = dates.length - 1; i >= 0; i--) {
             var snap = programHistory[dates[i]];
             if (!snap) continue;
@@ -2505,7 +2583,9 @@ body.observer-mode #programHistoryModal {
                 }).includes(driver);
             });
 
-            var status = worked ? 'عمل' : String((snap.driversCustomStatus || {})[driver] || 'الراحة').trim();
+            var status = worked
+                ? 'عمل'
+                : String((snap.driversCustomStatus || {})[driver] || 'الراحة').trim();
 
             if (status === currentStatus) {
                 days++;
@@ -2516,6 +2596,7 @@ body.observer-mode #programHistoryModal {
 
         return days || 1;
     }
+
 
     function renderStatusTables() {
         var activeDriversSet = new Set();
@@ -2552,7 +2633,36 @@ body.observer-mode #programHistoryModal {
             return true;
         });
 
-        filteredDriversList.sort(function(a, b) { return a.localeCompare(b); });
+        // ترتيب جدول "حالات السائقين (بدون العاملين)":
+        // الراحة أولاً دائماً، ثم باقي الحالات.
+        var driverStatusOrder = {
+            'الراحة': 0,
+            'الغياب': 1,
+            'المرض': 2,
+            'الترخيص': 3,
+            'العطلة السنوية': 4,
+            'انتظار اصلاح الحافلة': 5,
+            'الإدارة': 6
+        };
+
+        filteredDriversList.sort(function(a, b) {
+            var statusA = String(driversCustomStatus[a] || 'الراحة').trim();
+            var statusB = String(driversCustomStatus[b] || 'الراحة').trim();
+
+            // توحيد الحالات القديمة حتى لا تمنع ترتيب الراحة.
+            if(statusA === 'راحة') statusA = 'الراحة';
+            if(statusB === 'راحة') statusB = 'الراحة';
+            if(statusA === 'الادارة' || statusA === 'ادارة') statusA = 'الإدارة';
+            if(statusB === 'الادارة' || statusB === 'ادارة') statusB = 'الإدارة';
+
+            var orderA = Object.prototype.hasOwnProperty.call(driverStatusOrder, statusA)
+                ? driverStatusOrder[statusA] : 99;
+            var orderB = Object.prototype.hasOwnProperty.call(driverStatusOrder, statusB)
+                ? driverStatusOrder[statusB] : 99;
+
+            if(orderA !== orderB) return orderA - orderB;
+            return String(a).localeCompare(String(b), 'ar');
+        });
 
         filteredDriversList.forEach(function(driver) {
             var currentStatus = String(driversCustomStatus[driver] || 'الراحة').trim();
@@ -2863,6 +2973,7 @@ body.observer-mode #programHistoryModal {
     }
 
     async function deleteMonitorFromDatabase(name){
+        if(window.__isSupervisor){ alert('حساب المشرف لا يملك صلاحية حذف المراقبين.'); return; }
         name = String(name || '').trim();
         if(!name) return;
 
@@ -2911,6 +3022,7 @@ body.observer-mode #programHistoryModal {
 
 
     function addMonitorToDatabase(){
+        if(window.__isSupervisor){ alert('حساب المشرف لا يملك صلاحية إضافة المراقبين.'); return; }
         var el=document.getElementById('newMonitorName');
         var name=el ? el.value.trim() : '';
         if(!name) return alert('اكتب اسم المراقب أولاً.');
@@ -3129,6 +3241,7 @@ body.observer-mode #programHistoryModal {
     }
 
     function startAddLine() {
+        if(window.__isSupervisor){ alert('حساب المشرف لا يملك صلاحية إضافة الخطوط.'); return; }
         document.getElementById('lineForm').reset();
         document.getElementById('editingLineOriginalName').value = '';
         document.getElementById('lineEditTitle').innerText = 'إضافة خط جديد';
@@ -3138,6 +3251,7 @@ body.observer-mode #programHistoryModal {
     }
 
     function editLine(lineName) {
+        if(window.__isObserver){ alert('حساب الملاحظ للعرض فقط ولا يملك صلاحية التعديل.'); return; }
         if (!lineDefaults || !Object.prototype.hasOwnProperty.call(lineDefaults, lineName)) {
             alert('تعذر العثور على بيانات هذا الخط.');
             return;
@@ -3304,6 +3418,7 @@ body.observer-mode #programHistoryModal {
     }
 
     function addNewDriver() {
+        if(window.__isSupervisor){ alert('حساب المشرف لا يملك صلاحية إضافة السائقين.'); return; }
         var input = document.getElementById('newDriverName');
         var name = input.value.trim();
         if (name && !driversList.includes(name)) {
@@ -3318,6 +3433,7 @@ body.observer-mode #programHistoryModal {
     }
 
     function removeDriver(index) {
+        if(window.__isSupervisor){ alert('حساب المشرف لا يملك صلاحية حذف السائقين.'); return; }
         driversList.splice(index, 1);
         saveDataToStorage();
         renderDriversManagementList();
@@ -3456,6 +3572,12 @@ body.observer-mode #programHistoryModal {
         var duration = document.getElementById('newLineDuration').value.trim();
 
         if (!name) return;
+
+        // المشرف يمكنه تعديل خط موجود فقط، ولا يمكنه إنشاء خط جديد.
+        if(window.__isSupervisor && !originalName){
+            alert('حساب المشرف يستطيع تعديل الخطوط الموجودة فقط ولا يملك صلاحية إضافة خط جديد.');
+            return;
+        }
 
         // إضافة خط جديد.
         if (!originalName) {
@@ -3661,11 +3783,14 @@ body.observer-mode #programHistoryModal {
     const appMeta = user && user.app_metadata ? user.app_metadata : {};
     const role = String(meta.role || appMeta.role || '').toLowerCase().trim();
     window.__isObserver = (role === 'observer' || role === 'ملاحظ');
+    window.__isSupervisor = (role === 'supervisor' || role === 'مشرف');
     document.body.classList.toggle('observer-mode', window.__isObserver);
+    document.body.classList.toggle('supervisor-mode', window.__isSupervisor && !window.__isObserver);
 
     const chip=document.createElement('span');
     chip.className='supabase-user-chip no-print';
-    chip.textContent='متصل: '+(user.email||'المستخدم');
+    chip.textContent='متصل: '+(user.email||'المستخدم')+
+        (window.__isSupervisor ? ' — مشرف' : (window.__isObserver ? ' — ملاحظ' : ''));
     const actions=document.querySelector('header .header-actions');
     if(actions && !document.getElementById('supabaseUserChip')){ chip.id='supabaseUserChip'; actions.prepend(chip); }
   }
@@ -4037,11 +4162,41 @@ body.observer-mode #programHistoryModal {
         });
 
         // الراحة أولاً، ثم باقي الحالات، ثم اسم السائق.
+        // ترتيب الحالات: الراحة أولاً دائمًا، ثم باقي الحالات.
+        // داخل كل حالة يتم الترتيب حسب اسم السائق.
+        var statusOrder = {
+            'الراحة': 0,
+            'الغياب': 1,
+            'المرض': 2,
+            'الترخيص': 3,
+            'العطلة السنوية': 4,
+            'انتظار اصلاح الحافلة': 5,
+            'الإدارة': 6
+        };
+
+        function normalizedStatusForSort(status){
+            var s=String(status||'').replace(/[\u200B-\u200D\uFEFF]/g,'').trim();
+            if(s==='راحة' || s==='الراحة') return 'الراحة';
+            if(s==='ادارة' || s==='الادارة' || s==='إدارة' || s==='الإدارة') return 'الإدارة';
+            if(s==='مرض' || s==='المرض') return 'المرض';
+            if(s==='غياب' || s==='الغياب') return 'الغياب';
+            if(s==='ترخيص' || s==='الترخيص') return 'الترخيص';
+            if(s==='عطلة سنوية' || s==='العطلة السنوية') return 'العطلة السنوية';
+            return s;
+        }
+
         rows.sort(function(a,b){
-            if(a.status==='الراحة' && b.status!=='الراحة') return -1;
-            if(a.status!=='الراحة' && b.status==='الراحة') return 1;
-            if(a.status!==b.status) return a.status.localeCompare(b.status,'ar');
-            return a.driver.localeCompare(b.driver,'ar');
+            var sa=normalizedStatusForSort(a.status);
+            var sb=normalizedStatusForSort(b.status);
+
+            var oa = Object.prototype.hasOwnProperty.call(statusOrder,sa) ? statusOrder[sa] : 99;
+            var ob = Object.prototype.hasOwnProperty.call(statusOrder,sb) ? statusOrder[sb] : 99;
+
+            // الأولوية الأساسية: الراحة دائماً في البداية.
+            if(oa !== ob) return oa - ob;
+
+            // إذا كانت الحالة نفسها، ترتيب أبجدي حسب اسم السائق.
+            return String(a.driver||'').localeCompare(String(b.driver||''),'ar');
         });
 
         var statuses=['الراحة','الغياب','المرض','الترخيص','العطلة السنوية','انتظار اصلاح الحافلة','الإدارة'];
