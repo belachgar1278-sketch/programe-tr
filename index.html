@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>برنامج حافلات تارودانت </title>
+    <title>برنامج حافلات تارودانت - نسخة الهاتف</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -3973,24 +3973,12 @@ body.observer-mode #programHistoryModal {
     if(__switchingProgramDate) return;
     var newDate = this.value;
     if(!newDate) return;
-    var oldDate = window.__lastProgramDate || newDate;
-    saveCurrentProgramToHistory(oldDate);
-    __switchingProgramDate = true;
-    if(programHistory[newDate]) {
-      restoreProgramFromHistory(newDate);
-    } else {
-      // A new day starts from the currently displayed program until the user rotates it.
-      programHistory[newDate] = snapshotCurrentProgram();
-    }
-    __switchingProgramDate = false;
+
+    // تغيير التاريخ هنا يغيّر التاريخ المعروض فقط، ولا يستبدل البرنامج الحالي
+    // ولا يسترجع برنامجًا محفوظًا ليوم آخر. استرجاع برنامج محفوظ يتم فقط
+    // من خلال "سجل البرامج".
     window.__lastProgramDate = newDate;
     updateHeaderTitle();
-    initDropdowns();
-    renderTable();
-    renderStatusTables();
-    updateStats();
-    saveDataToStorage();
-    if(window.__supabaseReady) window.__queueSupabaseSave();
   });
 
   sb.auth.getSession().then(async function(res){
@@ -4240,15 +4228,31 @@ body.observer-mode #programHistoryModal {
         try{
             if(typeof driversCustomStatus==='undefined' || !driversCustomStatus) window.driversCustomStatus={};
             window.driversCustomStatus[driver]=newStatus;
-        }catch(e){}
-        // حفظ الحالة في البرنامج الحالي إن كان متاحاً.
-        try{
-            if(typeof saveCurrentProgram==='function') saveCurrentProgram();
-        }catch(e){}
+
+            // حفظ الحالة فورًا في البرنامج المرتبط بالتاريخ الحالي، دون تغيير
+            // busData أو أي جزء آخر من البرنامج.
+            var currentDate = (typeof getProgramDateValue==='function') ? getProgramDateValue() : '';
+            if(currentDate){
+                if(typeof programHistory==='undefined' || !programHistory) window.programHistory={};
+                programHistory[currentDate] = snapshotCurrentProgram();
+            }
+            if(typeof saveDataToStorage==='function') saveDataToStorage();
+
+            // تحديث الواجهة فورًا، دون الحاجة إلى Refresh.
+            if(typeof initDropdowns==='function') initDropdowns();
+            if(typeof renderStatusTables==='function') renderStatusTables();
+            if(typeof updateStats==='function') updateStats();
+            if(typeof refreshAdminCenter==='function') refreshAdminCenter();
+
+            if(typeof window.__queueSupabaseSave==='function' && window.__supabaseReady){
+                window.__queueSupabaseSave();
+            }
+        }catch(e){
+            console.error('changeDriverStatus:', e);
+        }
         if(typeof addAuditEntry==='function'){
             addAuditEntry('تغيير حالة سائق','السائق: '+driver+' — الحالة الجديدة: '+newStatus);
         }
-        if(typeof refreshAdminCenter==='function') refreshAdminCenter();
     };
 
     function buildDriverStatuses(){
