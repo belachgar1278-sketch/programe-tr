@@ -1043,6 +1043,7 @@ body.observer-mode .observer-banner {
 }
 
 /* سجل البرامج هو الشاشة الوحيدة للملاحظ */
+body.observer-mode #approveProgramBtn { display:none !important; }
 body.observer-mode #programHistoryModal {
     display:flex !important;
     position:fixed !important;
@@ -1311,7 +1312,17 @@ body.observer-mode #programHistoryModal {
 </style>
 
 
-</head>
+<style id="enhancedDashboardStyle">
+#enhancedDashboard{margin-top:12px}
+#enhancedDashboard .stat-box{min-width:130px}
+#dashApproval{font-size:14px}
+.approval-badge{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;font-weight:900}
+.approval-approved{background:#dcfce7;color:#166534}
+.approval-draft{background:#fef3c7;color:#92400e}
+.conflict-box{border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#fff;margin-top:8px}
+.conflict-error{border-right:4px solid #dc2626}
+.conflict-warning{border-right:4px solid #f59e0b}
+</style></head>
 <body class="auth-locked">
 <div class="modal" id="programHistoryModal">
     <div class="modal-content program-history-modal">
@@ -1339,7 +1350,8 @@ body.observer-mode #programHistoryModal {
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
       <button class="btn btn-primary" type="button" onclick="refreshAdminCenter()">تحديث</button>
       <button class="btn btn-warning" type="button" onclick="runProgramValidation(true)">فحص البرنامج قبل الحفظ</button>
-      <button class="btn btn-info" type="button" onclick="openAuditLog()">سجل التغييرات</button>
+      <button class="btn btn-info" type="button" onclick="openAuditLog()">سجل التغييرات</button> 
+      <button class="btn btn-secondary" type="button" onclick="window.unapproveCurrentProgram()">↩ إلغاء اعتماد البرنامج</button>
     </div>
     <div class="admin-center-grid">
       <div class="admin-center-card"><h4>الحافلات في البرنامج</h4><strong id="acBuses">0</strong></div>
@@ -1350,6 +1362,7 @@ body.observer-mode #programHistoryModal {
     <div class="admin-center-card">
       <h4>فحص البرنامج الحالي</h4>
       <div id="programValidationResults"></div>
+      <div id="programApprovalPanel" style="margin-top:10px;"></div>
     </div>
     <div class="admin-center-card">
       <h4>📊 إحصائيات السائق</h4>
@@ -1430,6 +1443,7 @@ body.observer-mode #programHistoryModal {
             <button class="btn btn-rotate" type="button" onclick="rotateToNextProgram()">↻ تدوير لليوم الموالي</button>
             <button class="btn btn-rotate" type="button" onclick="rotateToPreviousProgram()">↺ التدوير للخلف</button>
             <button id="saveProgramBtn" class="btn btn-success" type="button" onclick="window.saveCurrentProgramToHistory()">💾 حفظ البرنامج</button>
+            <button id="approveProgramBtn" class="btn btn-primary" type="button" onclick="window.approveCurrentProgram()">✅ اعتماد البرنامج</button>
             <button id="savedProgramsBtn" class="btn btn-history" type="button" onclick="window.openProgramHistory()">📚 سجل البرامج المحفوظة</button>
             <button class="btn btn-history" id="observerDailyHistoryBtn" type="button" onclick="openObserverDailyHistory()">📅 الاطلاع على سجل البرامج</button>
         </div>
@@ -1458,6 +1472,19 @@ body.observer-mode #programHistoryModal {
                 <span id="totalDriversCount">0</span>
             </div>
         </div>
+    </div>
+
+    <div class="stats-container enhanced-dashboard no-print" id="enhancedDashboard">
+        <div class="stat-box"><div class="stat-icon">🟢</div><div class="stat-data"><h4>العاملون</h4><span id="dashWorking">0</span></div></div>
+        <div class="stat-box"><div class="stat-icon">🛌</div><div class="stat-data"><h4>الراحة</h4><span id="dashRest">0</span></div></div>
+        <div class="stat-box"><div class="stat-icon">⚪</div><div class="stat-data"><h4>الغياب</h4><span id="dashAbsent">0</span></div></div>
+        <div class="stat-box"><div class="stat-icon">🤒</div><div class="stat-data"><h4>المرض</h4><span id="dashSick">0</span></div></div>
+        <div class="stat-box"><div class="stat-icon">📄</div><div class="stat-data"><h4>الترخيص</h4><span id="dashPermit">0</span></div></div>
+        <div class="stat-box"><div class="stat-icon">🌴</div><div class="stat-data"><h4>العطلة السنوية</h4><span id="dashAnnual">0</span></div></div>
+        <div class="stat-box"><div class="stat-icon">🏗️</div><div class="stat-data"><h4>مهمة في المرآب</h4><span id="dashGarage">0</span></div></div>
+        <div class="stat-box"><div class="stat-icon">🏢</div><div class="stat-data"><h4>الإدارة</h4><span id="dashAdmin">0</span></div></div>
+        <div class="stat-box"><div class="stat-icon">⚠️</div><div class="stat-data"><h4>ملاحظات البرنامج</h4><span id="dashWarnings">0</span></div></div>
+        <div class="stat-box"><div class="stat-icon">🔒</div><div class="stat-data"><h4>حالة الاعتماد</h4><span id="dashApproval">مسودة</span></div></div>
     </div>
 
     <div class="controls-card">
@@ -1902,8 +1929,13 @@ body.observer-mode #programHistoryModal {
     var lineDefaults = JSON.parse(localStorage.getItem('taroudant_lineDefaults')) || defaultLineDefaults;
     var busData = JSON.parse(localStorage.getItem('taroudant_busData')) || defaultBusData;
     var driversCustomStatus = JSON.parse(localStorage.getItem('taroudant_driversCustomStatus')) || {};
+    // حالات السائقين التي تم تعيينها صراحةً للبرنامج الحالي/تاريخه، لمنع اعتبار بيانات قديمة تعارضاً.
+    var driverStatusExplicitByDate = JSON.parse(localStorage.getItem('taroudant_driverStatusExplicitByDate')) || {};
     var busesCustomStatus = JSON.parse(localStorage.getItem('taroudant_busesCustomStatus')) || {};
     var programHistory = JSON.parse(localStorage.getItem('taroudant_programHistory')) || {};
+    // مصدر مستقل لفحص البرنامج المعروض فعليًا، حتى لا تختلط حالات تاريخ آخر مع البرنامج الحالي.
+    window.__validationProgramData = null;
+    window.__validationStatusMap = null;
     var defaultMonitorProgram = {
         stations: [
             {name:'أيت بدني ياسين', assignment:'منسق الحركية'},
@@ -1956,6 +1988,7 @@ body.observer-mode #programHistoryModal {
         localStorage.setItem('taroudant_lineDefaults', JSON.stringify(lineDefaults));
         localStorage.setItem('taroudant_busData', JSON.stringify(busData));
         localStorage.setItem('taroudant_driversCustomStatus', JSON.stringify(driversCustomStatus));
+        localStorage.setItem('taroudant_driverStatusExplicitByDate', JSON.stringify(driverStatusExplicitByDate));
         localStorage.setItem('taroudant_busesCustomStatus', JSON.stringify(busesCustomStatus));
         localStorage.setItem('taroudant_programHistory', JSON.stringify(programHistory));
         localStorage.setItem('taroudant_monitorPrograms', JSON.stringify(monitorPrograms));
@@ -1985,6 +2018,7 @@ body.observer-mode #programHistoryModal {
             busData: cloneData(busData),
             lineDefaults: cloneData(lineDefaults),
             driversCustomStatus: cloneData(driversCustomStatus),
+            explicitDriverStatuses: cloneData((function(){ var d=(typeof getProgramDateValue==='function'?getProgramDateValue():''); return d && driverStatusExplicitByDate[d] ? driverStatusExplicitByDate[d] : {}; })()),
             busesCustomStatus: cloneData(busesCustomStatus),
             savedAt: new Date().toISOString()
         };
@@ -2003,6 +2037,9 @@ body.observer-mode #programHistoryModal {
             // حفظ نسخة مستقلة في سجل البرامج.
             programHistory[date] = snapshotCurrentProgram();
             programHistory[date].savedAt = new Date().toISOString();
+            programHistory[date].approved = false;
+            programHistory[date].approvedAt = null;
+            programHistory[date].approvedBy = null;
 
             // حفظ محلياً فوراً.
             saveDataToStorage();
@@ -2052,6 +2089,7 @@ body.observer-mode #programHistoryModal {
         busData = cloneData(snap.busData || []);
         if (snap.lineDefaults) lineDefaults = cloneData(snap.lineDefaults);
         if (snap.driversCustomStatus) driversCustomStatus = cloneData(snap.driversCustomStatus);
+        if (snap.explicitDriverStatuses) { driverStatusExplicitByDate[dateValue] = cloneData(snap.explicitDriverStatuses); }
         if (snap.busesCustomStatus) busesCustomStatus = cloneData(snap.busesCustomStatus);
         return true;
     }
@@ -2423,6 +2461,9 @@ body.observer-mode #programHistoryModal {
         document.getElementById('mainHeaderTitle').innerText = "برنامج حافلات تارودانت ليوم " + formattedDate;
         document.getElementById('restSheetTitle').innerText = "برنامج الراحة للسائقين ليوم " + formattedDate;
         updateMonitorExportSheet();
+        // تحديث فحص البرنامج المعروض حتى لا تبقى أخطاء من برنامج سابق.
+        if(typeof window.runProgramValidation === 'function') window.runProgramValidation(false);
+        if(typeof window.updateEnhancedDashboard === 'function') window.updateEnhancedDashboard();
     }
 
     function initDropdowns() {
@@ -2857,6 +2898,8 @@ body.observer-mode #programHistoryModal {
         if(window.__isObserver){ alert('حساب الملاحظ للعرض فقط ولا يملك صلاحية التعديل.'); return; }
         status = String(status || '').trim();
         driversCustomStatus[driver] = status;
+        var statusDate = (typeof getProgramDateValue==='function') ? getProgramDateValue() : '';
+        if(statusDate){ if(!driverStatusExplicitByDate[statusDate]) driverStatusExplicitByDate[statusDate]={}; driverStatusExplicitByDate[statusDate][driver]=status; }
         saveDataToStorage();
         renderStatusTables();
         updateStats();
@@ -4059,6 +4102,52 @@ body.observer-mode #programHistoryModal {
                 warnings.push('الحافلة '+bus+' حالتها '+row.status+' لكنها مرتبطة بسائق.');
             }
         });
+        // فحص حالات السائقين والتعارضات الإدارية.
+        // مهم: لا نعتمد على قائمة السائقين وحدها، بل نستخرج السائقين
+        // الموجودين فعليًا في busData المعروض حاليًا. هذا يمنع ظهور
+        // تعارضات وهمية لسائقين غير موجودين في البرنامج الذي تتم معاينته.
+        var validationData = Array.isArray(window.__validationProgramData) ? window.__validationProgramData : (typeof busData !== 'undefined' ? busData : []);
+        var currentDate = (typeof getProgramDateValue==='function') ? getProgramDateValue() : '';
+        var explicitMap = (currentDate && driverStatusExplicitByDate && driverStatusExplicitByDate[currentDate]) ? driverStatusExplicitByDate[currentDate] : {};
+        var currentStatusMap = (window.__validationStatusMap && typeof window.__validationStatusMap === 'object') ? window.__validationStatusMap : explicitMap;
+        var programmedDrivers = {};
+        validationData.forEach(function(row){
+            var rowDriver = String(row.driver || '').trim();
+            if(!rowDriver) return;
+            rowDriver.split('/').map(function(x){ return x.replace(/\s+/g,' ').trim(); }).filter(Boolean).forEach(function(driverName){
+                if(!programmedDrivers[driverName]) programmedDrivers[driverName] = [];
+                programmedDrivers[driverName].push({
+                    bus: String(row.bus || '').trim(),
+                    line: String(row.line || '').trim()
+                });
+            });
+        });
+
+        Object.keys(programmedDrivers).forEach(function(driver){
+            // لا نعتبر الحالة العامة/القديمة تعارضاً. لا يتم الفحص إلا إذا كانت الحالة
+            // مسجلة صراحةً للبرنامج الحالي. هذا يمنع ظهور أخطاء وهمية من localStorage.
+            if(!Object.prototype.hasOwnProperty.call(currentStatusMap, driver)) return;
+            var st = String(currentStatusMap[driver] || '').replace(/[\u200B-\u200D\uFEFF]/g,'').trim() || 'الراحة';
+            var assignments = programmedDrivers[driver];
+            var assignmentText = assignments.map(function(a){
+                var parts=[];
+                if(a.bus) parts.push('الحافلة '+a.bus);
+                if(a.line) parts.push(a.line);
+                return parts.join(' — ');
+            }).join(' | ');
+
+            // فقط الحالات التي تمنع العمل تعتبر خطأ.
+            if(['الغياب','المرض','الترخيص','العطلة السنوية','الإدارة'].includes(st)){
+                errors.push('السائق '+driver+' حالته «'+st+'» لكنه مبرمج للعمل'+(assignmentText ? ' ('+assignmentText+')' : '')+'.');
+            }
+
+            // مهمة في المرآب تبقى حالة مستقلة؛ لا تمنعها من الظهور،
+            // لكنها تحتاج تنبيهًا فقط إذا كانت مبرمجة للعمل.
+            if(st==='مهمة في المرآب'){
+                warnings.push('السائق '+driver+' في «مهمة في المرآب» ومبرمج للعمل'+(assignmentText ? ' ('+assignmentText+')' : '')+'؛ يرجى التأكد من أن ذلك مقصود.');
+            }
+        });
+
         return {errors:errors,warnings:warnings,ok:errors.length===0};
     };
 
@@ -4079,6 +4168,89 @@ body.observer-mode #programHistoryModal {
             else alert('✓ البرنامج سليم وجاهز للحفظ.');
         }
         return r;
+    };
+
+    function getCurrentDashboardStatuses(){
+        var result={working:0,rest:0,absent:0,sick:0,permit:0,annual:0,garage:0,admin:0,warnings:0};
+        var map=(typeof driversCustomStatus!=='undefined'&&driversCustomStatus)?driversCustomStatus:{};
+        var list=(typeof driversList!=='undefined'?driversList:[]);
+        list.forEach(function(d){
+            var assigned=(typeof busData!=='undefined'?busData:[]).some(function(row){
+                return String(row.driver||'').split('/').map(function(x){return x.trim();}).includes(d);
+            });
+            var st=String(map[d]||'الراحة').trim();
+            if(assigned && st!=='انتظار اصلاح الحافلة' && st!=='مهمة في المرآب' && !['الغياب','المرض','الترخيص','العطلة السنوية','الإدارة'].includes(st)) result.working++;
+            else if(st==='الراحة') result.rest++;
+            else if(st==='الغياب') result.absent++;
+            else if(st==='المرض') result.sick++;
+            else if(st==='الترخيص') result.permit++;
+            else if(st==='العطلة السنوية') result.annual++;
+            else if(st==='مهمة في المرآب') result.garage++;
+            else if(st==='الإدارة') result.admin++;
+        });
+        var vr=window.validateCurrentProgram?window.validateCurrentProgram():{warnings:[]};
+        result.warnings=(vr.errors||[]).length+(vr.warnings||[]).length;
+        return result;
+    }
+
+    window.updateEnhancedDashboard=function(){
+        var d=getCurrentDashboardStatuses();
+        var map={dashWorking:d.working,dashRest:d.rest,dashAbsent:d.absent,dashSick:d.sick,dashPermit:d.permit,dashAnnual:d.annual,dashGarage:d.garage,dashAdmin:d.admin,dashWarnings:d.warnings};
+        Object.keys(map).forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=map[id];});
+        updateApprovalUI();
+    };
+
+    window.updateApprovalUI=function(){
+        var date=(typeof getProgramDateValue==='function'?getProgramDateValue():'');
+        var snap=(typeof programHistory!=='undefined'?programHistory[date]:null);
+        var approved=!!(snap&&snap.approved);
+        var dash=document.getElementById('dashApproval');
+        if(dash){
+            dash.textContent=approved?'معتمد':'مسودة';
+            dash.className=approved?'approval-badge approval-approved':'approval-badge approval-draft';
+        }
+        var panel=document.getElementById('programApprovalPanel');
+        if(panel){
+            panel.innerHTML=approved
+                ? '<div class="admin-alert ok">✓ البرنامج معتمد'+(snap.approvedBy?' بواسطة '+escapeAdmin(snap.approvedBy):'')+(snap.approvedAt?' — '+escapeAdmin(new Date(snap.approvedAt).toLocaleString('ar-MA')):'')+'.</div>'
+                : '<div class="admin-alert warn">⚠ البرنامج الحالي ما زال في حالة مسودة.</div>';
+        }
+    };
+
+    window.approveCurrentProgram=async function(){
+        if(window.__isObserver){ alert('حساب الملاحظ للعرض فقط ولا يملك صلاحية الاعتماد.'); return; }
+        var r=window.validateCurrentProgram?window.validateCurrentProgram():{errors:[],warnings:[]};
+        if(r.errors.length){
+            alert('لا يمكن اعتماد البرنامج قبل معالجة '+r.errors.length+' خطأ.');
+            if(typeof openAdminCenter==='function') openAdminCenter();
+            return false;
+        }
+        var date=(typeof getProgramDateValue==='function'?getProgramDateValue():'');
+        if(!date){alert('يرجى تحديد تاريخ البرنامج أولاً.');return false;}
+        if(!confirm('هل تريد اعتماد برنامج '+date+'؟ بعد الاعتماد يجب إلغاء الاعتماد قبل أي تعديل رسمي.')) return false;
+        programHistory[date]=snapshotCurrentProgram();
+        programHistory[date].approved=true;
+        programHistory[date].approvedAt=new Date().toISOString();
+        var u=window.__supabaseUser;
+        programHistory[date].approvedBy=(u&&u.email)?u.email:'المستخدم الحالي';
+        saveDataToStorage();
+        if(window.__supabaseReady&&typeof window.__queueSupabaseSave==='function') await window.__queueSupabaseSave(true);
+        addAuditEntry('اعتماد البرنامج','تم اعتماد برنامج '+date);
+        updateApprovalUI(); updateEnhancedDashboard();
+        alert('✓ تم اعتماد البرنامج بنجاح.');
+        return true;
+    };
+
+    window.unapproveCurrentProgram=function(){
+        if(window.__isObserver){alert('لا تملك الصلاحية.');return;}
+        var date=getProgramDateValue(), snap=programHistory[date];
+        if(!snap||!snap.approved){alert('البرنامج غير معتمد.');return;}
+        if(!confirm('إلغاء اعتماد البرنامج؟'))return;
+        snap.approved=false; snap.approvedAt=null; snap.approvedBy=null;
+        saveDataToStorage();
+        if(window.__supabaseReady&&typeof window.__queueSupabaseSave==='function') window.__queueSupabaseSave(true);
+        addAuditEntry('إلغاء اعتماد البرنامج','تم إلغاء اعتماد برنامج '+date);
+        updateApprovalUI(); updateEnhancedDashboard();
     };
 
     function escapeAdmin(v){
@@ -4108,6 +4280,8 @@ body.observer-mode #programHistoryModal {
         Object.keys(els).forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=els[id]});
         runProgramValidation(false);
         searchDriverHistory();
+        if(typeof updateEnhancedDashboard==='function') updateEnhancedDashboard();
+        if(typeof updateApprovalUI==='function') updateApprovalUI();
     };
 
     function getProgramDates(){
@@ -4200,8 +4374,13 @@ body.observer-mode #programHistoryModal {
     document.addEventListener('change',function(e){
         if(e.target && e.target.id==='programDate'){
             addAuditEntry('تغيير تاريخ البرنامج','التاريخ الجديد: '+e.target.value);
+            if(typeof updateEnhancedDashboard==='function') updateEnhancedDashboard();
+            if(typeof updateApprovalUI==='function') updateApprovalUI();
         }
     });
+
+    setTimeout(function(){ if(typeof updateEnhancedDashboard==='function') updateEnhancedDashboard(); }, 250);
+    document.addEventListener('click',function(){ setTimeout(function(){ if(typeof updateEnhancedDashboard==='function') updateEnhancedDashboard(); }, 30); });
 
     // تحذير قبل مغادرة الصفحة إذا كانت هناك تعديلات غير محفوظة.
     window.__programDirty=false;
@@ -4249,6 +4428,12 @@ body.observer-mode #programHistoryModal {
         try{
             if(typeof driversCustomStatus==='undefined' || !driversCustomStatus) window.driversCustomStatus={};
             window.driversCustomStatus[driver]=newStatus;
+
+            var currentDate = (typeof getProgramDateValue==='function') ? getProgramDateValue() : '';
+            if(currentDate){
+                if(!driverStatusExplicitByDate[currentDate]) driverStatusExplicitByDate[currentDate] = {};
+                driverStatusExplicitByDate[currentDate][driver] = newStatus;
+            }
 
             // حفظ الحالة فورًا في البرنامج المرتبط بالتاريخ الحالي، دون تغيير
             // busData أو أي جزء آخر من البرنامج.
