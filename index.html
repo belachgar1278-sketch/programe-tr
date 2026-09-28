@@ -651,24 +651,21 @@
         .history-table th { background:#eef2f7; }
         .history-empty { text-align:center; color:#64748b; padding:20px; }
         .rotation-info { background:#eef6ff; border:1px solid #bfdbfe; color:#1e3a8a; padding:10px 12px; border-radius:8px; margin-top:10px; line-height:1.7; }
-        /* تصميم صورة برنامج المراقبين - واضح وكبير للطباعة */
-        .monitor-export-sheet { display:none; background:#f8fafc; color:#172033; width:1500px; margin:20px auto; padding:34px 38px 40px; direction:rtl; font-family:Arial, Tahoma, sans-serif; }
-        .monitor-export-title { text-align:center; font-size:38px; line-height:1.35; font-weight:900; color:#123b63; margin:0 0 28px; padding:18px 22px; background:#eaf3fb; border:2px solid #b8d2e8; border-radius:14px; }
-        .monitor-export-section { margin-top:24px; }
-        .monitor-export-card { border:2px solid #c8d7e5; border-radius:14px; overflow:hidden; background:#fff; box-shadow:0 4px 12px rgba(31,55,78,.08); }
-        .monitor-export-section-title { background:#1f5d8f; color:#fff; padding:15px 20px; margin:0; font-size:27px; line-height:1.35; font-weight:900; text-align:right; border-bottom:2px solid #17496f; }
+        /* برنامج المراقبين: نفس تصميم برنامج راحة السائقين */
+        .monitor-export-sheet { display:none; background:#ffffff; color:#000000; width:800px; margin:0 auto; padding:20px; direction:rtl; font-family:Arial, Tahoma, sans-serif; }
+        .monitor-export-title { background-color:#facc15; color:#000000; text-align:center; font-weight:800; font-size:1.4rem; padding:10px; margin:0; border:0; border-bottom:2px solid #94a3b8; line-height:1.4; }
+        .monitor-export-section { margin-top:0; }
+        .monitor-export-card { border:2px solid #64748b; border-radius:2px; overflow:hidden; background:#ffffff; box-shadow:none; }
+        .monitor-export-card:last-child { border-bottom:none; }
+        .monitor-export-section-title { background-color:#fef08a; color:#000000; padding:6px; margin:0; font-size:1.15rem; line-height:1.4; font-weight:800; text-align:center; border:0; border-bottom:1px solid #94a3b8; }
         .monitor-export-table { width:100%; border-collapse:collapse; table-layout:fixed; }
-        .monitor-export-table th,.monitor-export-table td { border:1.5px solid #c9d6e2; padding:16px 18px; text-align:right; vertical-align:middle; line-height:1.45; }
-        .monitor-export-table th { background:#dcebf7; color:#123b63; font-size:23px; font-weight:900; }
-        .monitor-export-table td { font-size:22px; font-weight:600; min-height:58px; }
-        .monitor-export-table tbody tr:nth-child(even) { background:#f5f9fc; }
-        .monitor-export-table tbody tr:nth-child(odd) { background:#ffffff; }
-        .monitor-export-table tbody tr:hover { background:#edf6fc; }
-        .monitor-export-card.untitled-status-card { margin-top:18px; }
-        .monitor-export-table .time-cell { text-align:center; direction:rtl; font-weight:800; white-space:nowrap; font-size:21px; }
-        .monitor-export-sheet .monitor-export-card:last-child { border-color:#d5c79a; }
-        .monitor-export-sheet .monitor-export-card:last-child .monitor-export-table th { background:#f5edd2; color:#5f4b12; }
-        .monitor-export-sheet .monitor-export-card:last-child .monitor-export-table td { font-size:22px; }
+        .monitor-export-table th,.monitor-export-table td { border:1px solid #cbd5e1; padding:10px 14px; text-align:center; vertical-align:middle; line-height:1.6; color:#000000; }
+        .monitor-export-table th { background:#fef08a; color:#000000; font-size:1.05rem; font-weight:800; }
+        .monitor-export-table td { background:#ffffff; font-size:.95rem; font-weight:700; min-height:40px; }
+        .monitor-export-table tbody tr:last-child td { border-bottom:1px solid #cbd5e1; }
+        .monitor-export-table tbody tr:nth-child(even), .monitor-export-table tbody tr:nth-child(odd), .monitor-export-table tbody tr:hover { background:#ffffff; }
+        .monitor-export-card.untitled-status-card { margin-top:0; }
+        .monitor-export-table .time-cell { text-align:center; direction:rtl; font-weight:800; white-space:nowrap; font-size:.95rem; }
         .monitor-manager-table { width:100%; border-collapse:collapse; margin-top:10px; }
         .monitor-manager-table th,.monitor-manager-table td { border:1px solid #dbe3ef; padding:7px; }
         .monitor-manager-table input { width:100%; padding:7px; border:1px solid #cbd5e1; border-radius:6px; }
@@ -781,9 +778,9 @@
      فقط نثبت لوحة الصورة أثناء الالتقاط. */
   #exportRestSheet.exporting-mobile,
   #monitorExportSheet.exporting-mobile{
-    width:1500px!important;
-    min-width:1500px!important;
-    max-width:1500px!important;
+    width:800px!important;
+    min-width:800px!important;
+    max-width:800px!important;
     padding:24px!important;
     margin:0!important;
     overflow:visible!important;
@@ -793,13 +790,13 @@
   #exportRestSheet.exporting-mobile .rest-main-title{font-size:28px!important;padding:16px!important}
   #exportRestSheet.exporting-mobile .rest-section-header{font-size:23px!important;padding:12px 16px!important}
   #exportRestSheet.exporting-mobile .rest-section-body{font-size:22px!important;padding:14px 16px!important;line-height:1.7!important}
-  #monitorExportSheet.exporting-mobile .monitor-export-title{font-size:38px!important}
-  #monitorExportSheet.exporting-mobile .monitor-export-section-title{font-size:27px!important}
-  #monitorExportSheet.exporting-mobile .monitor-export-table th{font-size:23px!important}
-  #monitorExportSheet.exporting-mobile .monitor-export-table td{font-size:22px!important}
-  .monitor-export-title{font-size:1.15rem;padding:10px;margin-bottom:10px}
-  .monitor-export-section-title{font-size:.9rem;padding:8px 10px}
-  .monitor-export-table th,.monitor-export-table td{font-size:.72rem!important;padding:7px 6px}
+  #monitorExportSheet.exporting-mobile .monitor-export-title{font-size:28px!important;padding:16px!important}
+  #monitorExportSheet.exporting-mobile .monitor-export-section-title{font-size:23px!important;padding:12px 16px!important}
+  #monitorExportSheet.exporting-mobile .monitor-export-table th{font-size:23px!important;padding:12px 14px!important}
+  #monitorExportSheet.exporting-mobile .monitor-export-table td{font-size:22px!important;padding:14px 16px!important;line-height:1.7!important}
+  .monitor-export-title{font-size:1rem;padding:8px;margin-bottom:0}
+  .monitor-export-section-title{font-size:.82rem;padding:5px}
+  .monitor-export-table th,.monitor-export-table td{font-size:.7rem!important;padding:7px 6px}
   .monitor-export-table .time-cell{font-size:.68rem!important}
 
   #supabaseLoginOverlay{padding:12px}
@@ -3309,10 +3306,10 @@ body.observer-mode #programHistoryModal {
         updateMonitorExportSheet();
         var sheet=document.getElementById('monitorExportSheet');
         sheet.style.display='block';
-        sheet.style.width='1500px';
-        sheet.style.maxWidth='1500px';
+        sheet.style.width='800px';
+        sheet.style.maxWidth='800px';
         sheet.style.margin='0';
-        html2canvas(sheet,{scale:3,useCORS:true,backgroundColor:'#f8fafc',logging:false,width:1500,windowWidth:1500}).then(function(canvas){
+        html2canvas(sheet,{scale:4,useCORS:true,backgroundColor:'#ffffff',logging:false,width:800,windowWidth:800}).then(function(canvas){
             sheet.style.display='none';
             sheet.style.width='';
             sheet.style.maxWidth='';
