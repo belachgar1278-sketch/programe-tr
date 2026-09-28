@@ -1322,6 +1322,29 @@ body.observer-mode #programHistoryModal {
 .conflict-box{border:1px solid #cbd5e1;border-radius:10px;padding:10px;background:#fff;margin-top:8px}
 .conflict-error{border-right:4px solid #dc2626}
 .conflict-warning{border-right:4px solid #f59e0b}
+
+<style id="restAlertsStyle">
+#liveIssuesPanel{margin-top:14px;border:1px solid #dbe3ee;border-radius:14px;background:#fff;box-shadow:0 4px 16px rgba(15,23,42,.06);overflow:hidden}
+#liveIssuesPanel .live-panel-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:12px 16px;background:linear-gradient(135deg,#f8fafc,#eef6ff);border-bottom:1px solid #e2e8f0}
+#liveIssuesPanel .live-panel-head h3{margin:0;font-size:1rem;color:#0f172a}
+#liveIssuesPanel .live-panel-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;padding:12px}
+#liveIssuesPanel .issue-card{border:1px solid #e2e8f0;border-radius:12px;padding:11px;background:#fff;min-height:72px}
+#liveIssuesPanel .issue-card h4{margin:0 0 8px;font-size:.9rem;color:#334155}
+#liveIssuesPanel .issue-item{display:flex;align-items:flex-start;gap:8px;padding:8px 9px;border-radius:9px;margin-top:6px;font-size:.84rem;line-height:1.55}
+#liveIssuesPanel .issue-error{background:#fef2f2;color:#991b1b;border-right:4px solid #ef4444}
+#liveIssuesPanel .issue-warning{background:#fffbeb;color:#92400e;border-right:4px solid #f59e0b}
+#liveIssuesPanel .issue-ok{background:#f0fdf4;color:#166534;border-right:4px solid #22c55e}
+#liveIssuesPanel .issue-info{background:#eff6ff;color:#1e40af;border-right:4px solid #3b82f6}
+#liveIssuesPanel .live-panel-actions{display:flex;gap:7px;flex-wrap:wrap}
+.rest-warning-summary{display:flex;gap:8px;align-items:center;justify-content:space-between;flex-wrap:wrap}
+.rest-warning-count{font-weight:900;font-size:1.1rem;color:#b45309}
+.rest-table{width:100%;border-collapse:collapse;margin-top:8px}
+.rest-table th,.rest-table td{border:1px solid #e2e8f0;padding:7px;text-align:center;font-size:.82rem}
+.rest-table th{background:#f8fafc;color:#334155}
+.rest-danger-row{background:#fff1f2}
+.rest-safe-row{background:#f0fdf4}
+@media(max-width:800px){#liveIssuesPanel .live-panel-grid{grid-template-columns:1fr}}
+</style>
 </style></head>
 <body class="auth-locked">
 <div class="modal" id="programHistoryModal">
@@ -1382,6 +1405,25 @@ body.observer-mode #programHistoryModal {
     </div>
 
 
+  </div>
+</div>
+
+<div class="modal" id="restManagementModal">
+  <div class="modal-content" style="max-width:1050px;max-height:90vh;overflow:auto;">
+    <div class="modal-header">
+      <h3>🛌 إدارة آخر يوم راحة للسائقين</h3>
+      <button class="close-modal" type="button" onclick="window.closeRestManagement && window.closeRestManagement()">×</button>
+    </div>
+    <p style="color:#64748b;font-size:.9rem;margin:6px 0 14px;line-height:1.7;">
+      لأن تفاصيل أيام الراحة السابقة ليست متوفرة بالكامل في قاعدة البيانات، يمكنك إدخال <strong>آخر يوم راحة فعلي</strong> لكل سائق يدويًا.
+      عند وصوله إلى 6 أيام أو أكثر دون راحة سيظهر تنبيه واضح في الواجهة.
+    </p>
+    <div style="display:grid;grid-template-columns:1fr 1fr auto;gap:8px;align-items:end;">
+      <div><label>السائق</label><select id="restDriverSelect"></select></div>
+      <div><label>آخر يوم راحة</label><input id="restLastDateInput" type="date"></div>
+      <button type="button" class="btn btn-success" onclick="window.saveManualRestDate && window.saveManualRestDate()">💾 حفظ</button>
+    </div>
+    <div id="restManagementTable" style="margin-top:14px;"></div>
   </div>
 </div>
 
@@ -1485,6 +1527,29 @@ body.observer-mode #programHistoryModal {
         <div class="stat-box"><div class="stat-icon">🏢</div><div class="stat-data"><h4>الإدارة</h4><span id="dashAdmin">0</span></div></div>
         <div class="stat-box"><div class="stat-icon">⚠️</div><div class="stat-data"><h4>ملاحظات البرنامج</h4><span id="dashWarnings">0</span></div></div>
         <div class="stat-box"><div class="stat-icon">🔒</div><div class="stat-data"><h4>حالة الاعتماد</h4><span id="dashApproval">مسودة</span></div></div>
+    </div>
+
+    <div id="liveIssuesPanel" class="no-print">
+        <div class="live-panel-head">
+            <h3>⚠️ مشاكل البرنامج وتنبيهات الراحة</h3>
+            <div class="live-panel-actions">
+                <button type="button" class="btn btn-secondary" onclick="window.refreshLiveIssuesPanel && window.refreshLiveIssuesPanel()">تحديث الفحص</button>
+                <button type="button" class="btn btn-warning" onclick="window.openRestManagement && window.openRestManagement()">🛌 إدارة آخر يوم راحة</button>
+            </div>
+        </div>
+        <div class="live-panel-grid">
+            <div class="issue-card">
+                <h4>مشاكل البرنامج</h4>
+                <div id="liveProgramIssues"><div class="issue-item issue-info">جاري الفحص...</div></div>
+            </div>
+            <div class="issue-card">
+                <div class="rest-warning-summary">
+                    <h4 style="margin:0">تنبيهات الراحة</h4>
+                    <span id="liveRestWarningCount" class="rest-warning-count">0</span>
+                </div>
+                <div id="liveRestIssues"><div class="issue-item issue-info">جاري الفحص...</div></div>
+            </div>
+        </div>
     </div>
 
     <div class="controls-card">
@@ -1931,6 +1996,7 @@ body.observer-mode #programHistoryModal {
     var driversCustomStatus = JSON.parse(localStorage.getItem('taroudant_driversCustomStatus')) || {};
     // حالات السائقين التي تم تعيينها صراحةً للبرنامج الحالي/تاريخه، لمنع اعتبار بيانات قديمة تعارضاً.
     var driverStatusExplicitByDate = JSON.parse(localStorage.getItem('taroudant_driverStatusExplicitByDate')) || {};
+    var driverLastRestDates = JSON.parse(localStorage.getItem('taroudant_driverLastRestDates')) || {};
     var busesCustomStatus = JSON.parse(localStorage.getItem('taroudant_busesCustomStatus')) || {};
     var programHistory = JSON.parse(localStorage.getItem('taroudant_programHistory')) || {};
     // مصدر مستقل لفحص البرنامج المعروض فعليًا، حتى لا تختلط حالات تاريخ آخر مع البرنامج الحالي.
@@ -1989,6 +2055,7 @@ body.observer-mode #programHistoryModal {
         localStorage.setItem('taroudant_busData', JSON.stringify(busData));
         localStorage.setItem('taroudant_driversCustomStatus', JSON.stringify(driversCustomStatus));
         localStorage.setItem('taroudant_driverStatusExplicitByDate', JSON.stringify(driverStatusExplicitByDate));
+        localStorage.setItem('taroudant_driverLastRestDates', JSON.stringify(driverLastRestDates));
         localStorage.setItem('taroudant_busesCustomStatus', JSON.stringify(busesCustomStatus));
         localStorage.setItem('taroudant_programHistory', JSON.stringify(programHistory));
         localStorage.setItem('taroudant_monitorPrograms', JSON.stringify(monitorPrograms));
@@ -2019,6 +2086,7 @@ body.observer-mode #programHistoryModal {
             lineDefaults: cloneData(lineDefaults),
             driversCustomStatus: cloneData(driversCustomStatus),
             explicitDriverStatuses: cloneData((function(){ var d=(typeof getProgramDateValue==='function'?getProgramDateValue():''); return d && driverStatusExplicitByDate[d] ? driverStatusExplicitByDate[d] : {}; })()),
+            driverLastRestDates: cloneData(driverLastRestDates),
             busesCustomStatus: cloneData(busesCustomStatus),
             savedAt: new Date().toISOString()
         };
@@ -2090,6 +2158,7 @@ body.observer-mode #programHistoryModal {
         if (snap.lineDefaults) lineDefaults = cloneData(snap.lineDefaults);
         if (snap.driversCustomStatus) driversCustomStatus = cloneData(snap.driversCustomStatus);
         if (snap.explicitDriverStatuses) { driverStatusExplicitByDate[dateValue] = cloneData(snap.explicitDriverStatuses); }
+        if (snap.driverLastRestDates && typeof snap.driverLastRestDates === 'object') driverLastRestDates = cloneData(snap.driverLastRestDates);
         if (snap.busesCustomStatus) busesCustomStatus = cloneData(snap.busesCustomStatus);
         return true;
     }
@@ -2367,6 +2436,7 @@ body.observer-mode #programHistoryModal {
             busData = cloneData(snap.busData || []);
             if (snap.lineDefaults) lineDefaults = cloneData(snap.lineDefaults);
             if (snap.driversCustomStatus) driversCustomStatus = cloneData(snap.driversCustomStatus);
+            if (snap.driverLastRestDates && typeof snap.driverLastRestDates === 'object') driverLastRestDates = cloneData(snap.driverLastRestDates);
             if (snap.busesCustomStatus) busesCustomStatus = cloneData(snap.busesCustomStatus);
 
             var dateInput = document.getElementById('programDate');
@@ -3911,6 +3981,7 @@ body.observer-mode #programHistoryModal {
       lineDefaults: lineDefaults,
       busData: busData,
       driversCustomStatus: driversCustomStatus,
+      driverLastRestDates: driverLastRestDates,
       busesCustomStatus: busesCustomStatus,
       programHistory: programHistory,
       monitorPrograms: monitorPrograms,
@@ -3946,6 +4017,7 @@ body.observer-mode #programHistoryModal {
       if(st.lineDefaults && Object.keys(st.lineDefaults).length) lineDefaults=st.lineDefaults;
       if(Array.isArray(st.busData) && st.busData.length) busData=st.busData;
       if(st.driversCustomStatus) driversCustomStatus=st.driversCustomStatus;
+      if(st.driverLastRestDates && typeof st.driverLastRestDates === 'object') driverLastRestDates=st.driverLastRestDates;
       if(st.busesCustomStatus) busesCustomStatus=st.busesCustomStatus;
       if(st.programHistory && typeof st.programHistory === 'object') programHistory=st.programHistory;
       if(st.monitorPrograms && typeof st.monitorPrograms === 'object') monitorPrograms=st.monitorPrograms;
@@ -4102,6 +4174,109 @@ body.observer-mode #programHistoryModal {
         setAudit(a);
     };
 
+    function getCurrentProgramDateSafe(){
+        try{return typeof getProgramDateValue==='function' ? getProgramDateValue() : (document.getElementById('programDate')?.value || '');}catch(e){return '';}
+    }
+    function getManualLastRestDate(driver){
+        var d=String((driverLastRestDates||{})[driver]||'').trim();
+        return d || null;
+    }
+    function getRestTracking(driver, currentDate){
+        currentDate=currentDate||getCurrentProgramDateSafe();
+        var last=getManualLastRestDate(driver);
+        if(!last){
+            // إذا كان لدينا برامج محفوظة، نحاول إيجاد آخر يوم راحة موثق قبل التاريخ الحالي.
+            var dates=Object.keys(typeof programHistory!=='undefined'?programHistory:{}).filter(function(d){return !currentDate||d<=currentDate;}).sort();
+            for(var i=dates.length-1;i>=0;i--){
+                var st=driverStatusOnDate(driver,dates[i]);
+                if(st==='الراحة'){ last=dates[i]; break; }
+            }
+        }
+        if(!last || !currentDate) return {driver:driver,lastRest:null,days:0,known:false,status:getEffectiveDriverStatus(driver)};
+        var start=new Date(last+'T12:00:00'), end=new Date(currentDate+'T12:00:00');
+        var days=Math.floor((end-start)/86400000);
+        if(days<0) days=0;
+        var status=getEffectiveDriverStatus(driver);
+        return {driver:driver,lastRest:last,days:days,known:true,status:status};
+    }
+    window.getRestWarnings=function(){
+        var currentDate=getCurrentProgramDateSafe(), out=[];
+        if(!currentDate || typeof driversList==='undefined') return out;
+        driversList.forEach(function(driver){
+            var tr=getRestTracking(driver,currentDate);
+            // لا ننبه السائق إذا كان اليوم نفسه راحة أو حالة إدارية/غير عاملة.
+            if(['الراحة','الغياب','المرض','الترخيص','العطلة السنوية','الإدارة'].includes(tr.status)) return;
+            if(tr.known && tr.days>=6){
+                out.push({driver:driver,days:tr.days,lastRest:tr.lastRest,status:tr.status,level:tr.days>=7?'error':'warning'});
+            }
+        });
+        out.sort(function(a,b){return b.days-a.days || a.driver.localeCompare(b.driver,'ar');});
+        return out;
+    };
+    window.refreshRestManagement=function(){
+        var select=document.getElementById('restDriverSelect');
+        var input=document.getElementById('restLastDateInput');
+        if(select){
+            var current=select.value;
+            select.innerHTML=(typeof driversList!=='undefined'?driversList:[]).map(function(d){return '<option value="'+escapeAdmin(d)+'">'+escapeAdmin(d)+'</option>';}).join('');
+            if(current && (typeof driversList!=='undefined') && driversList.includes(current)) select.value=current;
+            if(select.value && input) input.value=getManualLastRestDate(select.value)||'';
+            select.onchange=function(){if(input) input.value=getManualLastRestDate(select.value)||'';};
+        }
+        var box=document.getElementById('restManagementTable'); if(!box)return;
+        var date=getCurrentProgramDateSafe();
+        var rows=(typeof driversList!=='undefined'?driversList:[]).map(function(d){return getRestTracking(d,date);}).filter(function(x){return x.known;}).sort(function(a,b){return b.days-a.days || a.driver.localeCompare(b.driver,'ar');});
+        var h='<table class="rest-table"><thead><tr><th>السائق</th><th>آخر يوم راحة</th><th>الأيام منذ آخر راحة</th><th>الحالة الحالية</th><th>التنبيه</th></tr></thead><tbody>';
+        if(!rows.length) h+='<tr><td colspan="5">لم يتم إدخال آخر يوم راحة بعد.</td></tr>';
+        rows.forEach(function(r){
+            var cls=r.days>=6?'rest-danger-row':'rest-safe-row';
+            var note=r.days>=7?'🔴 تجاوز 6 أيام':(r.days===6?'🟠 وصل إلى 6 أيام':'✓ ضمن الحد');
+            h+='<tr class="'+cls+'"><td style="font-weight:800">'+escapeAdmin(r.driver)+'</td><td>'+escapeAdmin(r.lastRest||'—')+'</td><td><strong>'+r.days+'</strong></td><td>'+escapeAdmin(r.status)+'</td><td>'+note+'</td></tr>';
+        });
+        box.innerHTML=h+'</tbody></table>';
+    };
+    window.openRestManagement=function(){
+        if(window.__isObserver){alert('حساب الملاحظ للعرض فقط.');return;}
+        var m=document.getElementById('restManagementModal'); if(m)m.style.display='flex';
+        refreshRestManagement();
+    };
+    window.closeRestManagement=function(){var m=document.getElementById('restManagementModal');if(m)m.style.display='none';};
+    window.saveManualRestDate=function(){
+        if(window.__isObserver){alert('لا تملك الصلاحية.');return;}
+        var d=document.getElementById('restDriverSelect')?.value||'', date=document.getElementById('restLastDateInput')?.value||'';
+        if(!d||!date){alert('يرجى اختيار السائق وإدخال آخر يوم راحة.');return;}
+        var current=getCurrentProgramDateSafe();
+        if(current && date>current){alert('آخر يوم راحة لا يمكن أن يكون بعد تاريخ البرنامج الحالي.');return;}
+        driverLastRestDates[d]=date;
+        saveDataToStorage();
+        if(typeof addAuditEntry==='function') addAuditEntry('تسجيل آخر يوم راحة','السائق: '+d+' — آخر يوم راحة: '+date);
+        refreshRestManagement();
+        if(typeof window.refreshLiveIssuesPanel==='function') window.refreshLiveIssuesPanel();
+        if(typeof updateEnhancedDashboard==='function') updateEnhancedDashboard();
+    };
+    window.refreshLiveIssuesPanel=function(){
+        var issueBox=document.getElementById('liveProgramIssues'), restBox=document.getElementById('liveRestIssues'), count=document.getElementById('liveRestWarningCount');
+        if(issueBox){
+            var vr=window.validateCurrentProgram?window.validateCurrentProgram():{errors:[],warnings:[]};
+            var h='';
+            (vr.errors||[]).forEach(function(x){h+='<div class="issue-item issue-error">✕ '+escapeAdmin(x)+'</div>';});
+            (vr.warnings||[]).filter(function(x){return !/وصل إلى \d+ أيام دون راحة/.test(String(x));}).forEach(function(x){h+='<div class="issue-item issue-warning">⚠ '+escapeAdmin(x)+'</div>';});
+            if(!h) h='<div class="issue-item issue-ok">✓ لا توجد مشاكل أو تعارضات مسجلة في البرنامج الحالي.</div>';
+            issueBox.innerHTML=h;
+        }
+        if(restBox){
+            var rw=window.getRestWarnings?window.getRestWarnings():[];
+            if(count) count.textContent=rw.length;
+            var rh='';
+            rw.slice(0,8).forEach(function(x){
+                var cls=x.level==='error'?'issue-error':'issue-warning';
+                rh+='<div class="issue-item '+cls+'">'+(x.level==='error'?'🔴':'🟠')+' <strong>'+escapeAdmin(x.driver)+'</strong> — '+x.days+' أيام منذ آخر راحة (آخر راحة: '+escapeAdmin(x.lastRest)+')</div>';
+            });
+            if(!rh) rh='<div class="issue-item issue-ok">✓ لا يوجد سائق وصل إلى 6 أيام دون راحة.</div>';
+            restBox.innerHTML=rh;
+        }
+    };
+
     window.validateCurrentProgram=function(){
         var errors=[], warnings=[];
         var seenBuses={}, seenDrivers={}, seenLines={};
@@ -4168,6 +4343,8 @@ body.observer-mode #programHistoryModal {
             }
         });
 
+        var restWarnings = window.getRestWarnings ? window.getRestWarnings() : [];
+        restWarnings.forEach(function(x){ warnings.push('السائق '+x.driver+' وصل إلى '+x.days+' أيام دون راحة (آخر يوم راحة: '+x.lastRest+').'); });
         return {errors:errors,warnings:warnings,ok:errors.length===0};
     };
 
@@ -4216,6 +4393,7 @@ body.observer-mode #programHistoryModal {
         var d=getCurrentDashboardStatuses();
         var map={dashWorking:d.working,dashRest:d.rest,dashAbsent:d.absent,dashSick:d.sick,dashPermit:d.permit,dashAnnual:d.annual,dashGarage:d.garage,dashAdmin:d.admin,dashWarnings:d.warnings};
         Object.keys(map).forEach(function(id){var e=document.getElementById(id);if(e)e.textContent=map[id];});
+        if(typeof window.refreshLiveIssuesPanel==='function') window.refreshLiveIssuesPanel();
         updateApprovalUI();
     };
 
@@ -4394,11 +4572,12 @@ body.observer-mode #programHistoryModal {
         if(e.target && e.target.id==='programDate'){
             addAuditEntry('تغيير تاريخ البرنامج','التاريخ الجديد: '+e.target.value);
             if(typeof updateEnhancedDashboard==='function') updateEnhancedDashboard();
+            if(typeof window.refreshLiveIssuesPanel==='function') window.refreshLiveIssuesPanel();
             if(typeof updateApprovalUI==='function') updateApprovalUI();
         }
     });
 
-    setTimeout(function(){ if(typeof updateEnhancedDashboard==='function') updateEnhancedDashboard(); }, 250);
+    setTimeout(function(){ if(typeof updateEnhancedDashboard==='function') updateEnhancedDashboard(); if(typeof window.refreshLiveIssuesPanel==='function') window.refreshLiveIssuesPanel(); }, 250);
     document.addEventListener('click',function(){ setTimeout(function(){ if(typeof updateEnhancedDashboard==='function') updateEnhancedDashboard(); }, 30); });
 
     // تحذير قبل مغادرة الصفحة إذا كانت هناك تعديلات غير محفوظة.
@@ -4468,6 +4647,7 @@ body.observer-mode #programHistoryModal {
             if(typeof renderStatusTables==='function') renderStatusTables();
             if(typeof updateStats==='function') updateStats();
             if(typeof refreshAdminCenter==='function') refreshAdminCenter();
+            if(typeof window.refreshLiveIssuesPanel==='function') window.refreshLiveIssuesPanel();
 
             if(typeof window.__queueSupabaseSave==='function' && window.__supabaseReady){
                 window.__queueSupabaseSave();
