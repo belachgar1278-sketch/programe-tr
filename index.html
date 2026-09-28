@@ -3764,16 +3764,40 @@ body.observer-mode #programHistoryModal {
 
     function exportAsImage() {
         var sheet = document.getElementById('exportSheet');
+        if (!sheet) {
+            alert("تعذر العثور على برنامج الحافلات لاستخراجه.");
+            return;
+        }
+
         sheet.classList.add('exporting');
-        
-        html2canvas(sheet, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, width: 1400, windowWidth: 1400 }).then(function(canvas) {
+
+        // تحسين وضوح صورة البرنامج دون تغيير تصميم الموقع:
+        // نستخدم دقة عالية للصورة الناتجة مع تثبيت نفس أبعاد ورقة الاستخراج.
+        var exportWidth = 1400;
+        var exportScale = Math.max(4, Math.min(5, (window.devicePixelRatio || 1) * 2));
+
+        // html2canvas يعتمد على حجم العنصر الفعلي؛ نثبت عرض نافذة الرسم
+        // حتى لا يعاد ضغط الجدول أو تصغير النص أثناء الاستخراج.
+        html2canvas(sheet, {
+            scale: exportScale,
+            useCORS: true,
+            allowTaint: false,
+            backgroundColor: '#ffffff',
+            logging: false,
+            width: exportWidth,
+            windowWidth: exportWidth,
+            imageTimeout: 15000,
+            removeContainer: true
+        }).then(function(canvas) {
             sheet.classList.remove('exporting');
+
             var link = document.createElement('a');
             link.download = 'برنامج_حافلات_تارودانت.png';
-            link.href = canvas.toDataURL('image/png');
+            link.href = canvas.toDataURL('image/png', 1.0);
             link.click();
         }).catch(function(err) {
             sheet.classList.remove('exporting');
+            console.error('خطأ استخراج برنامج الحافلات:', err);
             alert("حدث خطأ أثناء تصدير الصورة.");
         });
     }
