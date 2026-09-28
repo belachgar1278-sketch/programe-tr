@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>برنامج حافلات تارودانت </title>
+    <title>برنامج حافلات تارودانت - نسخة الهاتف</title>
 
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
@@ -2734,6 +2734,26 @@ body.observer-mode #programHistoryModal {
     }
 
 
+    // الحالة الفعلية للسائق في تاريخ البرنامج الحالي.
+    // المصدر المعتمد هو الحالات التي تم تعيينها صراحةً لذلك التاريخ؛
+    // لا نستخدم driversCustomStatus القديم حتى لا تظهر حالات قديمة في أرقام اليوم.
+    function getEffectiveDriverStatus(driver) {
+        var name = String(driver || '').trim();
+        var date = (typeof getProgramDateValue === 'function') ? getProgramDateValue() : '';
+        var explicit = (date && driverStatusExplicitByDate && driverStatusExplicitByDate[date])
+            ? driverStatusExplicitByDate[date] : {};
+        if (Object.prototype.hasOwnProperty.call(explicit, name)) {
+            return String(explicit[name] || 'الراحة').trim() || 'الراحة';
+        }
+
+        // إذا لم توجد حالة صريحة لهذا التاريخ، فالسائق المبرمج للعمل يعتبر عاملاً،
+        // والسائق غير المبرمج يعتبر في الراحة افتراضياً.
+        var assigned = (typeof busData !== 'undefined' ? busData : []).some(function(row) {
+            return String(row.driver || '').split('/').map(function(x){ return x.trim(); }).includes(name);
+        });
+        return assigned ? 'عمل' : 'الراحة';
+    }
+
     function renderStatusTables() {
         var activeDriversSet = new Set();
         busData.forEach(function(item) {
@@ -2755,7 +2775,7 @@ body.observer-mode #programHistoryModal {
 
         var filteredDriversList = driversList.filter(function(driver) {
             var isInWork = activeDriversSet.has(driver);
-            var currentStatus = String(driversCustomStatus[driver] || '').trim();
+            var currentStatus = getEffectiveDriverStatus(driver);
 
             // السائق العامل لا يظهر في الحالات العادية، لكنه يبقى ظاهراً
             // إذا كانت حالته "انتظار اصلاح الحافلة" أو "مهمة في المرآب".
@@ -2783,8 +2803,8 @@ body.observer-mode #programHistoryModal {
         };
 
         filteredDriversList.sort(function(a, b) {
-            var statusA = String(driversCustomStatus[a] || 'الراحة').trim();
-            var statusB = String(driversCustomStatus[b] || 'الراحة').trim();
+            var statusA = getEffectiveDriverStatus(a);
+            var statusB = getEffectiveDriverStatus(b);
 
             // توحيد الحالات القديمة حتى لا تمنع ترتيب الراحة.
             if(statusA === 'راحة') statusA = 'الراحة';
@@ -2802,7 +2822,7 @@ body.observer-mode #programHistoryModal {
         });
 
         filteredDriversList.forEach(function(driver) {
-            var currentStatus = String(driversCustomStatus[driver] || 'الراحة').trim();
+            var currentStatus = getEffectiveDriverStatus(driver);
             var badgeClass = 'status-admin';
             if (currentStatus === 'الراحة') badgeClass = 'status-rest';
             else if (currentStatus === 'الغياب') badgeClass = 'status-absence';
@@ -2938,7 +2958,7 @@ body.observer-mode #programHistoryModal {
         for (var cat in categories) {
             var matchedDrivers = [];
             driversList.forEach(function(driver) {
-                var currentStatus = String(driversCustomStatus[driver] || 'الراحة').trim();
+                var currentStatus = getEffectiveDriverStatus(driver);
 
                 // جميع الحالات العادية تستبعد السائق العامل.
                 // الاستثناء: انتظار اصلاح الحافلة ومهمة في المرآب يظهران حتى لو كان السائق مربوطاً بحافلة.
@@ -4172,13 +4192,12 @@ body.observer-mode #programHistoryModal {
 
     function getCurrentDashboardStatuses(){
         var result={working:0,rest:0,absent:0,sick:0,permit:0,annual:0,garage:0,admin:0,warnings:0};
-        var map=(typeof driversCustomStatus!=='undefined'&&driversCustomStatus)?driversCustomStatus:{};
-        var list=(typeof driversList!=='undefined'?driversList:[]);
+                var list=(typeof driversList!=='undefined'?driversList:[]);
         list.forEach(function(d){
             var assigned=(typeof busData!=='undefined'?busData:[]).some(function(row){
                 return String(row.driver||'').split('/').map(function(x){return x.trim();}).includes(d);
             });
-            var st=String(map[d]||'الراحة').trim();
+            var st=getEffectiveDriverStatus(d);
             if(assigned && st!=='انتظار اصلاح الحافلة' && st!=='مهمة في المرآب' && !['الغياب','المرض','الترخيص','العطلة السنوية','الإدارة'].includes(st)) result.working++;
             else if(st==='الراحة') result.rest++;
             else if(st==='الغياب') result.absent++;
