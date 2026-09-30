@@ -2086,7 +2086,6 @@ body.observer-mode #programHistoryModal {
             lineDefaults: cloneData(lineDefaults),
             driversCustomStatus: cloneData(driversCustomStatus),
             explicitDriverStatuses: cloneData((function(){ var d=(typeof getProgramDateValue==='function'?getProgramDateValue():''); return d && driverStatusExplicitByDate[d] ? driverStatusExplicitByDate[d] : {}; })()),
-            driverLastRestDates: cloneData(driverLastRestDates),
             busesCustomStatus: cloneData(busesCustomStatus),
             savedAt: new Date().toISOString()
         };
@@ -2158,7 +2157,6 @@ body.observer-mode #programHistoryModal {
         if (snap.lineDefaults) lineDefaults = cloneData(snap.lineDefaults);
         if (snap.driversCustomStatus) driversCustomStatus = cloneData(snap.driversCustomStatus);
         if (snap.explicitDriverStatuses) { driverStatusExplicitByDate[dateValue] = cloneData(snap.explicitDriverStatuses); }
-        if (snap.driverLastRestDates && typeof snap.driverLastRestDates === 'object') driverLastRestDates = cloneData(snap.driverLastRestDates);
         if (snap.busesCustomStatus) busesCustomStatus = cloneData(snap.busesCustomStatus);
         return true;
     }
@@ -2436,8 +2434,7 @@ body.observer-mode #programHistoryModal {
             busData = cloneData(snap.busData || []);
             if (snap.lineDefaults) lineDefaults = cloneData(snap.lineDefaults);
             if (snap.driversCustomStatus) driversCustomStatus = cloneData(snap.driversCustomStatus);
-            if (snap.driverLastRestDates && typeof snap.driverLastRestDates === 'object') driverLastRestDates = cloneData(snap.driverLastRestDates);
-            if (snap.busesCustomStatus) busesCustomStatus = cloneData(snap.busesCustomStatus);
+                if (snap.busesCustomStatus) busesCustomStatus = cloneData(snap.busesCustomStatus);
 
             var dateInput = document.getElementById('programDate');
             if (dateInput) dateInput.value = dateValue;
@@ -2816,12 +2813,17 @@ body.observer-mode #programHistoryModal {
             return String(explicit[name] || 'الراحة').trim() || 'الراحة';
         }
 
-        // إذا لم توجد حالة صريحة لهذا التاريخ، فالسائق المبرمج للعمل يعتبر عاملاً،
-        // والسائق غير المبرمج يعتبر في الراحة افتراضياً.
+        // إذا لم توجد حالة صريحة لهذا التاريخ، نحافظ على آخر حالة يدوية معروفة
+        // بدل تحويل السائق تلقائياً إلى "الراحة". ويظل السائق المبرمج للعمل "عمل".
         var assigned = (typeof busData !== 'undefined' ? busData : []).some(function(row) {
             return String(row.driver || '').split('/').map(function(x){ return x.trim(); }).includes(name);
         });
-        return assigned ? 'عمل' : 'الراحة';
+        if (assigned) return 'عمل';
+        if (driversCustomStatus && Object.prototype.hasOwnProperty.call(driversCustomStatus, name)) {
+            var legacyStatus = String(driversCustomStatus[name] || '').trim();
+            if (legacyStatus) return legacyStatus;
+        }
+        return 'الراحة';
     }
 
     function renderStatusTables() {
@@ -3981,6 +3983,7 @@ body.observer-mode #programHistoryModal {
       lineDefaults: lineDefaults,
       busData: busData,
       driversCustomStatus: driversCustomStatus,
+      driverStatusExplicitByDate: driverStatusExplicitByDate,
       driverLastRestDates: driverLastRestDates,
       busesCustomStatus: busesCustomStatus,
       programHistory: programHistory,
@@ -4017,6 +4020,7 @@ body.observer-mode #programHistoryModal {
       if(st.lineDefaults && Object.keys(st.lineDefaults).length) lineDefaults=st.lineDefaults;
       if(Array.isArray(st.busData) && st.busData.length) busData=st.busData;
       if(st.driversCustomStatus) driversCustomStatus=st.driversCustomStatus;
+      if(st.driverStatusExplicitByDate && typeof st.driverStatusExplicitByDate === 'object') driverStatusExplicitByDate=st.driverStatusExplicitByDate;
       if(st.driverLastRestDates && typeof st.driverLastRestDates === 'object') driverLastRestDates=st.driverLastRestDates;
       if(st.busesCustomStatus) busesCustomStatus=st.busesCustomStatus;
       if(st.programHistory && typeof st.programHistory === 'object') programHistory=st.programHistory;
@@ -4130,11 +4134,27 @@ body.observer-mode #programHistoryModal {
     var newDate = this.value;
     if(!newDate) return;
 
-    // تغيير التاريخ هنا يغيّر التاريخ المعروض فقط، ولا يستبدل البرنامج الحالي
-    // ولا يسترجع برنامجًا محفوظًا ليوم آخر. استرجاع برنامج محفوظ يتم فقط
-    // من خلال "سجل البرامج".
+    // عند الانتقال إلى يوم جديد: لا نعيد جميع السائقين إلى الراحة.
+    // إذا لم توجد حالات محفوظة لذلك اليوم، ننقل الحالات اليدوية لليوم السابق
+    // إلى اليوم الجديد. ويمكن للمستخدم تغييرها يدويًا لاحقًا.
+    var previousDate = window.__lastProgramDate || '';
+    if(previousDate && previousDate !== newDate){
+      if(!driverStatusExplicitByDate[newDate]){
+        var previousStatuses = driverStatusExplicitByDate[previousDate] || {};
+        driverStatusExplicitByDate[newDate] = JSON.parse(JSON.stringify(previousStatuses));
+      }
+    }
+
     window.__lastProgramDate = newDate;
     updateHeaderTitle();
+    renderStatusTables();
+    updateStats();
+    if (typeof updateRestExportSheet === 'function') updateRestExportSheet();
+    if (typeof window.refreshRestManagement === 'function') window.refreshRestManagement();
+    if (typeof window.refreshLiveIssuesPanel === 'function') window.refreshLiveIssuesPanel();
+    if (typeof updateEnhancedDashboard === 'function') updateEnhancedDashboard();
+    saveDataToStorage();
+    if (window.__supabaseReady && typeof window.__queueSupabaseSave === 'function') window.__queueSupabaseSave(true);
   });
 
   sb.auth.getSession().then(async function(res){
