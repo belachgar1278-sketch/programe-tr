@@ -1231,8 +1231,7 @@ body.supervisor-mode #lineEditPanel[data-supervisor-add="true"] {
 /* لا تظهر أي أزرار حذف داخل إدارة الخطوط إن أضيفت مستقبلاً */
 body.supervisor-mode #linesManagementModal .line-delete-btn,
 body.supervisor-mode #linesManagementModal button[onclick*="deleteLine"],
-body.supervisor-mode #linesManagementModal button[onclick*="removeLine"],
-body.supervisor-mode #lineModal .line-delete-btn {
+body.supervisor-mode #linesManagementModal button[onclick*="removeLine"] {
     display:none !important;
 }
 </style>
@@ -2619,7 +2618,7 @@ body.observer-mode #programHistoryModal {
                 <td colspan="4">
                     <div class="line-row-flex">
                         <div class="line-info-container">
-                            <span>${lineName} (${currentLineBusCount} حافلات)</span>
+                            <span>الخط: ${lineName} (${currentLineBusCount} حافلات)</span>
                             <span class="line-info-badge">التردد: ${defs.interval}</span>
                             <span class="line-info-badge">المدة الزمنية: ${defs.duration}</span>
                         </div>
@@ -3538,24 +3537,12 @@ body.observer-mode #programHistoryModal {
         if (original) original.value = '';
     }
 
-    // ترتيب الخطوط محفوظ صراحةً لأن JSONB في قاعدة البيانات لا يضمن ترتيب مفاتيح الكائن.
-    function getOrderedLineNames() {
-        var existing = Object.keys(lineDefaults || {});
-        var saved = Array.isArray(window.__lineOrder) ? window.__lineOrder : existing;
-        var ordered = saved.filter(function(name, index) {
-            return existing.indexOf(name) !== -1 && saved.indexOf(name) === index;
-        });
-        existing.forEach(function(name) { if (ordered.indexOf(name) === -1) ordered.push(name); });
-        window.__lineOrder = ordered.slice();
-        return ordered;
-    }
-
     function renderLinesManagementList() {
         var box = document.getElementById('linesManagementList');
         if (!box) return;
         box.innerHTML = '';
 
-        var names = getOrderedLineNames();
+        var names = Object.keys(lineDefaults);
         if (!names.length) {
             box.innerHTML = '<div style="padding:20px;text-align:center;color:#64748b;">لا توجد خطوط مضافة.</div>';
             return;
@@ -3570,21 +3557,11 @@ body.observer-mode #programHistoryModal {
                 '<div><span style="color:#64748b;">التردد:</span> ' + escapeHtml(data.interval || '') + '</div>' +
                 '<div><span style="color:#64748b;">المدة:</span> ' + escapeHtml(data.duration || '') + '</div>' +
                 '<div style="display:flex;gap:5px;align-items:center;justify-content:center;">' +
-                    '<button type="button" class="btn line-up-btn" title="رفع الاسم">⬆️</button>' +
+                    '<button type="button" class="btn line-up-btn" title="رفع الخط">⬆️</button>' +
                     '<span style="font-weight:900;min-width:24px;text-align:center;">' + (names.indexOf(name)+1) + '</span>' +
-                    '<button type="button" class="btn line-down-btn" title="خفض الاسم">⬇️</button>' +
+                    '<button type="button" class="btn line-down-btn" title="خفض الخط">⬇️</button>' +
                 '</div>' +
-                '<div style="display:flex;gap:5px;justify-content:center;flex-wrap:wrap;">' +
-                    '<button type="button" class="btn btn-primary line-edit-btn">✏️ تعديل</button>' +
-                    '<button type="button" class="btn btn-delete line-delete-btn">🗑️ حذف</button>' +
-                '</div>';
-
-            var deleteBtn = row.querySelector('.line-delete-btn');
-            deleteBtn.addEventListener('click', function(ev) {
-                ev.preventDefault();
-                ev.stopPropagation();
-                deleteLine(name);
-            });
+                '<button type="button" class="btn btn-primary line-edit-btn">✏️ تعديل</button>';
 
             var editBtn = row.querySelector('.line-edit-btn');
             editBtn.addEventListener('click', function(ev) {
@@ -3616,41 +3593,8 @@ body.observer-mode #programHistoryModal {
         });
     }
 
-    function deleteLine(lineName) {
-        if (window.__isObserver) {
-            alert('حساب الملاحظ للعرض فقط ولا يملك صلاحية التعديل.');
-            return;
-        }
-        if (window.__isSupervisor) {
-            alert('حساب المشرف لا يملك صلاحية حذف الأسماء.');
-            return;
-        }
-        if (!Object.prototype.hasOwnProperty.call(lineDefaults, lineName)) return;
-
-        var assignedBuses = busData.filter(function(item) { return item.line === lineName; });
-        if (assignedBuses.length) {
-            alert('لا يمكن حذف هذا الاسم لأنه مرتبط بـ ' + assignedBuses.length +
-                  ' حافلة. يرجى نقل الحافلات إلى اسم آخر أولاً، ثم إعادة الحذف.');
-            return;
-        }
-
-        if (!confirm('هل أنت متأكد من حذف «' + lineName + '»؟ لا يمكن التراجع عن هذا الإجراء.')) return;
-
-        delete lineDefaults[lineName];
-        window.__lineOrder = getOrderedLineNames().filter(function(name) { return name !== lineName; });
-        saveDataToStorage();
-        initDropdowns();
-        renderTable();
-        updateStats();
-        renderLinesManagementList();
-
-        if (window.__supabaseReady && typeof window.__queueSupabaseSave === 'function') {
-            try { window.__queueSupabaseSave(true); } catch (err) { console.warn(err); }
-        }
-    }
-
     function moveLine(lineName, direction) {
-        var names = getOrderedLineNames();
+        var names = Object.keys(lineDefaults);
         var index = names.indexOf(lineName);
         var newIndex = index + direction;
 
@@ -3682,7 +3626,6 @@ body.observer-mode #programHistoryModal {
         });
 
         lineDefaults = finalObj;
-        window.__lineOrder = orderedNames.slice();
         saveDataToStorage();
         initDropdowns();
         renderTable();
@@ -3937,23 +3880,6 @@ body.observer-mode #programHistoryModal {
             });
         }
 
-        var currentLineOrder = getOrderedLineNames();
-        if (!originalName) {
-            if (currentLineOrder.indexOf(name) === -1) currentLineOrder.push(name);
-        } else if (name !== originalName) {
-            var renamedIndex = currentLineOrder.indexOf(originalName);
-            currentLineOrder = currentLineOrder.filter(function(item) { return item !== originalName; });
-            if (renamedIndex < 0 || renamedIndex > currentLineOrder.length) renamedIndex = currentLineOrder.length;
-            currentLineOrder.splice(renamedIndex, 0, name);
-        }
-        window.__lineOrder = currentLineOrder;
-        // إعادة بناء الكائن وفق الترتيب المعتمد قبل الحفظ والعرض.
-        var orderedLineDefaults = {};
-        currentLineOrder.forEach(function(lineName) {
-            if (Object.prototype.hasOwnProperty.call(lineDefaults, lineName)) orderedLineDefaults[lineName] = lineDefaults[lineName];
-        });
-        lineDefaults = orderedLineDefaults;
-
         saveDataToStorage();
         initDropdowns();
         renderTable();
@@ -4055,7 +3981,6 @@ body.observer-mode #programHistoryModal {
       driversList: driversList,
       busesList: busesList,
       lineDefaults: lineDefaults,
-      lineOrder: (typeof getOrderedLineNames === 'function' ? getOrderedLineNames() : (window.__lineOrder || Object.keys(lineDefaults || {}))),
       busData: busData,
       driversCustomStatus: driversCustomStatus,
       driverStatusExplicitByDate: driverStatusExplicitByDate,
@@ -4093,16 +4018,6 @@ body.observer-mode #programHistoryModal {
       if(Array.isArray(st.driversList) && st.driversList.length) driversList=st.driversList;
       if(Array.isArray(st.busesList) && st.busesList.length) busesList=st.busesList;
       if(st.lineDefaults && Object.keys(st.lineDefaults).length) lineDefaults=st.lineDefaults;
-      // استرجاع ترتيب الخطوط المحفوظ صراحةً، بدلاً من الاعتماد على ترتيب JSONB.
-      var remoteLineNames = Object.keys(lineDefaults || {});
-      var remoteLineOrder = Array.isArray(st.lineOrder) ? st.lineOrder : remoteLineNames;
-      window.__lineOrder = remoteLineOrder.filter(function(name, index) {
-        return Object.prototype.hasOwnProperty.call(lineDefaults, name) && remoteLineOrder.indexOf(name) === index;
-      });
-      remoteLineNames.forEach(function(name) { if (window.__lineOrder.indexOf(name) === -1) window.__lineOrder.push(name); });
-      var orderedRemoteLineDefaults = {};
-      window.__lineOrder.forEach(function(name) { orderedRemoteLineDefaults[name] = lineDefaults[name]; });
-      lineDefaults = orderedRemoteLineDefaults;
       if(Array.isArray(st.busData) && st.busData.length) busData=st.busData;
       if(st.driversCustomStatus) driversCustomStatus=st.driversCustomStatus;
       if(st.driverStatusExplicitByDate && typeof st.driverStatusExplicitByDate === 'object') driverStatusExplicitByDate=st.driverStatusExplicitByDate;
@@ -4118,10 +4033,6 @@ body.observer-mode #programHistoryModal {
       await saveRemoteNow();
     }
     window.__supabaseLoading=false;
-    // ترحيل الترتيب إلى قاعدة البيانات مرة واحدة للبيانات القديمة التي لا تحتوي lineOrder.
-    if (data && data.state && !Array.isArray(data.state.lineOrder) && !window.__isObserver) {
-      try { await saveRemoteNow(); } catch (err) { console.warn('Line order migration:', err); }
-    }
     updateHeaderTitle();
     initDropdowns();
     renderTable();
@@ -4292,15 +4203,31 @@ body.observer-mode #programHistoryModal {
     }
     function getRestTracking(driver, currentDate){
         currentDate=currentDate||getCurrentProgramDateSafe();
-        var last=getManualLastRestDate(driver);
-        if(!last){
-            // إذا كان لدينا برامج محفوظة، نحاول إيجاد آخر يوم راحة موثق قبل التاريخ الحالي.
-            var dates=Object.keys(typeof programHistory!=='undefined'?programHistory:{}).filter(function(d){return !currentDate||d<=currentDate;}).sort();
+
+        // نعتمد أولاً على آخر يوم راحة ظاهر فعلياً في البرامج المحفوظة،
+        // حتى لا يبقى تاريخ يدوي قديم حاجزاً أمام احتساب راحة أحدث.
+        var lastSavedRest=null;
+        if(currentDate){
+            var dates=Object.keys(typeof programHistory!=='undefined'?programHistory:{}).filter(function(d){
+                return /^\d{4}-\d{2}-\d{2}$/.test(d) && d<=currentDate;
+            }).sort();
             for(var i=dates.length-1;i>=0;i--){
-                var st=driverStatusOnDate(driver,dates[i]);
-                if(st==='الراحة'){ last=dates[i]; break; }
+                if(driverStatusOnDate(driver,dates[i])==='الراحة'){
+                    lastSavedRest=dates[i];
+                    break;
+                }
             }
         }
+
+        // التاريخ اليدوي احتياطي فقط إذا لم يتوفر أي يوم راحة في البرامج المحفوظة.
+        var last=lastSavedRest;
+        if(!last){
+            var manualLastRest=getManualLastRestDate(driver);
+            if(manualLastRest && /^\d{4}-\d{2}-\d{2}$/.test(manualLastRest) && (!currentDate || manualLastRest<=currentDate)){
+                last=manualLastRest;
+            }
+        }
+
         if(!last || !currentDate) return {driver:driver,lastRest:null,days:0,known:false,status:getEffectiveDriverStatus(driver)};
         var start=new Date(last+'T12:00:00'), end=new Date(currentDate+'T12:00:00');
         var days=Math.floor((end-start)/86400000);
